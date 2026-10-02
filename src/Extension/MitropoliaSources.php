@@ -40,7 +40,7 @@ final class MitropoliaSources extends CMSPlugin implements SubscriberInterface
     {
         // Try early, and again after routing in case YOOtheme boots later.
         return [
-            'onAfterInitialise' => 'loadSources',
+            'onAfterInitialise' => 'onAfterInitialise',
             'onAfterRoute'      => 'onAfterRoute',
             'onAfterDispatch'   => 'onAfterDispatch',
             'onAfterRender'     => 'onAfterRender',
@@ -70,6 +70,29 @@ final class MitropoliaSources extends CMSPlugin implements SubscriberInterface
         } catch (\Throwable $e) {
             Log::add('Itinerary API not run: ' . $e->getMessage(), Log::WARNING, 'mitropolia');
         }
+    }
+
+    /**
+     * Short address for the editors' page: /administrare is served as /ro/administrare
+     * (the address bar keeps the short form). Runs before routing, so the language filter
+     * sees the Romanian prefix and does not redirect.
+     */
+    public function onAfterInitialise(): void
+    {
+        try {
+            if ($this->getApplication()->isClient('site')) {
+                $uri = \Joomla\CMS\Uri\Uri::getInstance();
+                $base = rtrim(\Joomla\CMS\Uri\Uri::base(true), '/');
+                $path = rtrim((string) $uri->getPath(), '/');
+                if ($path === $base . '/administrare' || $path === $base . '/index.php/administrare') {
+                    $uri->setPath($base . '/ro/administrare');
+                    \Mitropolia\Plugin\System\MitropoliaSources\Source\Admin::$short = true;
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::add('Short address not applied: ' . $e->getMessage(), Log::WARNING, 'mitropolia');
+        }
+        $this->loadSources();
     }
 
     public function loadSources(): void

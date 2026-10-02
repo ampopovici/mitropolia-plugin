@@ -26,7 +26,7 @@ use Joomla\Database\ParameterType;
 final class Admin
 {
     private const ROOT = 'images/news';
-    private const LIMIT = 80;
+    private const PAGE = 10;
     private const MAX_UPLOAD = 25 * 1024 * 1024;
     /** Romanian tag => English tag (the site's tags; Spanish has none yet). */
     private const TAGS = [
@@ -40,17 +40,17 @@ final class Admin
 
     /* ------------------------------------------------------------------ helpers */
 
-    private static function db(): DatabaseInterface
+    public static function db(): DatabaseInterface
     {
         return Factory::getContainer()->get(DatabaseInterface::class);
     }
 
-    private static function e(string $s): string
+    public static function e(string $s): string
     {
         return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
     }
 
-    private static function catByAlias(string $alias): int
+    public static function catByAlias(string $alias): int
     {
         static $ids = [];
         if (!isset($ids[$alias])) {
@@ -83,7 +83,7 @@ final class Admin
         return $cat > 0 && (bool) $u->authorise('core.create', 'com_content.category.' . $cat);
     }
 
-    private static function fieldIds(array $names): array
+    public static function fieldIds(array $names): array
     {
         static $all = null;
         if ($all === null) {
@@ -97,7 +97,7 @@ final class Admin
         return array_intersect_key($all, array_flip($names));
     }
 
-    private static function fieldValues(array $ids, array $names): array
+    public static function fieldValues(array $ids, array $names): array
     {
         if (!$ids) {
             return [];
@@ -115,7 +115,7 @@ final class Admin
         return $out;
     }
 
-    private static function writeFields(int $item, array $values): void
+    public static function writeFields(int $item, array $values): void
     {
         $ids = self::fieldIds(array_keys($values));
         $db = self::db();
@@ -132,7 +132,7 @@ final class Admin
         }
     }
 
-    private static function table()
+    public static function table()
     {
         return Factory::getApplication()->bootComponent('com_content')->getMVCFactory()->createTable('Article', 'Administrator');
     }
@@ -176,7 +176,7 @@ final class Admin
         }
     }
 
-    private static function ensureWorkflow(array $cats): void
+    public static function ensureWorkflow(array $cats): void
     {
         try {
             $db = self::db();
@@ -195,7 +195,7 @@ final class Admin
         }
     }
 
-    private static function uniqueAlias(int $cat, string $alias, int $self = 0): string
+    public static function uniqueAlias(int $cat, string $alias, int $self = 0): string
     {
         $db = self::db();
         $alias = $alias !== '' ? mb_substr($alias, 0, 180) : 'stire';
@@ -212,7 +212,7 @@ final class Admin
     }
 
     /** Romanian-safe slug (ș -> s, ț -> t, ă -> a, î/â -> i/a). */
-    private static function slug(string $s, int $max = 60): string
+    public static function slug(string $s, int $max = 60): string
     {
         $s = strtr($s, ['ș' => 's', 'ş' => 's', 'Ș' => 'S', 'Ş' => 'S', 'ț' => 't', 'ţ' => 't', 'Ț' => 'T', 'Ţ' => 'T', 'ă' => 'a', 'Ă' => 'A', 'â' => 'a', 'Â' => 'A', 'î' => 'i', 'Î' => 'I', '„' => '', '”' => '', '“' => '']);
         $s = trim(preg_replace('/-{2,}/', '-', OutputFilter::stringURLSafe($s)), '-');
@@ -224,7 +224,7 @@ final class Admin
     }
 
     /** Keeps simple formatting only: paragraphs, line breaks, bold, italic, lists, links. */
-    private static function cleanHtml(string $h): string
+    public static function cleanHtml(string $h): string
     {
         $h = preg_replace('#<(script|style|iframe|object|embed|svg|math)[^>]*>.*?</\1>#is', '', $h);
         $h = preg_replace('#<(/?)div\b[^>]*>#i', '<$1p>', $h);
@@ -258,23 +258,23 @@ final class Admin
         return $h;
     }
 
-    private static function plainTitle(string $s, int $max = 250): string
+    public static function plainTitle(string $s, int $max = 250): string
     {
         return mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags($s))), 0, $max);
     }
 
-    private static function validDate(string $d): bool
+    public static function validDate(string $d): bool
     {
         return (bool) (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]));
     }
 
-    private static function relUrl(string $rel): string
+    public static function relUrl(string $rel): string
     {
         return Uri::root(true) . '/' . implode('/', array_map('rawurlencode', explode('/', $rel)));
     }
 
     /** A relative image path inside images/, safe to read. */
-    private static function safeRel(string $p): string
+    public static function safeRel(string $p): string
     {
         $p = trim(explode('#', str_replace('\\', '/', $p), 2)[0], '/ ');
         if ($p === '' || strpos($p, '..') !== false || strpos($p, 'images/') !== 0 || !preg_match('#^[A-Za-z0-9._\-/ ]+$#', $p)) {
@@ -285,6 +285,18 @@ final class Admin
 
     /* ------------------------------------------------------------------ page */
 
+    /** True when the page was reached at the short address /administrare (see the plugin's onAfterInitialise). */
+    public static bool $short = false;
+
+    /** The address of this page, as the visitor sees it. */
+    public static function here(): string
+    {
+        if (self::$short) {
+            return rtrim(Uri::root(), '/') . '/administrare';
+        }
+        return Uri::getInstance()->toString(['scheme', 'host', 'port', 'path']);
+    }
+
     public static function page(array $props): string
     {
         try {
@@ -294,43 +306,54 @@ final class Admin
             $app->setHeader('Pragma', 'no-cache', true);
             $app->allowCache(false);
             $user = $app->getIdentity();
-            $here = Uri::getInstance()->toString(['scheme', 'host', 'port', 'path', 'query']);
+            $here = self::here();
             if (!$user || $user->guest) {
-                return self::login($here) . Itinerary::formCss() . self::css();
+                return '<div class="madm-root">' . self::login($here) . '</div>' . Itinerary::formCss() . self::css();
             }
             $itin = Itinerary::allowedCats();
             $news = self::can('news');
             $gal = self::can('gal');
-            if (!$itin && !$news && !$gal) {
-                return '<div class="mif"><div class="mif-card mif-narrow"><h2>Administrare</h2><p>Contul dumneavoastră nu are acces la această pagină. Vă rugăm să luați legătura cu administratorul site-ului.</p>'
-                    . self::logout($here) . '</div></div>' . Itinerary::formCss() . self::css();
+            $par = AdminDir::can('par');
+            $cl = AdminDir::can('cl');
+            if (!$itin && !$news && !$gal && !$par && !$cl) {
+                return '<div class="madm-root"><div class="mif"><div class="mif-card mif-narrow"><h2>Interfața de editare</h2><p>Contul dumneavoastră nu are acces la această pagină. Vă rugăm să luați legătura cu administratorul site-ului.</p>'
+                    . self::logout($here) . '</div></div></div>' . Itinerary::formCss() . self::css();
             }
             $tabs = [];
-            if ($itin) {
-                $tabs['itin'] = ['Itinerar', 'Itinerarul pastoral', 'Adăugați vizitele. Apar imediat pe site, în română, engleză și spaniolă.'];
-            }
             if ($news) {
                 $tabs['news'] = ['Știri', 'Știri', 'Scrieți în română. Engleza și spaniola sunt opționale. Știrea apare pe site imediat ce apăsați „Publică”.'];
             }
+            if ($itin) {
+                $tabs['itin'] = ['Itinerar', 'Itinerarul pastoral', 'Adăugați vizitele. Apar imediat pe site, în română, engleză și spaniolă.'];
+            }
             if ($gal) {
-                $tabs['gal'] = ['Galerii foto', 'Galerii foto', 'O galerie fără text, doar cu titlu și fotografii. O puteți lega de o știre deja publicată.'];
+                $tabs['gal'] = ['Galerii', 'Galerii foto', 'O galerie fără text, doar cu titlu și fotografii. O puteți lega de o știre deja publicată.'];
+            }
+            if ($cl) {
+                $tabs['cl'] = ['Clerici', 'Clerici', 'Datele apar în directorul clerului și pe paginile parohiilor unde slujesc.'];
+            }
+            if ($par) {
+                $tabs['par'] = ['Parohii', 'Parohii', 'Datele apar în directorul de parohii, pe hartă și pe pagina fiecărei parohii, în română, engleză și spaniolă.'];
             }
             $first = array_key_first($tabs);
-            $out = '<div class="mif madm">'
+            $out = '<div class="madm-root"><div class="mif madm">'
                 . '<div class="mif-hero"><div class="mif-hero-in"><div><h1 id="madm-h1">' . self::e($tabs[$first][1]) . '</h1><p id="madm-sub">' . self::e($tabs[$first][2]) . '</p></div>'
                 . '<div class="mif-user"><span>Conectat: <b>' . self::e((string) $user->name) . '</b></span>' . self::logout($here) . '</div></div>'
                 . (count($tabs) > 1 ? '<div class="madm-tabs" role="tablist" aria-label="Secțiuni">' . implode('', array_map(fn ($k, $t) => '<button type="button" role="tab" data-t="' . $k . '" aria-selected="' . ($k === $first ? 'true' : 'false') . '" data-h="' . self::e($t[1]) . '" data-s="' . self::e($t[2]) . '">' . self::e($t[0]) . '</button>', array_keys($tabs), $tabs)) . '</div>' : '')
                 . '</div>';
-            if ($itin) {
-                $out .= '<div class="madm-panel" data-p="itin"' . ($first === 'itin' ? '' : ' hidden') . '>' . Itinerary::formHtml($itin, $user, $here, false) . '</div>';
-            }
             if ($news || $gal) {
                 $out .= '<div class="madm-panel" data-p="ng"' . (in_array($first, ['news', 'gal'], true) ? '' : ' hidden') . '>' . self::panel($news, $gal, $first === 'gal' ? 'gal' : 'news') . '</div>';
             }
-            $out .= '</div>';
-            return $out . Itinerary::formCss() . self::css() . self::tabsJs();
+            if ($itin) {
+                $out .= '<div class="madm-panel" data-p="itin"' . ($first === 'itin' ? '' : ' hidden') . '>' . Itinerary::formHtml($itin, $user, $here, false) . '</div>';
+            }
+            if ($par || $cl) {
+                $out .= '<div class="madm-panel" data-p="dir"' . (in_array($first, ['par', 'cl'], true) ? '' : ' hidden') . '>' . AdminDir::panel($par, $cl, $first === 'par' ? 'par' : 'cl') . '</div>';
+            }
+            $out .= '</div></div>';
+            return $out . Itinerary::formCss() . self::css() . AdminDir::css() . self::tabsJs();
         } catch (\Throwable $x) {
-            Log::add('Admin page: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            Log::add('Admin page: ' . $x->getMessage() . ' @' . $x->getFile() . ':' . $x->getLine(), Log::WARNING, 'mitropolia');
             return '';
         }
     }
@@ -339,12 +362,14 @@ final class Admin
     {
         $action = Route::_('index.php?option=com_users&task=user.login');
         return '<div class="mif"><form class="mif-card mif-narrow" method="post" action="' . self::e($action) . '">'
-            . '<h2>Administrare</h2><p class="mif-hint">Intrați în cont pentru a adăuga sau modifica itinerarul, știrile și galeriile foto.</p>'
+            . '<h2>Interfața de editare</h2><p class="mif-hint">Intrați în cont pentru a publica sau edita conținut.</p>'
             . '<div class="f"><label for="mif-u">Utilizator</label><input type="text" id="mif-u" name="username" autocomplete="username" required></div>'
             . '<div class="f"><label for="mif-p">Parolă</label><input type="password" id="mif-p" name="password" autocomplete="current-password" required></div>'
             . '<input type="hidden" name="return" value="' . self::e(base64_encode($here)) . '">'
             . '<input type="hidden" name="' . Session::getFormToken() . '" value="1">'
-            . '<button class="btn" type="submit">Intră în cont</button></form></div>';
+            . '<div class="madm-login-act"><button class="btn" type="submit">Intră în cont</button>'
+            . '<a class="btn sec" href="' . self::e(Route::_('index.php?option=com_users&view=reset')) . '">Resetează parola</a></div>'
+            . '</form></div>';
     }
 
     private static function logout(string $here): string
@@ -358,16 +383,36 @@ final class Admin
 
     /* ------------------------------------------------------------------ lists */
 
-    private static function newsList(int $only = 0): array
+    /** Filters shared by the news and gallery lists: words of the title, and one day. */
+    private static function filter($q, string $find, string $day): void
+    {
+        $db = self::db();
+        foreach (array_slice(preg_split('/\s+/u', trim($find), -1, PREG_SPLIT_NO_EMPTY), 0, 6) as $w) {
+            $q->where('a.title LIKE ' . $db->quote('%' . $db->escape(mb_substr($w, 0, 60), true) . '%', false));
+        }
+        if (self::validDate($day)) {
+            $q->where('a.publish_up >= ' . $db->quote($day . ' 00:00:00'))->where('a.publish_up <= ' . $db->quote($day . ' 23:59:59'));
+        }
+    }
+
+    /** One page of news (Romanian articles), newest first; $total gets the number of matches. */
+    private static function newsList(int $only = 0, string $find = '', string $day = '', int $page = 0, ?int &$total = null): array
     {
         $cat = self::newsCats()['ro'];
         if (!$cat) {
+            $total = 0;
             return [];
         }
         $db = self::db();
-        $rows = $db->setQuery($db->getQuery(true)->select(['a.id', 'a.title', 'a.publish_up', 'a.images', 'a.created_by', 'u.name AS uname'])
-            ->from($db->quoteName('#__content', 'a'))->join('LEFT', $db->quoteName('#__users', 'u') . ' ON u.id = a.created_by')
-            ->where('a.catid = ' . $cat)->where('a.state IN (0,1)')->where($only ? 'a.id = ' . $only : '1 = 1')->order('a.publish_up DESC, a.id DESC'), 0, self::LIMIT)->loadObjectList();
+        $q = $db->getQuery(true)->from($db->quoteName('#__content', 'a'))->where('a.catid = ' . $cat)->where('a.state IN (0,1)');
+        if ($only) {
+            $q->where('a.id = ' . $only);
+        }
+        self::filter($q, $find, $day);
+        $total = (int) $db->setQuery((clone $q)->select('COUNT(*)'))->loadResult();
+        $rows = $db->setQuery($q->select(['a.id', 'a.title', 'a.publish_up', 'a.images', 'a.created_by', 'u.name AS uname'])
+            ->join('LEFT', $db->quoteName('#__users', 'u') . ' ON u.id = a.created_by')
+            ->order('a.publish_up DESC, a.id DESC'), max(0, $page) * self::PAGE, self::PAGE)->loadObjectList();
         $ids = array_map(fn ($r) => (int) $r->id, $rows);
         $langs = [];
         if ($ids) {
@@ -394,16 +439,23 @@ final class Admin
         }, $rows);
     }
 
-    private static function galList(int $only = 0): array
+    private static function galList(int $only = 0, string $find = '', string $day = '', int $page = 0, ?int &$total = null): array
     {
         $cat = self::galCat();
         if (!$cat) {
+            $total = 0;
             return [];
         }
         $db = self::db();
-        $rows = $db->setQuery($db->getQuery(true)->select(['a.id', 'a.title', 'a.publish_up', 'a.images', 'a.created_by', 'u.name AS uname'])
-            ->from($db->quoteName('#__content', 'a'))->join('LEFT', $db->quoteName('#__users', 'u') . ' ON u.id = a.created_by')
-            ->where('a.catid = ' . $cat)->where('a.state IN (0,1)')->where($only ? 'a.id = ' . $only : '1 = 1')->order('a.publish_up DESC, a.id DESC'), 0, self::LIMIT)->loadObjectList();
+        $q = $db->getQuery(true)->from($db->quoteName('#__content', 'a'))->where('a.catid = ' . $cat)->where('a.state IN (0,1)');
+        if ($only) {
+            $q->where('a.id = ' . $only);
+        }
+        self::filter($q, $find, $day);
+        $total = (int) $db->setQuery((clone $q)->select('COUNT(*)'))->loadResult();
+        $rows = $db->setQuery($q->select(['a.id', 'a.title', 'a.publish_up', 'a.images', 'a.created_by', 'u.name AS uname'])
+            ->join('LEFT', $db->quoteName('#__users', 'u') . ' ON u.id = a.created_by')
+            ->order('a.publish_up DESC, a.id DESC'), max(0, $page) * self::PAGE, self::PAGE)->loadObjectList();
         $f = self::fieldValues(array_map(fn ($r) => (int) $r->id, $rows), self::GAL_FIELDS);
         $u = Factory::getApplication()->getIdentity();
         return array_map(function ($r) use ($f, $u) {
@@ -431,15 +483,17 @@ final class Admin
     private static function panel(bool $news, bool $gal, string $mode): string
     {
         $data = [
-            'api'   => Uri::getInstance()->toString(['scheme', 'host', 'port', 'path']) . '?mitadm=api',
+            'api'   => self::here() . '?mitadm=api',
             'token' => Session::getFormToken(),
             'today' => Factory::getDate('now', Factory::getApplication()->get('offset', 'UTC'))->format('Y-m-d', true),
             'can'   => ['news' => $news, 'gal' => $gal],
             'mode'  => $mode,
             'tags'  => array_map(fn ($k, $v) => [$k, $v[1]], array_keys(self::TAGS), self::TAGS),
-            'news'  => $news || $gal ? self::newsList() : [],
-            'gals'  => $gal ? self::galList() : [],
-            'limit' => self::LIMIT,
+            'news'  => $news ? self::newsList(0, '', '', 0, $nt) : [],
+            'newsN' => $nt ?? 0,
+            'gals'  => $gal ? self::galList(0, '', '', 0, $gt) : [],
+            'galsN' => $gt ?? 0,
+            'page'  => self::PAGE,
         ];
         $json = json_encode($data, JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
         return '<div class="mif-wrap mng">' . <<<'HTML'
@@ -448,7 +502,10 @@ final class Admin
  <h2 id="mn-ftitle">Știre nouă</h2>
  <div class="row">
   <div class="f"><label for="mn-dt">Data</label><input type="date" id="mn-dt"></div>
-  <div class="f" id="mn-lnkBox" hidden><label for="mn-lnk">Legată de știrea <span class="opt">(opțional)</span></label><select id="mn-lnk"></select></div>
+  <div class="f" id="mn-lnkBox" hidden><label for="mn-lq">Legată de știrea <span class="opt">(opțional)</span></label>
+   <div class="ac" id="mn-lac"><input type="search" id="mn-lq" placeholder="Căutați știrea după titlu" autocomplete="off"><div class="sug" id="mn-lsug" hidden></div></div>
+   <div class="picked" id="mn-lpk" hidden><div><b id="mn-lpkT"></b><span id="mn-lpkD"></span></div><button type="button" class="link" id="mn-lpkX">Scoate</button></div>
+  </div>
  </div>
  <div class="f"><span class="lab" id="mn-txtLab">Titlul și textul</span>
   <div class="mng-ltabs" role="tablist" aria-label="Limba">
@@ -483,9 +540,10 @@ final class Admin
 </form>
 <aside class="mif-card side">
  <h2 id="mn-ltitle">Știri publicate</h2>
- <p class="hint">Ștergerea scoate știrea de pe site în toate limbile. Fotografiile rămân păstrate pe server.</p>
+ <div class="mls"><input type="search" id="mn-sq" placeholder="Căutați după titlu" aria-label="Căutați după titlu"><input type="date" id="mn-sd" aria-label="Data"><button type="button" class="link" id="mn-sx" hidden>Șterge căutarea</button></div>
+ <p class="hint" id="mn-lhint">Ștergerea scoate știrea de pe site în toate limbile. Fotografiile rămân păstrate pe server.</p>
  <div class="list" id="mn-list"></div>
- <p class="hint" id="mn-more" hidden></p>
+ <div class="mpg" id="mn-pg" hidden></div>
 </aside>
 </div>
 HTML
@@ -565,6 +623,22 @@ HTML
 .mng .nit .ia{display:flex;gap:16px;margin-top:4px}
 .mng .nit .ia button{border:0;background:none;font:inherit;font-size:14px;font-weight:700;color:var(--blue);padding:4px 0;cursor:pointer}
 .mng .nit .ia button.del{color:var(--red)}
+/* the page always reaches the bottom of the window: footer at the bottom, no gap under it */
+body:has(.madm-root) .tm-page{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+body:has(.madm-root) #tm-main{flex:1 0 auto}
+.madm-login-act{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.madm-login-act .btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.madm-login-act .btn.sec:hover{color:var(--navy);text-decoration:none}
+/* list search and pages (all tabs) */
+.mif .mls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
+.mif .mls input[type=search]{flex:1 1 180px;min-width:0;width:auto;min-height:44px;border:1px solid var(--line2);border-radius:6px;padding:8px 12px;font:inherit;font-size:16px;color:var(--ink);background:#fff;margin:0}
+.mif .mls input[type=date]{flex:0 1 170px;width:auto;min-height:44px;font-size:16px;padding:8px 10px}
+.mif .mls select{flex:0 1 auto;width:auto;min-height:44px;font-size:16px;padding:8px 10px}
+.mif .mls .link{font-size:14px}
+.mif .mpg{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;font-size:14px;color:var(--muted);font-variant-numeric:tabular-nums}
+.mif .mpg button{border:1px solid var(--line2);background:#fff;border-radius:6px;font:inherit;font-size:14px;font-weight:700;color:var(--blue);padding:8px 14px;cursor:pointer;min-height:40px}
+.mif .mpg button[disabled]{opacity:.4;cursor:default}
+.mif .list.busy{opacity:.55;transition:opacity .15s}
 @media (prefers-reduced-motion:reduce){.mng-prog i{transition:none}}
 @media (max-width:560px){.madm-tabs button{padding:11px 14px;font-size:15px;flex:1}.mng-card{grid-template-columns:minmax(0,1fr)}.mng-card .im{aspect-ratio:16/9;min-height:0}.mng-card .tx{padding:0 14px 14px}}
 </style>
@@ -576,12 +650,13 @@ HTML;
         return <<<'HTML'
 <script>
 (function(){var tabs=[].slice.call(document.querySelectorAll('.madm-tabs button'));if(!tabs.length)return;
+var PANEL={news:'ng',gal:'ng',itin:'itin',par:'dir',cl:'dir'};
 function go(t){tabs.forEach(function(b){b.setAttribute('aria-selected',String(b.dataset.t===t));if(b.dataset.t===t){document.getElementById('madm-h1').textContent=b.dataset.h;document.getElementById('madm-sub').textContent=b.dataset.s;}});
- [].forEach.call(document.querySelectorAll('.madm-panel'),function(p){p.hidden=t==='itin'?p.dataset.p!=='itin':p.dataset.p!=='ng';});
- if(t!=='itin'&&window.mngMode)window.mngMode(t);try{localStorage.setItem('madm-tab',t);}catch(e){}}
+ [].forEach.call(document.querySelectorAll('.madm-panel'),function(p){p.hidden=p.dataset.p!==PANEL[t];});
+ if(PANEL[t]==='ng'&&window.mngMode)window.mngMode(t);if(PANEL[t]==='dir'&&window.mdMode)window.mdMode(t);try{localStorage.setItem('madm-tab',t);}catch(e){}}
 tabs.forEach(function(b){b.addEventListener('click',function(){go(b.dataset.t);});});
 var t=null;try{t=localStorage.getItem('madm-tab');}catch(e){}
-if(location.hash==='#stiri')t='news';if(location.hash==='#galerii')t='gal';if(location.hash==='#itinerar')t='itin';
+var H={'#stiri':'news','#galerii':'gal','#itinerar':'itin','#clerici':'cl','#parohii':'par'};if(H[location.hash])t=H[location.hash];
 if(t&&tabs.some(function(b){return b.dataset.t===t;}))go(t);})();
 </script>
 HTML;
@@ -601,9 +676,9 @@ const MON={ro:["ianuarie","februarie","martie","aprilie","mai","iunie","iulie","
 const PH={news:{ro:['De ex. Hramul Parohiei „Sfântul Nicolae” din Shrewsbury','Scrieți aici textul știrii…'],en:['e.g. Patronal feast of St. Nicholas Parish in Shrewsbury','Write the English text here (optional)…'],es:['p. ej. Fiesta patronal de la parroquia San Nicolás','Escriba aquí el texto en español (opcional)…']},
  gal:{ro:['De ex. Înălțarea Sfintei Cruci la Catedrala din Chicago',''],en:['e.g. Exaltation of the Holy Cross at the Chicago Cathedral (optional)',''],es:['p. ej. Exaltación de la Santa Cruz en Chicago (opcional)','']}};
 let MODE=D.can.news?'news':'gal',LANG='ro',PVL='ro',EDIT=0,BATCH='',BUSY=false;
-let NEWS=D.news.slice(),GALS=D.gals.slice();
+const L={news:{items:D.news.slice(),total:D.newsN,page:0,q:'',dt:''},gal:{items:D.gals.slice(),total:D.galsN,page:0,q:'',dt:''}};
 let F=blank();
-function blank(){return{dt:D.today,lnk:'',t:{ro:'',en:'',es:''},b:{ro:'',en:'',es:''},bchg:{ro:0,en:0,es:0},tags:[],photos:[],pchg:0};}
+function blank(){return{dt:D.today,lnk:'',lnkt:null,t:{ro:'',en:'',es:''},b:{ro:'',en:'',es:''},bchg:{ro:0,en:0,es:0},tags:[],photos:[],pchg:0};}
 function fmtDate(iso,l){if(!iso)return'';const[y,m,d]=iso.split('-').map(Number);return l==='en'?`${MON.en[m-1]} ${d}, ${y}`:`${d} ${MON[l][m-1]} ${y}`;}
 const plain=h=>{const x=document.createElement('div');x.innerHTML=h;return x.textContent.replace(/\s+/g,' ').trim();};
 function rnd(){const a=new Uint8Array(8);crypto.getRandomValues(a);return [...a].map(x=>x.toString(16).padStart(2,'0')).join('');}
@@ -613,9 +688,8 @@ async function post(fields,file){const fd=new FormData();Object.entries(fields).
 function setMode(m){if(!D.can[m])return;MODE=m;
  $('bodyBox').hidden=m!=='news';$('tagBox').hidden=m!=='news';$('lnkBox').hidden=m!=='gal';$('txtLab').textContent=m==='news'?'Titlul și textul':'Titlul galeriei';
  $('phHint').textContent=m==='news'?'Prima fotografie este imaginea principală a știrii. Celelalte formează galeria de sub text. Le puteți alege direct din telefon.':'Prima fotografie apare pe coperta galeriei. Puteți încărca zeci de fotografii odată.';
- $('ltitle').textContent=m==='news'?'Știri publicate':'Galerii publicate';
- $('lnk').innerHTML='<option value="">Fără legătură</option>'+NEWS.map(n=>`<option value="${n.id}">${esc(fmtDate(n.dt,'ro'))} · ${esc(n.title)}</option>`).join('');
- reset();renderList();}
+ $('ltitle').textContent=m==='news'?'Știri publicate':'Galerii publicate';$('lhint').textContent=m==='news'?'Ștergerea scoate știrea de pe site în toate limbile. Fotografiile rămân păstrate pe server.':'Ștergerea scoate galeria de pe site. Fotografiile rămân păstrate pe server.';
+ $('sq').value=L[m].q;$('sd').value=L[m].dt;reset();renderList();}
 window.mngMode=t=>{if(t!==MODE&&!BUSY)setMode(t);};
 /* ---------- languages ---------- */
 ROOT.querySelectorAll('.mng-ltabs button').forEach(b=>b.onclick=()=>{store();LANG=b.dataset.l;ROOT.querySelectorAll('.mng-ltabs button').forEach(x=>x.setAttribute('aria-selected',String(x===b)));loadLang();setPv(LANG);});
@@ -631,7 +705,17 @@ ROOT.querySelectorAll('.mng-tb button').forEach(b=>b.onmousedown=e=>{e.preventDe
  document.execCommand(c);F.bchg[LANG]=1;store();upd();});
 $('linkOk').onclick=()=>{const u=$('linkUrl').value.trim();if(!/^https?:\/\/\S+\.\S+/.test(u)){$('linkUrl').focus();return;}const s=window.getSelection();s.removeAllRanges();if(savedRange)s.addRange(savedRange);document.execCommand('createLink',false,u);$('linkBox').hidden=true;F.bchg[LANG]=1;store();upd();};
 $('linkNo').onclick=()=>{$('linkBox').hidden=true;};
-$('dt').oninput=()=>{F.dt=$('dt').value;upd();};$('lnk').onchange=()=>{F.lnk=$('lnk').value;};
+$('dt').oninput=()=>{F.dt=$('dt').value;upd();};
+/* ---------- the news a gallery belongs to: searched, not a long dropdown ---------- */
+function paintLnk(){const on=!!F.lnk;$('lpk').hidden=!on;$('lac').hidden=on;if(on&&F.lnkt){$('lpkT').textContent=F.lnkt.title;$('lpkD').textContent=fmtDate(F.lnkt.dt,'ro');}}
+let lt=0,lseq=0;
+$('lq').oninput=()=>{clearTimeout(lt);const q=$('lq').value.trim();if(q.length<2){$('lsug').hidden=true;return;}
+ lt=setTimeout(async()=>{const my=++lseq;try{const j=await post({action:'list',kind:'news',q,page:0});if(my!==lseq)return;
+  $('lsug').innerHTML=j.items.length?j.items.map(n=>`<button type="button" data-id="${n.id}"><b>${esc(n.title)}</b><span>${esc(fmtDate(n.dt,'ro'))}</span></button>`).join(''):'<p class="empty" style="padding:10px 14px">Nicio știre găsită.</p>';
+  $('lsug').hidden=false;$('lsug')._items=j.items;}catch(x){$('err').textContent=x.message;}},250);};
+$('lsug').onclick=e=>{const b=e.target.closest('button');if(!b)return;const n=($('lsug')._items||[]).find(x=>x.id===+b.dataset.id);if(!n)return;F.lnk=String(n.id);F.lnkt={dt:n.dt,title:n.title};$('lsug').hidden=true;$('lq').value='';paintLnk();};
+$('lpkX').onclick=()=>{F.lnk='';F.lnkt=null;paintLnk();$('lq').focus();};
+document.addEventListener('click',e=>{if(!$('lac').contains(e.target))$('lsug').hidden=true;});
 /* ---------- tags ---------- */
 $('tags').innerHTML=D.tags.map(t=>`<button type="button" class="chip" data-i="${t[0]}" aria-pressed="false">${esc(t[1])}</button>`).join('');
 $('tags').onclick=e=>{const b=e.target.closest('.chip');if(!b)return;const i=+b.dataset.i;F.tags=F.tags.includes(i)?F.tags.filter(x=>x!==i):[...F.tags,i];paintTags();};
@@ -666,7 +750,7 @@ function upd(){const l=PVL;let use=l,note='';
  $('pv').innerHTML=`<div class="mng-card"><div class="im">${cov&&cov.src?`<img ${SRC}="${esc(cov.src)}" alt="">`:''}</div><div class="tx"><div class="dt">${esc(fmtDate(F.dt,use))}</div><h3>${t?esc(t):'<span style="opacity:.45">'+(MODE==='news'?'Titlul știrii':'Titlul galeriei')+'</span>'}</h3>${bt?`<p>${esc(bt.slice(0,160))}${bt.length>160?'…':''}</p>`:''}${n?`<div class="gl">${GL[use](n)}</div>`:''}</div></div>`;
  $('fb').textContent=note;}
 /* ---------- form ---------- */
-function reset(){F=blank();EDIT=0;BATCH='';$('dt').value=F.dt;$('lnk').value='';
+function reset(){F=blank();EDIT=0;BATCH='';$('dt').value=F.dt;$('lq').value='';paintLnk();
  LANG='ro';ROOT.querySelectorAll('.mng-ltabs button').forEach(x=>x.setAttribute('aria-selected',String(x.dataset.l==='ro')));loadLang();paintTags();paintGrid();dots();
  $('ftitle').textContent=MODE==='news'?'Știre nouă':'Galerie nouă';$('save').textContent='Publică';$('cancel').hidden=true;$('err').textContent='';$('linkBox').hidden=true;setPv('ro');}
 $('cancel').onclick=()=>{if(!BUSY)reset();};
@@ -684,25 +768,37 @@ $('frm').onsubmit=async e=>{e.preventDefault();if(BUSY)return;store();const miss
   const f={action:MODE==='news'?'news_save':'gal_save',id:EDIT||'',dt:F.dt,batch:BATCH,pchg:F.pchg?1:0,photos:JSON.stringify(photos),lnk:F.lnk||''};
   ['ro','en','es'].forEach(l=>{f['t_'+l]=F.t[l];f['b_'+l]=F.b[l];f['bchg_'+l]=F.bchg[l]||!EDIT?1:0;});f.tags=F.tags.join(',');
   const j=await post(f);done=tot;bar();
-  const arr=MODE==='news'?NEWS:GALS,was=EDIT;const k=arr.findIndex(x=>x.id===j.item.id);if(k>=0)arr.splice(k,1);arr.unshift(j.item);arr.sort((a,b)=>b.dt.localeCompare(a.dt)||b.id-a.id);
-  F.photos.forEach(p=>{if(p.src&&p.blob)URL.revokeObjectURL(p.src);});reset();renderList();
+  const was=EDIT;if(!was){L[MODE].page=0;}
+  F.photos.forEach(p=>{if(p.src&&p.blob)URL.revokeObjectURL(p.src);});reset();await loadList();
   $('okmsg').innerHTML=esc((was?'Modificarea a fost salvată':(MODE==='news'?'Știrea a fost publicată':'Galeria a fost publicată'))+' ('+j.item.langs.map(x=>x.toUpperCase()).join(', ')+').')+(j.url?` <a ${HREF}="${esc(j.url)}" target="_blank" rel="noopener">Vedeți pe site</a>`:'');
   $('okmsg').hidden=false;setTimeout(()=>$('okmsg').hidden=true,8000);$('frm').scrollIntoView({behavior:'smooth'});
  }catch(x){$('err').textContent=x.message+' Fotografiile deja trimise nu se pierd; apăsați din nou „'+(EDIT?'Salvează modificările':'Publică')+'”.';}
  finally{BUSY=false;$('save').disabled=false;$('cancel').disabled=false;$('prog').hidden=true;$('progBar').style.width='0';if($('save').textContent.indexOf('Se ')===0)$('save').textContent=EDIT?'Salvează modificările':'Publică';}};
-/* ---------- list ---------- */
-function renderList(){const arr=MODE==='news'?NEWS:GALS;
- $('list').innerHTML=arr.length?arr.map(n=>`<div class="nit" data-id="${n.id}"><div class="th">${n.th?`<img ${SRC}="${esc(n.th)}" alt="" loading="lazy">`:''}</div><div><b>${esc(n.title)}</b><div class="meta">${esc(fmtDate(n.dt,'ro'))}<span class="langs">${['ro','en','es'].map(l=>`<span class="${n.langs.includes(l)?'':'no'}">${l.toUpperCase()}</span>`).join('')}</span></div><div class="meta">${MODE==='gal'?n.n+' fotografii · ':''}${n.by?'Adăugat de '+esc(n.by):''}</div><div class="ia">${n.edit?'<button type="button" class="ed">Editează</button>':''}${n.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`).join(''):'<p class="empty">Nimic publicat încă.</p>';
- $('more').hidden=arr.length<D.limit;$('more').textContent='Se arată cele mai recente '+D.limit+'. Pe cele mai vechi le găsiți în administrarea site-ului.';}
-$('list').onclick=async e=>{const it=e.target.closest('.nit');if(!it||BUSY)return;const id=+it.dataset.id,arr=MODE==='news'?NEWS:GALS;
+/* ---------- list: 10 at a time, searched on the server ---------- */
+function pager(el,total,page,go){const per=D.page,pages=Math.ceil(total/per);if(pages<=1){el.hidden=true;el.innerHTML='';return;}el.hidden=false;
+ el.innerHTML=`<button type="button" data-p="${page-1}"${page<=0?' disabled':''}>‹ Înapoi</button><span>${page*per+1}–${Math.min(total,page*per+per)} din ${total}</span><button type="button" data-p="${page+1}"${page>=pages-1?' disabled':''}>Înainte ›</button>`;
+ el.onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled)go(+b.dataset.p);};}
+let lseqL=0;
+async function loadList(){const st=L[MODE],my=++lseqL,m=MODE;$('list').classList.add('busy');
+ try{const j=await post({action:'list',kind:m,q:st.q,dt:st.dt,page:st.page});if(my!==lseqL)return;
+  if(!j.items.length&&st.page>0&&j.total){st.page=Math.max(0,Math.ceil(j.total/D.page)-1);return loadList();}
+  st.items=j.items;st.total=j.total;if(m===MODE)renderList();}
+ catch(x){$('list').innerHTML=`<p class="empty">${esc(x.message)}</p>`;}finally{$('list').classList.remove('busy');}}
+let stt=0;
+function search(){const s=L[MODE];s.q=$('sq').value.trim();s.dt=$('sd').value;s.page=0;$('sx').hidden=!s.q&&!s.dt;clearTimeout(stt);stt=setTimeout(loadList,300);}
+$('sq').oninput=search;$('sd').onchange=search;$('sx').onclick=()=>{$('sq').value='';$('sd').value='';search();};
+function renderList(){const s=L[MODE],arr=s.items;$('sx').hidden=!s.q&&!s.dt;
+ $('list').innerHTML=arr.length?arr.map(n=>`<div class="nit" data-id="${n.id}"><div class="th">${n.th?`<img ${SRC}="${esc(n.th)}" alt="" loading="lazy">`:''}</div><div><b>${esc(n.title)}</b><div class="meta">${esc(fmtDate(n.dt,'ro'))}<span class="langs">${['ro','en','es'].map(l=>`<span class="${n.langs.includes(l)?'':'no'}">${l.toUpperCase()}</span>`).join('')}</span></div><div class="meta">${MODE==='gal'?n.n+' fotografii · ':''}${n.by?'Adăugat de '+esc(n.by):''}</div><div class="ia">${n.edit?'<button type="button" class="ed">Editează</button>':''}${n.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`).join(''):`<p class="empty">${s.q||s.dt?'Nimic găsit.':'Nimic publicat încă.'}</p>`;
+ pager($('pg'),s.total,s.page,p=>{s.page=p;loadList().then(()=>$('ltitle').scrollIntoView({behavior:'smooth',block:'start'}));});}
+$('list').onclick=async e=>{const it=e.target.closest('.nit');if(!it||BUSY)return;const id=+it.dataset.id;
  if(e.target.classList.contains('ed')){e.target.disabled=true;e.target.textContent='Se încarcă…';
   try{const j=await post({action:MODE==='news'?'news_get':'gal_get',id});reset();EDIT=id;const d=j.item;
-   F={dt:d.dt,lnk:d.lnk?String(d.lnk):'',t:d.t,b:d.b||{ro:'',en:'',es:''},bchg:{ro:0,en:0,es:0},tags:d.tags||[],photos:d.photos.map(p=>({k:p.k,n:p.n,src:p.src})),pchg:0};
-   $('dt').value=F.dt;$('lnk').value=F.lnk;loadLang();paintTags();paintGrid();dots();upd();
+   F={dt:d.dt,lnk:d.lnk?String(d.lnk):'',lnkt:d.lnkt&&d.lnkt.title?d.lnkt:null,t:d.t,b:d.b||{ro:'',en:'',es:''},bchg:{ro:0,en:0,es:0},tags:d.tags||[],photos:d.photos.map(p=>({k:p.k,n:p.n,src:p.src})),pchg:0};
+   $('dt').value=F.dt;paintLnk();loadLang();paintTags();paintGrid();dots();upd();
    $('ftitle').textContent=MODE==='news'?'Modificați știrea':'Modificați galeria';$('save').textContent='Salvează modificările';$('cancel').hidden=false;$('frm').scrollIntoView({behavior:'smooth'});
   }catch(x){$('err').textContent=x.message;}finally{e.target.disabled=false;e.target.textContent='Editează';}}
  else if(e.target.classList.contains('del')){if(it.querySelector('.confirm'))return;const c=document.createElement('div');c.className='confirm';c.innerHTML='<span>Ștergeți de pe site, în toate limbile?</span><button type="button" class="yes">Da, șterge</button><button type="button" class="no">Renunță</button>';it.appendChild(c);}
- else if(e.target.classList.contains('yes')){e.target.disabled=true;try{await post({action:MODE==='news'?'news_trash':'gal_trash',id});const k=arr.findIndex(x=>x.id===id);if(k>=0)arr.splice(k,1);if(EDIT===id)reset();renderList();}catch(x){e.target.disabled=false;e.target.closest('.confirm').querySelector('span').textContent=x.message;}}
+ else if(e.target.classList.contains('yes')){e.target.disabled=true;try{await post({action:MODE==='news'?'news_trash':'gal_trash',id});if(EDIT===id)reset();await loadList();}catch(x){e.target.disabled=false;e.target.closest('.confirm').querySelector('span').textContent=x.message;}}
  else if(e.target.classList.contains('no'))e.target.closest('.confirm').remove();};
 window.addEventListener('beforeunload',e=>{if(BUSY||(!EDIT&&(F.t.ro||F.photos.length))){e.preventDefault();e.returnValue='';}});
 setMode(D.mode&&D.can[D.mode]?D.mode:MODE);
@@ -759,11 +855,33 @@ HTML;
                 return self::galSave();
             case 'gal_trash':
                 return self::galTrash($in->post->getInt('id'));
+            case 'list':
+                return self::listPage();
+        }
+        if (strpos((string) $action, 'dir_') === 0) {
+            return AdminDir::api((string) $action);
         }
         return ['ok' => false, 'error' => 'Cerere invalidă.'];
     }
 
-    private static function batchDir(string $batch): string
+    /** One page of the news or gallery list, with the search applied. */
+    private static function listPage(): array
+    {
+        $p = Factory::getApplication()->getInput()->post;
+        $kind = $p->getCmd('kind') === 'gal' ? 'gal' : 'news';
+        // the gallery form searches news to link a gallery to one
+        if (!self::can($kind) && !($kind === 'news' && self::can('gal'))) {
+            return ['ok' => false, 'error' => 'Nu aveți acces la această listă.'];
+        }
+        $find = mb_substr(trim((string) $p->getString('q')), 0, 120);
+        $day = (string) $p->getString('dt');
+        $page = max(0, min(5000, $p->getInt('page')));
+        $total = 0;
+        $items = $kind === 'gal' ? self::galList(0, $find, $day, $page, $total) : self::newsList(0, $find, $day, $page, $total);
+        return ['ok' => true, 'items' => $items, 'total' => $total, 'page' => $page];
+    }
+
+    public static function batchDir(string $batch): string
     {
         $uid = (int) Factory::getApplication()->getIdentity()->id;
         return JPATH_ROOT . '/' . self::ROOT . '/_upload/u' . $uid . '/' . $batch;
@@ -771,7 +889,7 @@ HTML;
 
     private static function upload(): array
     {
-        if (!self::can('news') && !self::can('gal')) {
+        if (!self::can('news') && !self::can('gal') && !AdminDir::can('par') && !AdminDir::can('cl')) {
             return ['ok' => false, 'error' => 'Nu aveți dreptul să încărcați fotografii.'];
         }
         $in = Factory::getApplication()->getInput();
@@ -905,7 +1023,7 @@ HTML;
         return $out;
     }
 
-    private static function articleUrl(int $id): string
+    public static function articleUrl(int $id): string
     {
         $db = self::db();
         $a = $db->setQuery($db->getQuery(true)->select(['id', 'alias', 'catid', 'language'])->from('#__content')->where('id = ' . $id))->loadObject();
@@ -1146,8 +1264,19 @@ HTML;
         return ['ok' => true, 'item' => [
             'dt' => substr((string) ($v['gallery-date'] ?? $a->publish_up), 0, 10),
             't' => ['ro' => (string) ($v['gallery-title-ro'] ?? $a->title), 'en' => (string) ($v['gallery-title-en'] ?? ''), 'es' => (string) ($v['gallery-title-es'] ?? '')],
-            'lnk' => (int) ($v['gallery-news'] ?? 0) ?: '', 'photos' => $photos,
+            'lnk' => (int) ($v['gallery-news'] ?? 0) ?: '', 'lnkt' => self::newsLabel((int) ($v['gallery-news'] ?? 0)), 'photos' => $photos,
         ]];
+    }
+
+    /** "date · title" of a Romanian news article, for the gallery form. */
+    private static function newsLabel(int $id): array
+    {
+        if (!$id) {
+            return [];
+        }
+        $db = self::db();
+        $a = $db->setQuery($db->getQuery(true)->select(['title', 'publish_up'])->from('#__content')->where('id = ' . $id)->where('state IN (0,1)'))->loadObject();
+        return $a ? ['dt' => substr((string) $a->publish_up, 0, 10), 'title' => (string) $a->title] : [];
     }
 
     private static function galSave(): array
