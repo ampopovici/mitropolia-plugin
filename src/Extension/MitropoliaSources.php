@@ -245,6 +245,10 @@ final class MitropoliaSources extends CMSPlugin implements SubscriberInterface
             if ($id > 0) {
                 $target = self::REPLACED[$id] ?? $id;
                 $hit = $db->setQuery($base()->where('a.id = ' . (int) $target))->loadObject();
+                // "/2026-10-02-some-title" is not an old "id-alias" link: the alias part must belong to that article
+                if ($hit && $alias !== '' && $target === $id && $hit->alias !== $alias) {
+                    $hit = null;
+                }
             }
             if (!$hit && $alias !== '') {
                 // same alias in this language; the oldest one first (mitropolia.us pieces before later imports)

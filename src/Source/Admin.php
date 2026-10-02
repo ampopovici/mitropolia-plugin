@@ -1210,7 +1210,7 @@ HTML;
             $table->modified_by = (int) $user->id;
         } else {
             $table->bind([
-                'title' => $t['ro'], 'alias' => self::uniqueAlias($cat, self::slug($dt . ' ' . $t['ro'], 120)),
+                'title' => $t['ro'], 'alias' => self::uniqueAlias($cat, (self::slug($t['ro'], 100) ?: 'galerie') . '-' . $dt),
                 'catid' => $cat, 'state' => 1, 'access' => 1, 'language' => '*', 'introtext' => '', 'fulltext' => '',
                 'created' => $now, 'created_by' => (int) $user->id, 'publish_up' => $pub, 'featured' => 0,
                 'images' => json_encode($images), 'urls' => '{}', 'attribs' => '{}', 'metadata' => '{}', 'metakey' => '', 'metadesc' => '', 'note' => 'admin-form',
