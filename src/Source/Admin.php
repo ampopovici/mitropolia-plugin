@@ -633,7 +633,7 @@ body:has(.madm-root) #tm-main{flex:1 0 auto}
 body:has(.madm) #tm-main .uk-container{max-width:1680px}
 .mif .mmore{text-align:center;font-size:14px;color:var(--soft);padding:12px 0 4px}
 @media (min-width:901px){
- .madm .mif-wrap>.side{position:sticky;top:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+ .madm .mif-wrap>.side{position:sticky;top:var(--madm-top,16px);max-height:calc(100vh - var(--madm-top,16px) - 16px);display:flex;flex-direction:column;transition:top .2s}
  .madm .mif-wrap>.side .list{flex:1 1 auto;min-height:160px;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;margin-right:-6px}
 }
 @media (min-width:1200px){
@@ -669,6 +669,9 @@ function go(t){tabs.forEach(function(b){b.setAttribute('aria-selected',String(b.
  [].forEach.call(document.querySelectorAll('.madm-panel'),function(p){p.hidden=p.dataset.p!==PANEL[t];});
  if(PANEL[t]==='ng'&&window.mngMode)window.mngMode(t);if(PANEL[t]==='dir'&&window.mdMode)window.mdMode(t);try{localStorage.setItem('madm-tab',t);}catch(e){}}
 tabs.forEach(function(b){b.addEventListener('click',function(){go(b.dataset.t);});});
+/* the list panel stays under the site's sticky header, whatever its height */
+var raf=0;function top(){raf=0;var y=0;[].forEach.call(document.querySelectorAll('header *'),function(el){var cs=getComputedStyle(el);if(cs.position==='fixed'||cs.position==='sticky'){var r=el.getBoundingClientRect();if(r.top<=1&&r.height>0&&r.height<300)y=Math.max(y,r.bottom);}});document.documentElement.style.setProperty('--madm-top',Math.round(y+16)+'px');}
+function ask(){if(!raf)raf=requestAnimationFrame(top);}addEventListener('scroll',ask,{passive:true});addEventListener('resize',ask);ask();
 var t=null;try{t=localStorage.getItem('madm-tab');}catch(e){}
 var H={'#stiri':'news','#galerii':'gal','#itinerar':'itin','#clerici':'cl','#parohii':'par'};if(H[location.hash])t=H[location.hash];
 if(t&&tabs.some(function(b){return b.dataset.t===t;}))go(t);})();
