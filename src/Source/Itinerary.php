@@ -1100,6 +1100,7 @@ HTML;
             'itinerary-city'        => $city,
         ];
         self::writeFields($newId, $values);
+        self::ensureWorkflow([$cat]);
 
         $row = self::visits([$cat], true);
         foreach ($row as $r) {
@@ -1170,7 +1171,27 @@ HTML;
             ]);
             $ids[] = $newId;
         }
+        self::ensureWorkflow(array_keys($cats));
         return ['ok' => true, 'created' => count($ids), 'first' => $ids[0] ?? 0, 'last' => end($ids) ?: 0, 'errors' => $errors];
+    }
+
+    /** Joomla lists articles through their workflow stage; give every visit one (the default stage) when it has none. */
+    private static function ensureWorkflow(array $cats): void
+    {
+        try {
+            $db = self::db();
+            $stage = (int) $db->setQuery('SELECT s.id FROM #__workflow_stages s INNER JOIN #__workflows w ON w.id = s.workflow_id'
+                . ' WHERE w.extension = ' . $db->quote('com_content.article') . ' AND w.default = 1 AND s.default = 1', 0, 1)->loadResult();
+            if (!$stage || !$cats) {
+                return;
+            }
+            $db->setQuery('INSERT INTO #__workflow_associations (item_id, stage_id, extension)'
+                . ' SELECT a.id, ' . $stage . ', ' . $db->quote('com_content.article') . ' FROM #__content a'
+                . ' LEFT JOIN #__workflow_associations wa ON wa.item_id = a.id AND wa.extension = ' . $db->quote('com_content.article')
+                . ' WHERE wa.item_id IS NULL AND a.catid IN (' . implode(',', array_map('intval', $cats)) . ')')->execute();
+        } catch (\Throwable $x) {
+            Log::add('Itinerary workflow link: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+        }
     }
 
     private static function table()
