@@ -215,7 +215,7 @@ final class Admin
     private static function slug(string $s, int $max = 60): string
     {
         $s = strtr($s, ['ș' => 's', 'ş' => 's', 'Ș' => 'S', 'Ş' => 'S', 'ț' => 't', 'ţ' => 't', 'Ț' => 'T', 'Ţ' => 'T', 'ă' => 'a', 'Ă' => 'A', 'â' => 'a', 'Â' => 'A', 'î' => 'i', 'Î' => 'I', '„' => '', '”' => '', '“' => '']);
-        $s = OutputFilter::stringURLSafe($s);
+        $s = trim(preg_replace('/-{2,}/', '-', OutputFilter::stringURLSafe($s)), '-');
         if (strlen($s) > $max) {
             $s = rtrim(substr($s, 0, $max), '-');
             $s = preg_replace('/-[^-]*$/', '', $s) ?: $s;
@@ -906,7 +906,12 @@ HTML;
             return '';
         }
         $lang = (string) $a->language === '*' ? 'ro-RO' : (string) $a->language;
-        return Route::_(\Joomla\Component\Content\Site\Helper\RouteHelper::getArticleRoute($a->id . ':' . $a->alias, (int) $a->catid, $lang));
+        $rel = \Joomla\Component\Content\Site\Helper\RouteHelper::getArticleRoute($a->id . ':' . $a->alias, (int) $a->catid, $lang);
+        try {
+            return Route::link('site', $rel, false, Route::TLS_IGNORE, true);
+        } catch (\Throwable $x) {
+            return Uri::root() . ltrim(Route::_($rel), '/');
+        }
     }
 
     /* ---------- news ---------- */
@@ -925,7 +930,7 @@ HTML;
     {
         $cats = self::newsCats();
         $db = self::db();
-        $ro = $db->setQuery($db->getQuery(true)->select(['id', 'catid', 'publish_up', 'images', 'introtext', 'fulltext', 'title', 'state'])->from('#__content')->where('id = ' . $id))->loadObject();
+        $ro = $db->setQuery($db->getQuery(true)->select(['id', 'catid', 'publish_up', 'images', 'introtext', $db->quoteName('fulltext'), 'title', 'state'])->from('#__content')->where('id = ' . $id))->loadObject();
         if (!$ro || (int) $ro->catid !== $cats['ro'] || (int) $ro->state === -2) {
             return ['ok' => false, 'error' => 'Știrea nu mai există.'];
         }
@@ -937,7 +942,7 @@ HTML;
             if (!$aid) {
                 continue;
             }
-            $a = $l === 'ro' ? $ro : $db->setQuery($db->getQuery(true)->select(['title', 'introtext', 'fulltext'])->from('#__content')->where('id = ' . (int) $aid))->loadObject();
+            $a = $l === 'ro' ? $ro : $db->setQuery($db->getQuery(true)->select(['title', 'introtext', $db->quoteName('fulltext')])->from('#__content')->where('id = ' . (int) $aid))->loadObject();
             if ($a) {
                 $t[$l] = (string) $a->title;
                 $b[$l] = (string) $a->introtext . (trim((string) $a->fulltext) !== '' ? (string) $a->fulltext : '');
