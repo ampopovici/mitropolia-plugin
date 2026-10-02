@@ -590,6 +590,8 @@ HTML;
 const D=JSON.parse(document.getElementById('mn-data').textContent);
 const $=id=>document.getElementById('mn-'+id),esc=s=>String(s==null?'':s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ROOT=$('frm').closest('.mng');
+/* attribute names split so Joomla's SEF filter does not rewrite these script templates */
+const SRC='s'+'rc',HREF='hr'+'ef';
 const MON={ro:["ianuarie","februarie","martie","aprilie","mai","iunie","iulie","august","septembrie","octombrie","noiembrie","decembrie"],en:["January","February","March","April","May","June","July","August","September","October","November","December"],es:["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]};
 const PH={news:{ro:['De ex. Hramul Parohiei „Sfântul Nicolae” din Shrewsbury','Scrieți aici textul știrii…'],en:['e.g. Patronal feast of St. Nicholas Parish in Shrewsbury','Write the English text here (optional)…'],es:['p. ej. Fiesta patronal de la parroquia San Nicolás','Escriba aquí el texto en español (opcional)…']},
  gal:{ro:['De ex. Înălțarea Sfintei Cruci la Catedrala din Chicago',''],en:['e.g. Exaltation of the Holy Cross at the Chicago Cathedral (optional)',''],es:['p. ej. Exaltación de la Santa Cruz en Chicago (opcional)','']}};
@@ -643,7 +645,7 @@ $('files').onchange=e=>{addFiles(e.target.files);e.target.value='';};
 ['dragleave','drop'].forEach(ev=>$('drop').addEventListener(ev,e=>{e.preventDefault();$('drop').classList.remove('over');}));
 $('drop').addEventListener('drop',e=>addFiles(e.dataTransfer.files));
 function paintGrid(){const cover=MODE==='news'?'Principală':'Copertă';
- $('grid').innerHTML=F.photos.map((p,i)=>`<div class="mng-ph${i===0?' cover':''}" data-i="${i}">${p.src?`<img src='${esc(p.src)}' alt="">`:''}${p.busy?'<div class="busy">Se micșorează…</div>':p.bad?`<div class="busy bad">${esc(p.bad)}</div>`:''}${i===0&&!p.bad?`<span class="badge">${cover}</span>`:''}${p.busy?'':`<div class="acts">${i===0||p.bad?'<span></span>':'<button type="button" class="cv">Fă principală</button>'}<button type="button" class="x" aria-label="Scoate fotografia">✕</button></div>`}</div>`).join('');
+ $('grid').innerHTML=F.photos.map((p,i)=>`<div class="mng-ph${i===0?' cover':''}" data-i="${i}">${p.src?`<img ${SRC}="${esc(p.src)}" alt="">`:''}${p.busy?'<div class="busy">Se micșorează…</div>':p.bad?`<div class="busy bad">${esc(p.bad)}</div>`:''}${i===0&&!p.bad?`<span class="badge">${cover}</span>`:''}${p.busy?'':`<div class="acts">${i===0||p.bad?'<span></span>':'<button type="button" class="cv">Fă principală</button>'}<button type="button" class="x" aria-label="Scoate fotografia">✕</button></div>`}</div>`).join('');
  const nw=F.photos.filter(p=>p.blob),b=nw.reduce((s,p)=>s+p.before,0),a=nw.reduce((s,p)=>s+p.after,0),ok=F.photos.filter(p=>!p.bad).length;
  $('stat').innerHTML=ok?`<span>${ok} ${ok===1?'fotografie':'fotografii'}</span>${nw.length?`<span>${nw.length} noi: ${MB(b)} → <b>${MB(a)}</b> după micșorare</span>`:''}`:'';}
 $('grid').onclick=e=>{const ph=e.target.closest('.mng-ph');if(!ph||BUSY)return;const i=+ph.dataset.i;
@@ -656,7 +658,7 @@ function upd(){const l=PVL;let use=l,note='';
  if(!F.t[l]&&l!=='ro'){if(MODE==='news'&&l==='en'){$('pv').innerHTML='';$('fb').textContent='Fără titlu în engleză, știrea nu apare pe site-ul în engleză.';return;}
   use=F.t.en&&l==='es'?'en':'ro';note=l==='es'?(MODE==='news'?(F.t.en?'Fără text în spaniolă, pagina în spaniolă arată versiunea în engleză.':'Fără text în spaniolă sau engleză, pagina în spaniolă arată versiunea în română.'):'Fără titlu în spaniolă, se folosește titlul în '+(use==='en'?'engleză.':'română.')):'Fără titlu în engleză, se folosește titlul în română.';}
  const ok=F.photos.filter(p=>!p.bad&&!p.busy),cov=ok[0],n=MODE==='news'?Math.max(ok.length-1,0):ok.length,t=F.t[use],bt=MODE==='news'?plain(F.b[use]||''):'';
- $('pv').innerHTML=`<div class="mng-card"><div class="im">${cov&&cov.src?`<img src='${esc(cov.src)}' alt="">`:''}</div><div class="tx"><div class="dt">${esc(fmtDate(F.dt,use))}</div><h3>${t?esc(t):'<span style="opacity:.45">'+(MODE==='news'?'Titlul știrii':'Titlul galeriei')+'</span>'}</h3>${bt?`<p>${esc(bt.slice(0,160))}${bt.length>160?'…':''}</p>`:''}${n?`<div class="gl">${GL[use](n)}</div>`:''}</div></div>`;
+ $('pv').innerHTML=`<div class="mng-card"><div class="im">${cov&&cov.src?`<img ${SRC}="${esc(cov.src)}" alt="">`:''}</div><div class="tx"><div class="dt">${esc(fmtDate(F.dt,use))}</div><h3>${t?esc(t):'<span style="opacity:.45">'+(MODE==='news'?'Titlul știrii':'Titlul galeriei')+'</span>'}</h3>${bt?`<p>${esc(bt.slice(0,160))}${bt.length>160?'…':''}</p>`:''}${n?`<div class="gl">${GL[use](n)}</div>`:''}</div></div>`;
  $('fb').textContent=note;}
 /* ---------- form ---------- */
 function reset(){F=blank();EDIT=0;BATCH='';$('dt').value=F.dt;$('lnk').value='';
@@ -679,13 +681,13 @@ $('frm').onsubmit=async e=>{e.preventDefault();if(BUSY)return;store();const miss
   const j=await post(f);done=tot;bar();
   const arr=MODE==='news'?NEWS:GALS,was=EDIT;const k=arr.findIndex(x=>x.id===j.item.id);if(k>=0)arr.splice(k,1);arr.unshift(j.item);arr.sort((a,b)=>b.dt.localeCompare(a.dt)||b.id-a.id);
   F.photos.forEach(p=>{if(p.src&&p.blob)URL.revokeObjectURL(p.src);});reset();renderList();
-  $('okmsg').innerHTML=esc((was?'Modificarea a fost salvată':(MODE==='news'?'Știrea a fost publicată':'Galeria a fost publicată'))+' ('+j.item.langs.map(x=>x.toUpperCase()).join(', ')+').')+(j.url?` <a href='${esc(j.url)}' target="_blank" rel="noopener">Vedeți pe site</a>`:'');
+  $('okmsg').innerHTML=esc((was?'Modificarea a fost salvată':(MODE==='news'?'Știrea a fost publicată':'Galeria a fost publicată'))+' ('+j.item.langs.map(x=>x.toUpperCase()).join(', ')+').')+(j.url?` <a ${HREF}="${esc(j.url)}" target="_blank" rel="noopener">Vedeți pe site</a>`:'');
   $('okmsg').hidden=false;setTimeout(()=>$('okmsg').hidden=true,8000);$('frm').scrollIntoView({behavior:'smooth'});
  }catch(x){$('err').textContent=x.message+' Fotografiile deja trimise nu se pierd; apăsați din nou „'+(EDIT?'Salvează modificările':'Publică')+'”.';}
  finally{BUSY=false;$('save').disabled=false;$('cancel').disabled=false;$('prog').hidden=true;$('progBar').style.width='0';if($('save').textContent.indexOf('Se ')===0)$('save').textContent=EDIT?'Salvează modificările':'Publică';}};
 /* ---------- list ---------- */
 function renderList(){const arr=MODE==='news'?NEWS:GALS;
- $('list').innerHTML=arr.length?arr.map(n=>`<div class="nit" data-id="${n.id}"><div class="th">${n.th?`<img src='${esc(n.th)}' alt="" loading="lazy">`:''}</div><div><b>${esc(n.title)}</b><div class="meta">${esc(fmtDate(n.dt,'ro'))}<span class="langs">${['ro','en','es'].map(l=>`<span class="${n.langs.includes(l)?'':'no'}">${l.toUpperCase()}</span>`).join('')}</span></div><div class="meta">${MODE==='gal'?n.n+' fotografii · ':''}${n.by?'Adăugat de '+esc(n.by):''}</div><div class="ia">${n.edit?'<button type="button" class="ed">Editează</button>':''}${n.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`).join(''):'<p class="empty">Nimic publicat încă.</p>';
+ $('list').innerHTML=arr.length?arr.map(n=>`<div class="nit" data-id="${n.id}"><div class="th">${n.th?`<img ${SRC}="${esc(n.th)}" alt="" loading="lazy">`:''}</div><div><b>${esc(n.title)}</b><div class="meta">${esc(fmtDate(n.dt,'ro'))}<span class="langs">${['ro','en','es'].map(l=>`<span class="${n.langs.includes(l)?'':'no'}">${l.toUpperCase()}</span>`).join('')}</span></div><div class="meta">${MODE==='gal'?n.n+' fotografii · ':''}${n.by?'Adăugat de '+esc(n.by):''}</div><div class="ia">${n.edit?'<button type="button" class="ed">Editează</button>':''}${n.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`).join(''):'<p class="empty">Nimic publicat încă.</p>';
  $('more').hidden=arr.length<D.limit;$('more').textContent='Se arată cele mai recente '+D.limit+'. Pe cele mai vechi le găsiți în administrarea site-ului.';}
 $('list').onclick=async e=>{const it=e.target.closest('.nit');if(!it||BUSY)return;const id=+it.dataset.id,arr=MODE==='news'?NEWS:GALS;
  if(e.target.classList.contains('ed')){e.target.disabled=true;e.target.textContent='Se încarcă…';
