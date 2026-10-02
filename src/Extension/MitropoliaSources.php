@@ -57,6 +57,15 @@ final class MitropoliaSources extends CMSPlugin implements SubscriberInterface
         } catch (\Throwable $e) {
             // labels fall back to their keys; never break the page
         }
+        // Itinerary manager form posts (?mitit=api): save or remove a visit, answer in JSON
+        try {
+            $app = $this->getApplication();
+            if ($app->isClient('site') && $app->getInput()->getCmd('mitit') === 'api') {
+                \Mitropolia\Plugin\System\MitropoliaSources\Source\Itinerary::api();
+            }
+        } catch (\Throwable $e) {
+            Log::add('Itinerary API not run: ' . $e->getMessage(), Log::WARNING, 'mitropolia');
+        }
     }
 
     public function loadSources(): void

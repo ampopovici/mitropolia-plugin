@@ -1,0 +1,15 @@
+{
+ "name": "mitropolia_itinerary_manage",
+ "title": "Itinerary manager",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "note": {"label": "Note", "type": "textarea", "description": "No settings. Shows a login box to visitors, and the Romanian form to users who may add visits to a hierarch's itinerary (Joomla permission Create on that category)."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["note"]}]}}
+}
