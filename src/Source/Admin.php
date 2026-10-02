@@ -670,7 +670,7 @@ function go(t){tabs.forEach(function(b){b.setAttribute('aria-selected',String(b.
  if(PANEL[t]==='ng'&&window.mngMode)window.mngMode(t);if(PANEL[t]==='dir'&&window.mdMode)window.mdMode(t);try{localStorage.setItem('madm-tab',t);}catch(e){}}
 tabs.forEach(function(b){b.addEventListener('click',function(){go(b.dataset.t);});});
 /* the list panel stays under the site's sticky header, whatever its height */
-var raf=0;function top(){raf=0;var y=0;[].forEach.call(document.querySelectorAll('header *'),function(el){var cs=getComputedStyle(el);if(cs.position==='fixed'||cs.position==='sticky'){var r=el.getBoundingClientRect();if(r.top<=1&&r.height>0&&r.height<300)y=Math.max(y,r.bottom);}});document.documentElement.style.setProperty('--madm-top',Math.round(y+16)+'px');}
+var raf=0;function top(){raf=0;var y=0;[].forEach.call(document.querySelectorAll('header, header *'),function(el){var cs=getComputedStyle(el);if(cs.position==='fixed'||cs.position==='sticky'){var r=el.getBoundingClientRect();if(r.top<=1&&r.height>0&&r.height<300)y=Math.max(y,r.bottom);}});document.documentElement.style.setProperty('--madm-top',Math.round(y+16)+'px');}
 function ask(){if(!raf)raf=requestAnimationFrame(top);}addEventListener('scroll',ask,{passive:true});addEventListener('resize',ask);ask();
 var t=null;try{t=localStorage.getItem('madm-tab');}catch(e){}
 var H={'#stiri':'news','#galerii':'gal','#itinerar':'itin','#clerici':'cl','#parohii':'par'};if(H[location.hash])t=H[location.hash];
