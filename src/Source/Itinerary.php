@@ -559,6 +559,7 @@ final class Itinerary
 .mit-month::after{content:"";flex:1;height:1px;background:var(--mi-line)}
 .mit-list{display:flex;flex-direction:column;gap:10px}
 .mit-empty{color:var(--mi-soft);font-size:17px;background:#fff;border:1px dashed var(--mi-line2);border-radius:6px;padding:22px;text-align:center;margin:0}
+.mit-stats+.mit-empty,.mit-stats+.mit-month{margin-top:28px}
 .mit-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1px;background:var(--mi-line);border:1px solid var(--mi-line);border-radius:6px;overflow:hidden}
 .mit-stats div{background:#fff;padding:18px 20px;text-align:center}
 .mit-stats b{display:block;font-family:'Baskervville',Georgia,serif;font-weight:500;font-size:34px;color:var(--mi-navy);line-height:1.1}
@@ -964,6 +965,9 @@ HTML;
             return ['ok' => false, 'error' => 'Sesiunea a expirat. Reîncărcați pagina.'];
         }
         $action = $in->post->getCmd('action');
+        if ($action === 'import') {
+            return self::import();
+        }
         $id = $in->post->getInt('id');
         $cats = self::hierarchCats();
         $existing = null;
@@ -1104,6 +1108,69 @@ HTML;
             }
         }
         return ['ok' => false, 'error' => 'Vizita a fost salvată, dar nu poate fi citită. Reîncărcați pagina.'];
+    }
+
+    /**
+     * Bulk import of past itineraries (administrator only, Super User).
+     * POST items = JSON list of {cat, d1, d2, tm, t:[ro,en,es], f:[ro,en,es], type, pid, place, city}.
+     */
+    private static function import(): array
+    {
+        $app = Factory::getApplication();
+        $user = $app->getIdentity();
+        if (!$app->isClient('administrator') || !$user->authorise('core.admin')) {
+            return ['ok' => false, 'error' => 'Not allowed.'];
+        }
+        $items = json_decode((string) $app->getInput()->post->getRaw('items'), true);
+        if (!is_array($items)) {
+            return ['ok' => false, 'error' => 'No items.'];
+        }
+        $cats = self::hierarchCats();
+        $valid = fn ($d) => is_string($d) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $d, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1]);
+        $clean = fn ($s, int $max = 400): string => mb_substr(trim(preg_replace('/\s+/u', ' ', strip_tags((string) $s))), 0, $max);
+        $now = Factory::getDate()->toSql();
+        $ids = [];
+        $errors = [];
+        foreach ($items as $n => $it) {
+            $cat = (int) ($it['cat'] ?? 0);
+            $d1 = (string) ($it['d1'] ?? '');
+            $d2 = (string) ($it['d2'] ?? '');
+            $t = array_map($clean, array_pad((array) ($it['t'] ?? []), 3, ''));
+            $f = array_map($clean, array_pad((array) ($it['f'] ?? []), 3, ''));
+            if (!isset($cats[$cat]) || !$valid($d1) || ($d2 !== '' && (!$valid($d2) || $d2 <= $d1)) || $t[0] === '') {
+                $errors[] = $n;
+                continue;
+            }
+            $type = isset(self::TYP[$it['type'] ?? '']) ? (string) $it['type'] : '';
+            $pid = (int) ($it['pid'] ?? 0);
+            $place = $clean($it['place'] ?? '', 250);
+            $city = $clean($it['city'] ?? '', 250);
+            $tm = preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', (string) ($it['tm'] ?? '')) ? (string) $it['tm'] : '';
+            $where = $city !== '' ? $city : $place;
+            $table = self::table();
+            $alias = OutputFilter::stringURLSafe($d1 . ' ' . $t[1]);
+            $table->bind([
+                'title' => mb_substr($t[0] . ($where !== '' ? ' – ' . $where : '') . ' (' . $d1 . ')', 0, 250),
+                'alias' => ($alias !== '' ? $alias : $d1) . '-' . substr(bin2hex(random_bytes(3)), 0, 5),
+                'catid' => $cat, 'state' => 1, 'access' => 1, 'language' => '*', 'introtext' => '', 'fulltext' => '',
+                'created' => $now, 'created_by' => (int) $user->id, 'publish_up' => $now, 'featured' => 0,
+                'images' => '{}', 'urls' => '{}', 'attribs' => '{}', 'metadata' => '{}', 'metakey' => '', 'metadesc' => '', 'note' => 'import',
+            ]);
+            if (!$table->check() || !$table->store()) {
+                $errors[] = $n;
+                continue;
+            }
+            $newId = (int) $table->id;
+            self::writeFields($newId, [
+                'itinerary-date' => $d1 . ' 12:00:00', 'itinerary-end' => $d2 !== '' ? $d2 . ' 12:00:00' : '', 'itinerary-time' => $tm,
+                'itinerary-title-ro' => $t[0], 'itinerary-title-en' => $t[1], 'itinerary-title-es' => $t[2],
+                'itinerary-occasion-ro' => $f[0], 'itinerary-occasion-en' => $f[1], 'itinerary-occasion-es' => $f[2],
+                'itinerary-type' => $type, 'itinerary-parish' => $pid ? (string) $pid : '', 'itinerary-place' => $pid ? '' : $place,
+                'itinerary-city' => $pid ? '' : $city,
+            ]);
+            $ids[] = $newId;
+        }
+        return ['ok' => true, 'created' => count($ids), 'first' => $ids[0] ?? 0, 'last' => end($ids) ?: 0, 'errors' => $errors];
     }
 
     private static function table()

@@ -60,7 +60,7 @@ final class MitropoliaSources extends CMSPlugin implements SubscriberInterface
         // Itinerary manager form posts (?mitit=api): save or remove a visit, answer in JSON
         try {
             $app = $this->getApplication();
-            if ($app->isClient('site') && $app->getInput()->getCmd('mitit') === 'api') {
+            if (($app->isClient('site') || $app->isClient('administrator')) && $app->getInput()->getCmd('mitit') === 'api') {
                 \Mitropolia\Plugin\System\MitropoliaSources\Source\Itinerary::api();
             }
         } catch (\Throwable $e) {
