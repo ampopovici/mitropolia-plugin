@@ -79,7 +79,10 @@ final class Galleries
         }
         $l = self::lang();
         $mon = self::MON[$l][(int) $m[2] - 1];
-        return $l === 'en' ? $mon . ' ' . (int) $m[3] . ', ' . $m[1] : (int) $m[3] . ' ' . $mon . ' ' . $m[1];
+        if ($l === 'en') {
+            return $mon . ' ' . (int) $m[3] . ', ' . $m[1];
+        }
+        return $l === 'es' ? (int) $m[3] . ' de ' . $mon . ' de ' . $m[1] : (int) $m[3] . ' ' . $mon . ' ' . $m[1];
     }
 
     private static function values(array $ids): array

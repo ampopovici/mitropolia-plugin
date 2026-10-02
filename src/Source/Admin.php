@@ -907,11 +907,12 @@ HTML;
         }
         $lang = (string) $a->language === '*' ? 'ro-RO' : (string) $a->language;
         $rel = \Joomla\Component\Content\Site\Helper\RouteHelper::getArticleRoute($a->id . ':' . $a->alias, (int) $a->catid, $lang);
-        try {
-            return Route::link('site', $rel, false, Route::TLS_IGNORE, true);
-        } catch (\Throwable $x) {
-            return Uri::root() . ltrim(Route::_($rel), '/');
+        $u = (string) Route::_($rel);
+        // the router may already return an absolute address, or a path with extra slashes
+        if (preg_match('#https?://.*$#', $u, $m)) {
+            return $m[0];
         }
+        return rtrim(Uri::root(), '/') . '/' . ltrim($u, '/');
     }
 
     /* ---------- news ---------- */
