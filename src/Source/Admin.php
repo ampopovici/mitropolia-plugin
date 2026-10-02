@@ -288,7 +288,12 @@ final class Admin
     public static function page(array $props): string
     {
         try {
-            $user = Factory::getApplication()->getIdentity();
+            // never served from the browser cache: the form carries a session token
+            $app = Factory::getApplication();
+            $app->setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0', true);
+            $app->setHeader('Pragma', 'no-cache', true);
+            $app->allowCache(false);
+            $user = $app->getIdentity();
             $here = Uri::getInstance()->toString(['scheme', 'host', 'port', 'path', 'query']);
             if (!$user || $user->guest) {
                 return self::login($here) . Itinerary::formCss() . self::css();
