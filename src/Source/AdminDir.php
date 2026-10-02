@@ -769,7 +769,6 @@ final class AdminDir
  <div class="mls"><input type="search" id="md-q" placeholder="Căutați după nume sau oraș" aria-label="Căutare"><select id="md-dioF" aria-label="Eparhia"></select></div>
  <p class="hint" id="md-cnt"></p>
  <div class="list" id="md-list"></div>
- <div class="mpg" id="md-pg" hidden></div>
 </aside>
 HTML;
     }

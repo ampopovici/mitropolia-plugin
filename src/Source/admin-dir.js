@@ -15,7 +15,7 @@ const SVCS=[["Sfânta Liturghie","Divine Liturgy","Divina Liturgia"],["Utrenia",
 const FEASTS=[["Sfinții Împărați Constantin și Elena","Saints Constantine and Helen","Santos Constantino y Elena"],["Buna Vestire","The Annunciation","La Anunciación"],["Sfântul Nicolae","Saint Nicholas","San Nicolás"],["Sfânta Treime","Holy Trinity","Santísima Trinidad"],["Adormirea Maicii Domnului","Dormition of the Mother of God","Dormición de la Madre de Dios"],["Învierea Domnului","Resurrection of the Lord","Resurrección del Señor"],["Sfântul Mare Mucenic Gheorghe","Saint George the Great Martyr","San Jorge, Gran Mártir"],["Sfinții Apostoli Petru și Pavel","Saints Peter and Paul","Santos Pedro y Pablo"],["Sfântul Apostol Andrei","Saint Andrew the Apostle","San Andrés Apóstol"],["Sfânta Cuvioasă Parascheva","Saint Parascheva","Santa Parascheva"],["Acoperământul Maicii Domnului","Protection of the Mother of God","Protección de la Madre de Dios"],["Înălțarea Sfintei Cruci","Exaltation of the Holy Cross","Exaltación de la Santa Cruz"],["Sfântul Ioan Botezătorul","Saint John the Baptist","San Juan Bautista"],["Sfântul Dimitrie","Saint Demetrius","San Demetrio"],["Sfinții Arhangheli Mihail și Gavriil","Holy Archangels Michael and Gabriel","Santos Arcángeles Miguel y Gabriel"],["Schimbarea la Față","The Transfiguration","La Transfiguración"],["Nașterea Maicii Domnului","Nativity of the Mother of God","Natividad de la Madre de Dios"],["Intrarea în Biserică a Maicii Domnului","Entry of the Mother of God into the Temple","Presentación de la Madre de Dios"],["Sfântul Ilie","Saint Elijah","San Elías"],["Pogorârea Duhului Sfânt","Descent of the Holy Spirit","Descenso del Espíritu Santo"],["Înălțarea Domnului","Ascension of the Lord","Ascensión del Señor"]];
 const PER=10,SRC='s'+'rc';
 let P=D.P.slice(),C=D.C.slice();
-let TAB=D.mode,EDIT=0,PAGE=0,BUSY=false;
+let TAB=D.mode,EDIT=0,SHOWN=10,BUSY=false;
 const norm=s=>String(s==null?'':s).normalize('NFD').replace(/[̀-ͯ„”"]/g,'').toLowerCase();
 const parById=id=>P.find(p=>p[0]===id),clById=id=>C.find(c=>c.id===id);
 const lbl=(list,k)=>(list.find(x=>x[0]===k)||[k,k])[1];
@@ -34,23 +34,23 @@ function photoInput(inp,pv,X,get,set,empty){inp.onchange=async()=>{const f=inp.f
  return()=>{const p=get();const src=p&&!p.none?p.src:'';pv.style.backgroundImage=src?`url("${src}")`:'';pv.textContent=src?'':empty();X.hidden=!src;};}
 function alert0(m){const e=TAB==='par'?$('pErr'):$('cErr');e.textContent=m;}
 async function sendPhoto(p){if(!p||p.none)return p&&p.none?{photo:'none'}:{photo:'keep'};if(!p.blob)return{photo:'keep'};const batch=rnd();const j=await post({action:'upload',batch},p.blob);return{photo:j.name,batch};}
-function pager(){const rows=listRows(),pages=Math.max(1,Math.ceil(rows.length/PER));if(PAGE>=pages)PAGE=pages-1;const pg=$('pg');
- if(rows.length>PER){pg.hidden=false;pg.innerHTML=`<button type="button" data-p="${PAGE-1}"${PAGE<=0?' disabled':''}>‹ Înapoi</button><span>${PAGE*PER+1}–${Math.min(rows.length,PAGE*PER+PER)} din ${rows.length}</span><button type="button" data-p="${PAGE+1}"${PAGE>=pages-1?' disabled':''}>Înainte ›</button>`;}else{pg.hidden=true;pg.innerHTML='';}
- return rows.slice(PAGE*PER,PAGE*PER+PER);}
-$('pg').onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled){PAGE=+b.dataset.p;renderList();$('lt').scrollIntoView({behavior:'smooth',block:'start'});}};
+/* list: 10 first, 10 more each time the end comes into view */
+function nearEnd(){const el=$('list'),mm=el.querySelector('.mmore');if(!mm||!el._more)return;const r=mm.getBoundingClientRect(),lr=el.getBoundingClientRect();if(!r.height)return;if(r.top<Math.min(innerHeight,lr.bottom)+200&&r.bottom>0){SHOWN+=PER;const st=el.scrollTop;renderList();el.scrollTop=st;}}
+$('list').addEventListener('scroll',nearEnd,{passive:true});addEventListener('scroll',nearEnd,{passive:true});addEventListener('resize',nearEnd);
+function fresh(){SHOWN=PER;$('list').scrollTop=0;renderList();}
 /* ---------- tabs ---------- */
-function setTab(t){if(!D.can[t])return;TAB=t;EDIT=0;PAGE=0;$('pf').hidden=t!=='par';$('cf').hidden=t!=='cl';$('lt').textContent=t==='par'?'Parohiile':'Clericii';
+function setTab(t){if(!D.can[t])return;TAB=t;EDIT=0;SHOWN=PER;$('list').scrollTop=0;$('pf').hidden=t!=='par';$('cf').hidden=t!=='cl';$('lt').textContent=t==='par'?'Parohiile':'Clericii';
  $('q').value='';$('q').placeholder=t==='par'?'Căutați după nume sau oraș':'Căutați după nume sau parohie';if(t==='par')loadP(blankP());else loadC(blankC());renderList();}
 window.mdMode=t=>{if(t!==TAB&&!BUSY)setTab(t);};
 $('dioF').innerHTML='<option value="">Toate eparhiile</option>'+DIO.map(d=>`<option value="${d[0]}">${esc(d[1])}</option>`).join('');
-$('dioF').onchange=()=>{PAGE=0;renderList();};$('q').oninput=()=>{PAGE=0;renderList();};
+$('dioF').onchange=fresh;$('q').oninput=fresh;
 function listRows(){const q=norm($('q').value.trim()),dio=$('dioF').value,words=q.split(/\s+/).filter(Boolean);
  if(TAB==='par')return P.filter(p=>(!dio||p[3]===dio)&&words.every(w=>norm(p[1]+' '+p[4]+' '+p[5]).includes(w)));
  return C.filter(c=>(!dio||c.dio===dio)&&words.every(w=>norm(c.name+' '+c.asg.map(a=>{const p=parById(a[0]);return p?p[1]+' '+p[4]:'';}).join(' ')).includes(w)));}
-function renderList(){const all=listRows(),rows=pager();let html;
+function renderList(){const all=listRows(),rows=all.slice(0,SHOWN);let html;
  if(TAB==='par')html=rows.map(p=>{const n=C.filter(c=>c.asg.some(a=>a[0]===p[0])).length,t=lbl(TYPE,p[2]);return`<div class="dit${p[0]===EDIT?' on':''}" data-id="${p[0]}"><div class="ic sq">${esc(t.slice(0,3).toUpperCase())}</div><div><b>${esc(p[1])}</b><div class="meta">${esc(cityOf(p))} · <span class="ptype ${esc(p[2])}">${esc(t)}</span> · ${n} ${n===1?'cleric':'clerici'}</div><div class="ia">${p[6]?'<button type="button" class="ed">Editează</button>':''}${p[7]?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`;}).join('');
  else html=rows.map(c=>{const ps=c.asg.map(a=>parById(a[0])).filter(Boolean);return`<div class="dit${c.id===EDIT?' on':''}" data-id="${c.id}"><div class="ic" data-bg="${esc(c.th||'')}">${esc(ini(c.name))}</div><div><b>${esc(c.name)}</b><div class="meta">${esc(lbl(GROUP,c.group))}${c.status==='retired'?' · pensionar':''} · ${ps.length?esc(ps.map(p=>p[4]).join(', ')):'fără parohie'}</div><div class="ia">${c.edit?'<button type="button" class="ed">Editează</button>':''}${c.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`;}).join('');
- $('list').innerHTML=html||'<p class="empty">Nimic găsit.</p>';$('list').querySelectorAll('[data-bg]').forEach(x=>{if(x.dataset.bg){x.style.backgroundImage='url("'+x.dataset.bg+'")';x.style.color='transparent';}});$('cnt').textContent=all.length+(TAB==='par'?(all.length===1?' parohie':' parohii'):(all.length===1?' cleric':' clerici'));}
+ $('list').innerHTML=html?html+(all.length>SHOWN?'<div class="mmore">Se încarcă…</div>':(all.length>PER?`<div class="mmore">Toate cele ${all.length} sunt afișate.</div>`:'')):'<p class="empty">Nimic găsit.</p>';$('list')._more=all.length>SHOWN;requestAnimationFrame(nearEnd);$('list').querySelectorAll('[data-bg]').forEach(x=>{if(x.dataset.bg){x.style.backgroundImage='url("'+x.dataset.bg+'")';x.style.color='transparent';}});$('cnt').textContent=all.length+(TAB==='par'?(all.length===1?' parohie':' parohii'):(all.length===1?' cleric':' clerici'));}
 $('list').onclick=async e=>{const it=e.target.closest('.dit');if(!it||BUSY)return;const id=+it.dataset.id;
  if(e.target.classList.contains('ed')){e.target.disabled=true;e.target.textContent='Se încarcă…';
   try{const j=await post({action:TAB==='par'?'dir_par_get':'dir_cl_get',id});EDIT=id;if(TAB==='par')loadP(fromServerP(j.item));else loadC(fromServerC(j.item));renderList();(TAB==='par'?$('pf'):$('cf')).scrollIntoView({behavior:'smooth'});}

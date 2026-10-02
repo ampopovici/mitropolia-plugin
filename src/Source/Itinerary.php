@@ -726,7 +726,6 @@ HTML;
  <div id="yrBox" hidden style="margin-bottom:12px"><select id="yr" aria-label="Anul"></select></div></div>
  <p class="hint" id="lhint">Ștergerea face vizita să dispară de pe site.</p>
  <div class="list" id="list"></div>
- <div class="mpg" id="lpg" hidden></div>
 </aside>
 </div></div>
 HTML
@@ -849,7 +848,7 @@ const PAR={};D.parishes.forEach(p=>PAR[p[0]]=p);
 const SVC=D.svc,TYP=D.typ,LI={ro:1,en:2,es:3};
 const FLIST=[...D.mov.map(m=>[m[0],m[2],m[3],m[4]]),...Object.keys(D.fix).map(k=>[k,...D.fix[k]])];
 const LMON={ro:["Ian","Feb","Mar","Apr","Mai","Iun","Iul","Aug","Sep","Oct","Noi","Dec"],en:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],es:["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"]};
-let LIST=D.visits.slice(),CAT=D.cats[0].id,TAB='up',PAGE=0;const PER=10;
+let LIST=D.visits.slice(),CAT=D.cats[0].id,TAB='up',SHOWN=10;const PER=10;
 const S={type:'',parish:0,mode:'ours',lang:'ro',editing:0};
 const endOf=v=>v.d2||v.d1;
 function pascha(y){const a=y%4,b=y%7,c=y%19,d=(19*c+15)%30,e=(2*a+4*b-d+34)%7,m=Math.floor((d+e+114)/31),day=(d+e+114)%31+1;const j=new Date(Date.UTC(y,m-1,day));j.setUTCDate(j.getUTCDate()+13);return j;}
@@ -928,14 +927,16 @@ function renderList(){const el=$('list'),mine=LIST.filter(v=>v.cat===CAT);
  let rows;
  if(find){rows=mine.filter(v=>{if(dq&&!(v.d1<=dq&&endOf(v)>=dq))return false;if(!q)return true;const pl=placeOf(v,'ro');return q.split(/\s+/).every(w=>norm([pick3(v.t,'ro'),pick3(v.f,'ro'),pl.n,pl.c,v.d1].join(' ')).includes(w));}).slice().reverse();}
  else{rows=mine.filter(v=>TAB==='up'?endOf(v)>=D.today:(endOf(v)<D.today&&v.d1.slice(0,4)===cur));if(TAB==='past')rows=rows.slice().reverse();}
- const pages=Math.max(1,Math.ceil(rows.length/PER));if(PAGE>=pages)PAGE=pages-1;const pg=$('lpg');
- if(rows.length>PER){pg.hidden=false;pg.innerHTML=`<button type="button" data-p="${PAGE-1}"${PAGE<=0?' disabled':''}>‹ Înapoi</button><span>${PAGE*PER+1}–${Math.min(rows.length,PAGE*PER+PER)} din ${rows.length}</span><button type="button" data-p="${PAGE+1}"${PAGE>=pages-1?' disabled':''}>Înainte ›</button>`;}else{pg.hidden=true;pg.innerHTML='';}
  if(!rows.length){el.innerHTML=`<p class="empty">${find?'Nicio vizită găsită.':(TAB==='up'?'Nicio vizită programată.':'Nicio vizită în acest an.')}</p>`;return;}
- el.innerHTML=rows.slice(PAGE*PER,PAGE*PER+PER).map(v=>{const pl=placeOf(v,'ro');return`<div class="it" data-id="${v.id}">${dateBox(v,'ro')}<div><b>${esc(pick3(v.t,'ro'))}</b><span class="pl">${esc(pl.n)}${pl.c?(pl.n?', ':'')+esc(pl.c):''}${v.tm?' · '+v.tm:''}</span><div class="ia">${v.edit?'<button type="button" class="ed">Editează</button>':''}${v.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`;}).join('');}
-$('lpg').onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled){PAGE=+b.dataset.p;renderList();$('lq').scrollIntoView({behavior:'smooth',block:'center'});}};
-$('lq').oninput=()=>{PAGE=0;renderList();};$('ldt').onchange=()=>{PAGE=0;renderList();};$('lx').onclick=()=>{$('lq').value='';$('ldt').value='';PAGE=0;renderList();};
-function setTab(t,y){TAB=t;PAGE=0;$('tUp').setAttribute('aria-pressed',String(t==='up'));$('tPast').setAttribute('aria-pressed',String(t==='past'));$('yrBox').hidden=t!=='past';$('lhint').textContent=t==='up'?'Ștergerea face vizita să dispară de pe site.':'Puteți corecta sau șterge și vizitele care au trecut.';if(y){renderList();$('yr').value=y;}renderList();}
-$('tUp').onclick=()=>setTab('up');$('tPast').onclick=()=>setTab('past');$('yr').onchange=()=>{PAGE=0;renderList();};
+ el.innerHTML=rows.slice(0,SHOWN).map(v=>{const pl=placeOf(v,'ro');return`<div class="it" data-id="${v.id}">${dateBox(v,'ro')}<div><b>${esc(pick3(v.t,'ro'))}</b><span class="pl">${esc(pl.n)}${pl.c?(pl.n?', ':'')+esc(pl.c):''}${v.tm?' · '+v.tm:''}</span><div class="ia">${v.edit?'<button type="button" class="ed">Editează</button>':''}${v.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`;}).join('')
+  +(rows.length>SHOWN?'<div class="mmore">Se încarcă…</div>':(rows.length>PER?`<div class="mmore">Toate cele ${rows.length} sunt afișate.</div>`:''));
+ el._more=rows.length>SHOWN;requestAnimationFrame(nearEnd);}
+function nearEnd(){const el=$('list'),mm=el.querySelector('.mmore');if(!mm||!el._more)return;const r=mm.getBoundingClientRect(),lr=el.getBoundingClientRect();if(!r.height)return;if(r.top<Math.min(innerHeight,lr.bottom)+200&&r.bottom>0){SHOWN+=PER;const st=el.scrollTop;renderList();el.scrollTop=st;}}
+$('list').addEventListener('scroll',nearEnd,{passive:true});addEventListener('scroll',nearEnd,{passive:true});addEventListener('resize',nearEnd);
+const fresh=()=>{SHOWN=PER;$('list').scrollTop=0;renderList();};
+$('lq').oninput=fresh;$('ldt').onchange=fresh;$('lx').onclick=()=>{$('lq').value='';$('ldt').value='';fresh();};
+function setTab(t,y){TAB=t;SHOWN=PER;$('list').scrollTop=0;$('tUp').setAttribute('aria-pressed',String(t==='up'));$('tPast').setAttribute('aria-pressed',String(t==='past'));$('yrBox').hidden=t!=='past';$('lhint').textContent=t==='up'?'Ștergerea face vizita să dispară de pe site.':'Puteți corecta sau șterge și vizitele care au trecut.';if(y){renderList();$('yr').value=y;}renderList();}
+$('tUp').onclick=()=>setTab('up');$('tPast').onclick=()=>setTab('past');$('yr').onchange=fresh;
 $('list').onclick=async e=>{const it=e.target.closest('.it');if(!it)return;const id=+it.dataset.id,v=LIST.find(x=>x.id===id);if(!v)return;
  if(e.target.classList.contains('ed')){S.editing=id;load(v);$('ftitle').textContent='Modificați vizita';$('save').textContent='Salvează modificările';$('cancel').hidden=false;$('mif-frm').scrollIntoView({behavior:'smooth'});}
  else if(e.target.classList.contains('del')){if(it.querySelector('.confirm'))return;const c=document.createElement('div');c.className='confirm';c.innerHTML='<span>Ștergeți această vizită de pe site?</span><button type="button" class="yes">Da, șterge</button><button type="button" class="no">Renunță</button>';it.appendChild(c);}

@@ -543,7 +543,6 @@ final class Admin
  <div class="mls"><input type="search" id="mn-sq" placeholder="Căutați după titlu" aria-label="Căutați după titlu"><input type="date" id="mn-sd" aria-label="Data"><button type="button" class="link" id="mn-sx" hidden>Șterge căutarea</button></div>
  <p class="hint" id="mn-lhint">Ștergerea scoate știrea de pe site în toate limbile. Fotografiile rămân păstrate pe server.</p>
  <div class="list" id="mn-list"></div>
- <div class="mpg" id="mn-pg" hidden></div>
 </aside>
 </div>
 HTML
@@ -626,8 +625,23 @@ HTML
 /* the page always reaches the bottom of the window: footer at the bottom, no gap under it */
 body:has(.madm-root) .tm-page{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 body:has(.madm-root) #tm-main{flex:1 0 auto}
-.madm-login-act{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-.madm-login-act .btn{text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
+.madm-root .mif-narrow{max-width:540px}
+.madm-login-act{display:flex;gap:12px;flex-wrap:nowrap;align-items:stretch}
+.madm-login-act .btn{flex:1 1 0;min-width:0;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;white-space:nowrap;padding:13px 14px;font-size:15px}
+@media (max-width:440px){.madm-login-act{flex-wrap:wrap}.madm-login-act .btn{flex-basis:100%}}
+/* computers: a wider page, a larger form column, and a list that stays in view and scrolls by itself */
+body:has(.madm) #tm-main .uk-container{max-width:1680px}
+.mif .mmore{text-align:center;font-size:14px;color:var(--soft);padding:12px 0 4px}
+@media (min-width:901px){
+ .madm .mif-wrap>.side{position:sticky;top:16px;max-height:calc(100vh - 32px);display:flex;flex-direction:column}
+ .madm .mif-wrap>.side .list{flex:1 1 auto;min-height:160px;overflow-y:auto;overscroll-behavior:contain;padding-right:6px;margin-right:-6px}
+}
+@media (min-width:1200px){
+ .madm .mif-wrap{grid-template-columns:minmax(0,1.8fr) minmax(400px,1fr);gap:36px}
+ .madm .mif-card{padding:32px 36px 30px}
+ .madm .mng-ed{min-height:340px;max-height:70vh}
+ .madm .md .rte{min-height:260px}
+}
 .madm-login-act .btn.sec:hover{color:var(--navy);text-decoration:none}
 /* list search and pages (all tabs) */
 .mif .mls{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:0 0 12px}
@@ -768,28 +782,30 @@ $('frm').onsubmit=async e=>{e.preventDefault();if(BUSY)return;store();const miss
   const f={action:MODE==='news'?'news_save':'gal_save',id:EDIT||'',dt:F.dt,batch:BATCH,pchg:F.pchg?1:0,photos:JSON.stringify(photos),lnk:F.lnk||''};
   ['ro','en','es'].forEach(l=>{f['t_'+l]=F.t[l];f['b_'+l]=F.b[l];f['bchg_'+l]=F.bchg[l]||!EDIT?1:0;});f.tags=F.tags.join(',');
   const j=await post(f);done=tot;bar();
-  const was=EDIT;if(!was){L[MODE].page=0;}
+  const was=EDIT;
   F.photos.forEach(p=>{if(p.src&&p.blob)URL.revokeObjectURL(p.src);});reset();await loadList();
   $('okmsg').innerHTML=esc((was?'Modificarea a fost salvată':(MODE==='news'?'Știrea a fost publicată':'Galeria a fost publicată'))+' ('+j.item.langs.map(x=>x.toUpperCase()).join(', ')+').')+(j.url?` <a ${HREF}="${esc(j.url)}" target="_blank" rel="noopener">Vedeți pe site</a>`:'');
   $('okmsg').hidden=false;setTimeout(()=>$('okmsg').hidden=true,8000);$('frm').scrollIntoView({behavior:'smooth'});
  }catch(x){$('err').textContent=x.message+' Fotografiile deja trimise nu se pierd; apăsați din nou „'+(EDIT?'Salvează modificările':'Publică')+'”.';}
  finally{BUSY=false;$('save').disabled=false;$('cancel').disabled=false;$('prog').hidden=true;$('progBar').style.width='0';if($('save').textContent.indexOf('Se ')===0)$('save').textContent=EDIT?'Salvează modificările':'Publică';}};
-/* ---------- list: 10 at a time, searched on the server ---------- */
-function pager(el,total,page,go){const per=D.page,pages=Math.ceil(total/per);if(pages<=1){el.hidden=true;el.innerHTML='';return;}el.hidden=false;
- el.innerHTML=`<button type="button" data-p="${page-1}"${page<=0?' disabled':''}>‹ Înapoi</button><span>${page*per+1}–${Math.min(total,page*per+per)} din ${total}</span><button type="button" data-p="${page+1}"${page>=pages-1?' disabled':''}>Înainte ›</button>`;
- el.onclick=e=>{const b=e.target.closest('button');if(b&&!b.disabled)go(+b.dataset.p);};}
-let lseqL=0;
+/* ---------- list: 10 first, 10 more each time the end of the list comes into view; searched on the server ---------- */
+function moreLine(n,total,more){return more?'<div class="mmore">Se încarcă…</div>':(total>D.page?`<div class="mmore">Toate cele ${total} sunt afișate.</div>`:'');}
+let lseqL=0,MORE=false;
 async function loadList(){const st=L[MODE],my=++lseqL,m=MODE;$('list').classList.add('busy');
- try{const j=await post({action:'list',kind:m,q:st.q,dt:st.dt,page:st.page});if(my!==lseqL)return;
-  if(!j.items.length&&st.page>0&&j.total){st.page=Math.max(0,Math.ceil(j.total/D.page)-1);return loadList();}
-  st.items=j.items;st.total=j.total;if(m===MODE)renderList();}
+ try{const j=await post({action:'list',kind:m,q:st.q,dt:st.dt,page:0});if(my!==lseqL)return;st.items=j.items;st.total=j.total;st.page=0;if(m===MODE){renderList();$('list').scrollTop=0;}}
  catch(x){$('list').innerHTML=`<p class="empty">${esc(x.message)}</p>`;}finally{$('list').classList.remove('busy');}}
+async function loadMore(){const st=L[MODE],m=MODE,my=lseqL;if(MORE||st.items.length>=st.total)return;MORE=true;
+ try{const j=await post({action:'list',kind:m,q:st.q,dt:st.dt,page:st.page+1});if(my!==lseqL||m!==MODE)return;const have=new Set(st.items.map(x=>x.id));st.items.push(...j.items.filter(x=>!have.has(x.id)));st.total=j.total;st.page++;
+  if(!j.items.length)st.total=st.items.length;renderList();}
+ catch(x){const mm=$('list').querySelector('.mmore');if(mm)mm.textContent=x.message;}finally{MORE=false;}}
+function nearEnd(){const mm=$('list').querySelector('.mmore');if(!mm||MORE)return;const r=mm.getBoundingClientRect(),lr=$('list').getBoundingClientRect();if(!r.height)return;if(r.top<Math.min(innerHeight,lr.bottom)+200&&r.bottom>0&&L[MODE].items.length<L[MODE].total)loadMore();}
+$('list').addEventListener('scroll',nearEnd,{passive:true});addEventListener('scroll',nearEnd,{passive:true});addEventListener('resize',nearEnd);
 let stt=0;
-function search(){const s=L[MODE];s.q=$('sq').value.trim();s.dt=$('sd').value;s.page=0;$('sx').hidden=!s.q&&!s.dt;clearTimeout(stt);stt=setTimeout(loadList,300);}
+function search(){const s=L[MODE];s.q=$('sq').value.trim();s.dt=$('sd').value;$('sx').hidden=!s.q&&!s.dt;clearTimeout(stt);stt=setTimeout(loadList,300);}
 $('sq').oninput=search;$('sd').onchange=search;$('sx').onclick=()=>{$('sq').value='';$('sd').value='';search();};
 function renderList(){const s=L[MODE],arr=s.items;$('sx').hidden=!s.q&&!s.dt;
- $('list').innerHTML=arr.length?arr.map(n=>`<div class="nit" data-id="${n.id}"><div class="th">${n.th?`<img ${SRC}="${esc(n.th)}" alt="" loading="lazy">`:''}</div><div><b>${esc(n.title)}</b><div class="meta">${esc(fmtDate(n.dt,'ro'))}<span class="langs">${['ro','en','es'].map(l=>`<span class="${n.langs.includes(l)?'':'no'}">${l.toUpperCase()}</span>`).join('')}</span></div><div class="meta">${MODE==='gal'?n.n+' fotografii · ':''}${n.by?'Adăugat de '+esc(n.by):''}</div><div class="ia">${n.edit?'<button type="button" class="ed">Editează</button>':''}${n.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`).join(''):`<p class="empty">${s.q||s.dt?'Nimic găsit.':'Nimic publicat încă.'}</p>`;
- pager($('pg'),s.total,s.page,p=>{s.page=p;loadList().then(()=>$('ltitle').scrollIntoView({behavior:'smooth',block:'start'}));});}
+ $('list').innerHTML=arr.length?arr.map(n=>`<div class="nit" data-id="${n.id}"><div class="th">${n.th?`<img ${SRC}="${esc(n.th)}" alt="" loading="lazy">`:''}</div><div><b>${esc(n.title)}</b><div class="meta">${esc(fmtDate(n.dt,'ro'))}<span class="langs">${['ro','en','es'].map(l=>`<span class="${n.langs.includes(l)?'':'no'}">${l.toUpperCase()}</span>`).join('')}</span></div><div class="meta">${MODE==='gal'?n.n+' fotografii · ':''}${n.by?'Adăugat de '+esc(n.by):''}</div><div class="ia">${n.edit?'<button type="button" class="ed">Editează</button>':''}${n.del?'<button type="button" class="del">Șterge</button>':''}</div></div></div>`).join('')+moreLine(arr.length,s.total,arr.length<s.total):`<p class="empty">${s.q||s.dt?'Nimic găsit.':'Nimic publicat încă.'}</p>`;
+ requestAnimationFrame(nearEnd);}
 $('list').onclick=async e=>{const it=e.target.closest('.nit');if(!it||BUSY)return;const id=+it.dataset.id;
  if(e.target.classList.contains('ed')){e.target.disabled=true;e.target.textContent='Se încarcă…';
   try{const j=await post({action:MODE==='news'?'news_get':'gal_get',id});reset();EDIT=id;const d=j.item;
