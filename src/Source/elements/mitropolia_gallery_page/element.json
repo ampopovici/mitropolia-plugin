@@ -1,0 +1,15 @@
+{
+ "name": "mitropolia_gallery_page",
+ "title": "Gallery page",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "class": {"label": "Class", "description": "Optional extra CSS class. The gallery is the article of the current page (Galleries category)."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Advanced", "fields": ["class"]}]}}
+}

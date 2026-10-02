@@ -63,6 +63,10 @@ final class MitropoliaSources extends CMSPlugin implements SubscriberInterface
             if (($app->isClient('site') || $app->isClient('administrator')) && $app->getInput()->getCmd('mitit') === 'api') {
                 \Mitropolia\Plugin\System\MitropoliaSources\Source\Itinerary::api();
             }
+            // Administrare page, news and galleries (?mitadm=api): upload, save, trash
+            if ($app->isClient('site') && $app->getInput()->getCmd('mitadm') === 'api') {
+                \Mitropolia\Plugin\System\MitropoliaSources\Source\Admin::api();
+            }
         } catch (\Throwable $e) {
             Log::add('Itinerary API not run: ' . $e->getMessage(), Log::WARNING, 'mitropolia');
         }

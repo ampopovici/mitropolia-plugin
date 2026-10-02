@@ -533,7 +533,7 @@ final class News
             }
             $files = [];
             foreach (scandir($dir) ?: [] as $n) {
-                if ($n[0] !== '.' && preg_match('/\.(jpe?g|png|webp)$/i', $n) && is_file($dir . '/' . $n)) {
+                if ($n[0] !== '.' && $n[0] !== '_' && preg_match('/\.(jpe?g|png|webp)$/i', $n) && is_file($dir . '/' . $n)) {
                     $files[] = $n;
                 }
             }
@@ -604,6 +604,54 @@ final class News
         } catch (\Throwable $x) {
             return $rel;
         }
+    }
+
+    /** Photos of a folder (public wrapper, used by the gallery pages and the admin form). */
+    public static function folderPhotos(string $folder): array
+    {
+        return self::photos([$folder]);
+    }
+
+    /** URL of the 4:3 thumbnail of a photo (made on first use). */
+    public static function thumbUrl(string $rel): string
+    {
+        $th = self::thumb($rel);
+        return Uri::root(true) . '/' . implode('/', array_map('rawurlencode', explode('/', $th)));
+    }
+
+    /** "20 de fotografii" etc. in the page language. */
+    public static function photoCount(int $n): string
+    {
+        return self::count('MIT_NEWS_N_PHOTOS', $n);
+    }
+
+    /** Photo grid with lightbox (gallery section of a news article or a gallery page). */
+    public static function galleryHtml(array $photos, bool $heading = true): string
+    {
+        if (!$photos) {
+            return '';
+        }
+        $e = [self::class, 'e'];
+        $g = '';
+        foreach ($photos as $i => $p) {
+            $full = Uri::root(true) . '/' . implode('/', array_map('rawurlencode', explode('/', $p)));
+            $g .= '<a href="' . $e($full) . '" data-lb="' . $i . '"><img src="' . $e(self::thumbUrl($p)) . '" alt="' . $e(Text::sprintf('MIT_NEWS_PHOTO_N', $i + 1, count($photos))) . '" loading="lazy" width="' . self::THUMB_W . '" height="' . self::THUMB_H . '"></a>';
+        }
+        $out = '<section class="mnx-gal-wrap" id="mnx-gallery"' . ($heading ? ' aria-labelledby="mnx-galh"' : ' aria-label="' . $e(Text::_('MIT_NEWS_GALLERY')) . '"') . '>';
+        if ($heading) {
+            $out .= '<div class="mnx-sechead"><h2 id="mnx-galh" class="mpx-h2">' . $e(Text::_('MIT_NEWS_GALLERY')) . '</h2>'
+                . '<span class="mnx-meta">' . $e(self::count('MIT_NEWS_N_PHOTOS', count($photos))) . ' · ' . $e(Text::_('MIT_NEWS_ENLARGE')) . '</span></div>';
+        }
+        return $out . '<div class="mnx-gal">' . $g . '</div></section>' . self::lightbox();
+    }
+
+    private static function lightbox(): string
+    {
+        $e = [self::class, 'e'];
+        return '<div class="mnx-lb" hidden role="dialog" aria-modal="true" aria-label="' . $e(Text::_('MIT_NEWS_GALLERY')) . '">'
+            . '<button type="button" class="mnx-lb-x" aria-label="' . $e(Text::_('MIT_NEWS_CLOSE')) . '">×</button>'
+            . '<button type="button" class="mnx-lb-p" aria-label="' . $e(Text::_('MIT_NEWS_PREVIOUS')) . '">‹</button><img alt="">'
+            . '<button type="button" class="mnx-lb-n" aria-label="' . $e(Text::_('MIT_NEWS_NEXT')) . '">›</button><div class="mnx-lb-c"></div></div>';
     }
 
     private static function articleHtml(object $a, array $props): string

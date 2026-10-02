@@ -592,7 +592,7 @@ HTML;
     /* ------------------------------------------------------------------ manager (Romanian form) */
 
     /** Hierarch categories the current user may add visits to. */
-    private static function allowedCats(): array
+    public static function allowedCats(): array
     {
         $user = Factory::getApplication()->getIdentity();
         if (!$user || $user->guest) {
@@ -602,6 +602,12 @@ HTML;
     }
 
     public static function manage(array $props): string
+    {
+        return Admin::page($props);
+    }
+
+    /** The itinerary-only manager (kept for reference; the menu uses the combined page). */
+    public static function manageItinerary(array $props): string
     {
         try {
             $app = Factory::getApplication();
@@ -648,7 +654,8 @@ HTML;
             . '<button type="submit">Ieșire</button></form>';
     }
 
-    private static function formHtml(array $cats, $user, string $here): string
+    /** The form and list; $hero = false when embedded in the combined Administrare page. */
+    public static function formHtml(array $cats, $user, string $here, bool $hero = true): string
     {
         $par = self::parishes();
         $data = [
@@ -669,8 +676,8 @@ HTML;
               . implode('', array_map(fn ($c) => '<option value="' . (int) $c->id . '">' . self::e(self::who($c, 0)) . '</option>', $cats)) . '</select></div>'
             : '';
         return '<div class="mif">'
-            . '<div class="mif-hero"><div class="mif-hero-in"><div><h1>Adăugați o vizită</h1><p>Vizita apare imediat pe site, în română, engleză și spaniolă.</p></div>'
-            . '<div class="mif-user"><span>Conectat: <b>' . self::e((string) $user->name) . '</b></span>' . self::logoutForm($here) . '</div></div></div>'
+            . ($hero ? '<div class="mif-hero"><div class="mif-hero-in"><div><h1>Adăugați o vizită</h1><p>Vizita apare imediat pe site, în română, engleză și spaniolă.</p></div>'
+            . '<div class="mif-user"><span>Conectat: <b>' . self::e((string) $user->name) . '</b></span>' . self::logoutForm($here) . '</div></div></div>' : '')
             . '<div class="mif-wrap">'
             . '<form class="mif-card" id="mif-frm" novalidate>' . $catSel . <<<'HTML'
  <div class="ok" id="okmsg" hidden></div>
@@ -724,7 +731,7 @@ HTML
             . '<script type="application/json" id="mif-data">' . $json . '</script>' . self::formJs();
     }
 
-    private static function formCss(): string
+    public static function formCss(): string
     {
         static $done = false;
         if ($done) {

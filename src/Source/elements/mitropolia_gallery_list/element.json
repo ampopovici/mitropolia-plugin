@@ -1,0 +1,17 @@
+{
+ "name": "mitropolia_gallery_list",
+ "title": "Gallery list",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "title": {"label": "Title", "description": "Leave empty for Galerii foto / Photo galleries / Galerías de fotos."},
+  "intro": {"label": "Intro", "type": "textarea", "description": "Leave empty for the standard sentence in the page language."},
+  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["title", "intro"]}, {"title": "Advanced", "fields": ["class"]}]}}
+}
