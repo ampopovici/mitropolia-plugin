@@ -759,7 +759,7 @@ final class AdminDir
  </div></details>
  <details class="sec"><summary>Contact și fotografie<span class="sum" id="md-c3"></span></summary><div class="bd">
   <div class="row"><div class="f"><label for="md-cPhone">Telefon</label><input type="text" id="md-cPhone" maxlength="60" inputmode="tel"></div><div class="f"><label for="md-cEmail">E-mail</label><input type="text" id="md-cEmail" maxlength="120" inputmode="email"></div></div>
-  <div class="f"><span class="lab">Fotografie</span><div class="photo round"><div class="pv" id="md-cPhotoPv">?</div><label class="pick">Alegeți o fotografie<input type="file" accept="image/*" id="md-cPhoto"></label><button type="button" class="link" id="md-cPhotoX" hidden>Scoate fotografia</button></div><p class="hint">O fotografie de portret; se decupează rotund în director.</p></div>
+  <div class="f"><span class="lab">Fotografie</span><div class="photo round"><div class="pv" id="md-cPhotoPv">?</div><label class="pick">Alegeți o fotografie<input type="file" accept="image/*" id="md-cPhoto"></label><button type="button" class="link" id="md-cPhotoX" hidden>Scoate fotografia</button></div><p class="hint">În director fotografia apare ca dreptunghi (5:4), păstrând partea de sus, unde este fața. Cel mai bine arată un portret de la piept în sus.</p></div>
  </div></details>
  <div class="actions"><button class="btn" type="submit" id="md-cSave">Salvează</button><button class="btn sec" type="button" id="md-cCancel" hidden>Renunță</button><span class="err" id="md-cErr" role="alert"></span></div>
 </form>
@@ -809,18 +809,18 @@ HTML;
 .md .geo .btn{min-height:48px;padding:8px 16px;font-size:15px}
 .md .photo{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
 .md .photo .pv{width:140px;max-width:100%;aspect-ratio:4/3;border-radius:6px;background:var(--sand) center/cover no-repeat;display:grid;place-items:center;color:var(--muted);font-size:13px;text-align:center}
-.md .photo.round .pv{width:96px;aspect-ratio:1;border-radius:50%;font-family:'Baskervville',Georgia,serif;font-size:30px;color:var(--navy)}
+.md .photo.round .pv{width:150px;aspect-ratio:5/4;border-radius:6px;background-position:50% 25%;font-family:'Baskervville',Georgia,serif;font-size:30px;color:var(--navy)}
 .md .photo .pick{border:1px solid var(--line2);border-radius:6px;padding:10px 14px;font-weight:700;color:var(--blue);cursor:pointer;background:#fff;position:relative}
 .md .photo .pick input{position:absolute;opacity:0;width:1px;height:1px;left:0;top:0}
 .md .rte{min-height:160px}
-.md .prev{border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;grid-template-columns:64px minmax(0,1fr);gap:14px;align-items:center;margin-bottom:16px;background:#FCFAF5}
-.md .prev .av{width:64px;height:64px;border-radius:50%;background:var(--sand) center/cover;display:grid;place-items:center;font-family:'Baskervville',Georgia,serif;color:var(--navy);font-size:22px}
+.md .prev{border:1px solid var(--line);border-radius:8px;padding:14px;display:grid;grid-template-columns:100px minmax(0,1fr);gap:14px;align-items:center;margin-bottom:16px;background:#FCFAF5}
+.md .prev .av{width:100px;aspect-ratio:5/4;border-radius:5px;background:var(--sand) 50% 25%/cover no-repeat;display:grid;place-items:center;font-family:'Baskervville',Georgia,serif;color:var(--navy);font-size:22px}
 .md .prev .rk{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--red);min-height:1em}
 .md .prev b{display:block;font-family:'Baskervville',Georgia,serif;font-weight:500;font-size:22px;color:var(--navy);line-height:1.2;overflow-wrap:anywhere}
 .md .prev .ps{font-size:14px;color:var(--muted)}
 .md .dit{background:#fff;border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;grid-template-columns:44px minmax(0,1fr);gap:12px;align-items:start}
 .md .dit.on{border-color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
-.md .dit .ic{width:44px;height:44px;border-radius:50%;background:var(--sand) center/cover;display:grid;place-items:center;font-family:'Baskervville',Georgia,serif;color:var(--navy);font-size:16px}
+.md .dit .ic{width:44px;height:44px;border-radius:6px;background:var(--sand) 50% 25%/cover;display:grid;place-items:center;font-family:'Baskervville',Georgia,serif;color:var(--navy);font-size:16px}
 .md .dit .ic.sq{border-radius:6px;font-family:'Source Sans 3',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em}
 .md .dit b{display:block;color:var(--navy);font-size:16px;line-height:1.3;overflow-wrap:anywhere}
 .md .dit .meta{font-size:13px;color:var(--muted)}

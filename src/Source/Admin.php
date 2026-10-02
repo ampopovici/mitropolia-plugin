@@ -351,7 +351,7 @@ final class Admin
                 $out .= '<div class="madm-panel" data-p="dir"' . (in_array($first, ['par', 'cl'], true) ? '' : ' hidden') . '>' . AdminDir::panel($par, $cl, $first === 'par' ? 'par' : 'cl') . '</div>';
             }
             $out .= '</div></div>';
-            return $out . Itinerary::formCss() . self::css() . AdminDir::css() . self::tabsJs();
+            return $out . Itinerary::formCss() . self::css() . AdminDir::css() . self::tabsJs() . self::guardJs();
         } catch (\Throwable $x) {
             Log::add('Admin page: ' . $x->getMessage() . ' @' . $x->getFile() . ':' . $x->getLine(), Log::WARNING, 'mitropolia');
             return '';
@@ -631,6 +631,14 @@ body:has(.madm-root) #tm-main{flex:1 0 auto}
 @media (max-width:440px){.madm-login-act{flex-wrap:wrap}.madm-login-act .btn{flex-basis:100%}}
 /* computers: a wider page, a larger form column, and a list that stays in view and scrolls by itself */
 body:has(.madm) #tm-main .uk-container{max-width:1680px}
+.madm-leave{position:fixed;inset:0;z-index:10000;background:rgba(16,24,44,.55);display:grid;place-items:center;padding:16px}
+.madm-leave .box{background:#fff;border-radius:10px;max-width:480px;width:100%;padding:28px;box-shadow:0 20px 60px rgba(16,24,44,.3);font-family:'Source Sans 3',sans-serif;color:#1B2A4A}
+.madm-leave h2{font-family:'Baskervville',Georgia,serif;font-weight:500;font-size:26px;color:#172E5C;margin:0 0 10px}
+.madm-leave p{margin:0 0 20px;font-size:17px;color:#3C4A66}
+.madm-leave .act{display:flex;gap:12px;flex-wrap:wrap}
+.madm-leave .btn{border:0;background:#A32D36;color:#fff;font:inherit;font-weight:700;font-size:16px;border-radius:6px;padding:12px 20px;cursor:pointer;min-height:48px}
+.madm-leave .btn.sec{background:#fff;color:#203D78;border:1px solid #D9CBAA}
+.madm-leave .btn[disabled]{opacity:.6}
 .mif .mmore{text-align:center;font-size:14px;color:var(--soft);padding:12px 0 4px}
 @media (min-width:901px){
  .madm .mif-wrap>.side{position:sticky;top:var(--madm-top,16px);max-height:calc(100vh - var(--madm-top,16px) - 16px);display:flex;flex-direction:column;transition:top .2s}
@@ -675,6 +683,37 @@ function ask(){if(!raf)raf=requestAnimationFrame(top);}addEventListener('scroll'
 var t=null;try{t=localStorage.getItem('madm-tab');}catch(e){}
 var H={'#stiri':'news','#galerii':'gal','#itinerar':'itin','#clerici':'cl','#parohii':'par'};if(H[location.hash])t=H[location.hash];
 if(t&&tabs.some(function(b){return b.dataset.t===t;}))go(t);})();
+</script>
+HTML;
+    }
+
+/** Leaving the page signs the editor out: a warning for links, the browser's own warning otherwise. */
+    private static function guardJs(): string
+    {
+        $cfg = json_encode(['api' => self::here() . '?mitadm=api', 'token' => Session::getFormToken()], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
+        return '<div class="madm-leave" id="madm-leave" hidden role="dialog" aria-modal="true" aria-labelledby="madm-leave-t"><div class="box">'
+            . '<h2 id="madm-leave-t">Părăsiți interfața de editare?</h2>'
+            . '<p>Dacă mergeți pe altă pagină, veți fi deconectat automat. Ce nu ați salvat se pierde.</p>'
+            . '<div class="act"><button type="button" class="btn" id="madm-leave-go">Ieșire și deconectare</button><button type="button" class="btn sec" id="madm-leave-no">Rămân aici</button></div>'
+            . '</div></div><script type="application/json" id="madm-guard">' . $cfg . '</script>' . <<<'HTML'
+<script>
+(function(){var G=JSON.parse(document.getElementById('madm-guard').textContent),box=document.getElementById('madm-leave'),go=null,left=false;
+function fd(){var f=new FormData();f.append('action','bye');f.append(G.token,'1');return f;}
+function bye(){if(left)return;left=true;try{navigator.sendBeacon(G.api,fd());}catch(e){}}
+[].forEach.call(document.querySelectorAll('.mif-out'),function(f){f.addEventListener('submit',function(){left=true;});});
+document.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('a[href]');if(!a||e.defaultPrevented||left)return;
+ var h=a.getAttribute('href')||'';if(h===''||h.charAt(0)==='#'||/^(javascript|mailto|tel|sms):/i.test(h))return;
+ if(a.target==='_blank'||e.ctrlKey||e.metaKey||e.shiftKey||e.button===1)return;
+ e.preventDefault();e.stopPropagation();go=a.href;box.hidden=false;document.getElementById('madm-leave-no').focus();},true);
+document.getElementById('madm-leave-no').onclick=function(){box.hidden=true;go=null;};
+box.addEventListener('click',function(e){if(e.target===box){box.hidden=true;go=null;}});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!box.hidden){box.hidden=true;go=null;}});
+document.getElementById('madm-leave-go').onclick=function(){var b=this;b.disabled=true;b.textContent='Se deconectează…';left=true;
+ fetch(G.api,{method:'POST',body:fd(),credentials:'same-origin'}).catch(function(){}).then(function(){location.href=go||'/';});};
+/* back button, closed tab, typed address, reload: the browser asks first; if the page really goes away, sign out */
+addEventListener('beforeunload',function(e){if(!left){e.preventDefault();e.returnValue='';}});
+addEventListener('pagehide',function(){if(!left)bye();});
+})();
 </script>
 HTML;
     }
@@ -876,6 +915,10 @@ HTML;
                 return self::galTrash($in->post->getInt('id'));
             case 'list':
                 return self::listPage();
+            case 'bye':
+                // the editor left the page (another menu, closed tab, back button): sign out
+                $app->logout((int) $user->id);
+                return ['ok' => true];
         }
         if (strpos((string) $action, 'dir_') === 0) {
             return AdminDir::api((string) $action);

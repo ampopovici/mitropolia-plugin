@@ -761,7 +761,8 @@ HTML
 .mif .f>label,.mif .lab{font-weight:700;font-size:15px;color:var(--navy)}
 .mif .opt{font-weight:400;color:var(--soft);font-size:14px}
 .mif .hint,.mif-hint{font-size:14px;color:var(--soft)}
-.mif input[type=text],.mif input[type=password],.mif input[type=date],.mif input[type=time],.mif select{width:100%;min-height:48px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font:inherit;font-size:17px;color:var(--ink);background:#fff;margin:0}
+.mif input[type=text],.mif input[type=search],.mif input[type=email],.mif input[type=password],.mif input[type=date],.mif input[type=time],.mif select{width:100%;min-height:48px;border:1px solid var(--line2);border-radius:6px;padding:10px 12px;font:inherit;font-size:17px;color:var(--ink);background:#fff;margin:0}
+.mif input[type=search]{-webkit-appearance:none;appearance:none}
 .mif input:focus,.mif select:focus{outline:2px solid #9DB0D6;outline-offset:1px;border-color:var(--blue)}
 .mif .row{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .mif .check{display:flex;align-items:center;gap:10px;font-size:16px;cursor:pointer;margin:-6px 0 16px}
