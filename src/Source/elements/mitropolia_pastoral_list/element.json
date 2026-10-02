@@ -1,0 +1,18 @@
+{
+ "name": "mitropolia_pastoral_list",
+ "title": "Pastoral letters list",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "category_id": {"label": "Category ID", "description": "Leave empty: the page shows the category being viewed (all hierarchs, or one hierarch). Enter an ID only to preview in the builder."},
+  "title": {"label": "Title", "description": "Leave empty for Pastoral letters / Pastorale / Cartas pastorales in the page language."},
+  "intro": {"label": "Intro", "type": "textarea", "description": "Leave empty for the standard sentence in the page language."},
+  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["category_id", "title", "intro"]}, {"title": "Advanced", "fields": ["class"]}]}}
+}

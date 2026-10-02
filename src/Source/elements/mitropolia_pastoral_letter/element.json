@@ -1,0 +1,16 @@
+{
+ "name": "mitropolia_pastoral_letter",
+ "title": "Pastoral letter",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "article_id": {"label": "Article ID", "description": "Leave empty: the page shows the letter being viewed. Enter an ID only to preview a letter in the builder."},
+  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["article_id"]}, {"title": "Advanced", "fields": ["class"]}]}}
+}

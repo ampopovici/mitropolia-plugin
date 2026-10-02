@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<extension type="plugin" group="system" method="upgrade">
+  <name>Mitropolia - Dynamic Sources</name>
+  <author>Romanian Orthodox Metropolia of the Americas</author>
+  <creationDate>2026-09</creationDate>
+  <license>GPL-2.0-or-later</license>
+  <version>1.14.3</version>
+  <description>Adds Mitropolia data to YOOtheme Pro dynamic content: the parishes a clergy member serves (with role), the clergy of a parish, the events and pastoral visits at a parish, and the parish of an event or visit. Uses only the documented YOOtheme source API and Joomla's own content model; if either is missing it does nothing.</description>
+  <namespace path="src">Mitropolia\Plugin\System\MitropoliaSources</namespace>
+  <files>
+    <folder plugin="mitropoliasources">services</folder>
+    <folder>src</folder>
+    <folder>language</folder>
+  </files>
+  <config>
+    <fields name="params">
+      <fieldset name="basic">
+        <field name="assignments_field" type="text" default="clergy-parishes" label="Clergy assignments field (name)" description="Name of the repeatable subform field on clergy articles." />
+        <field name="parish_subfield" type="text" default="parish" label="Parish subfield (name)" description="Name of the SQL parish picker used inside the subform." />
+        <field name="role_subfield" type="text" default="role" label="Role subfield (name)" description="Name of the role list used inside the subform." />
+        <field name="group_field" type="text" default="clergy-group" label="Clergy group field (name, optional)" description="List field whose option order sets the directory order (hierarchs, priests, deacons). Leave empty to skip." />
+        <field name="lastname_field" type="text" default="last-name" label="Last name field (name, optional)" description="Text field used for alphabetical order. Falls back to the article title." />
+        <field name="event_parish_field" type="text" default="event-parish" label="Event parish field (name)" description="Parish picker on event articles." />
+        <field name="event_start_field" type="text" default="event-start" label="Event start field (name)" description="Start date/time on event articles; sets the order." />
+        <field name="itinerary_parish_field" type="text" default="itinerary-parish" label="Itinerary parish field (name)" description="Parish picker on itinerary stops." />
+        <field name="itinerary_date_field" type="text" default="itinerary-date" label="Itinerary date field (name)" description="Date on itinerary stops; sets the order." />
+        <field name="carto_key" type="text" default="" filter="string" label="CARTO map key (optional)" description="Paste the CARTO basemaps key here to show the Voyager map on the parish directory and parish pages. Leave empty to use the standard OpenStreetMap map." />
+      </fieldset>
+    </fields>
+  </config>
+</extension>

@@ -1,0 +1,6 @@
+*.zip
+*.tar.gz
+*.tgz
+*.tar.bz2
+.DS_Store
+Thumbs.db

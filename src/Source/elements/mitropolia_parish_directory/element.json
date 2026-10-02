@@ -1,0 +1,18 @@
+{
+ "name": "mitropolia_parish_directory",
+ "title": "Parish directory",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "title": {"label": "Title", "description": "Leave empty to use the menu item's Page Heading (or \"Find a parish\" in the page language)."},
+  "intro": {"label": "Introduction", "type": "textarea", "attrs": {"rows": 3}, "description": "Leave empty to use the standard sentence in the page language."},
+  "id": {"label": "ID", "description": "Optional HTML id."},
+  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["title", "intro"]}, {"title": "Advanced", "fields": ["id", "class"]}]}}
+}

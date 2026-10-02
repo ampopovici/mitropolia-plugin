@@ -1,0 +1,269 @@
+{
+    "name": "mitropolia_clergy_directory",
+    "title": "Clergy directory",
+    "group": "Mitropolia",
+    "icon": "${url:images/icon.svg}",
+    "iconSmall": "${url:images/icon-small.svg}",
+    "element": true,
+    "width": 500,
+    "defaults": {
+        "order": "az",
+        "diocese": "",
+        "show_filters": true,
+        "show_az": true,
+        "show_count": true,
+        "show_photo": true,
+        "show_parish": true,
+        "show_contact": true,
+        "columns": "4",
+        "columns_l": "3",
+        "columns_m": "2",
+        "columns_s": "1",
+        "gap": "",
+        "photo_ratio": "",
+        "card_align": "",
+        "show_hero": true,
+        "show_breadcrumb": true
+    },
+    "templates": {
+        "render": "./templates/template.php",
+        "content": "./templates/content.php"
+    },
+    "fields": {
+        "order": {
+            "label": "Order",
+            "type": "select",
+            "options": {
+                "A to Z with letter headings": "az",
+                "By group (hierarchs, priests, deacons)": "group"
+            }
+        },
+        "diocese": {
+            "label": "Show",
+            "description": "Limit the directory to one diocese, or show the whole Metropolia with a diocese filter.",
+            "type": "select",
+            "options": {
+                "Whole Metropolia": "",
+                "United States Archdiocese": "usa",
+                "Diocese of Canada": "canada",
+                "South America": "sa"
+            }
+        },
+        "show_hero": {
+            "label": "Header band",
+            "type": "checkbox",
+            "text": "Show the band with breadcrumb, title and introduction (filters sit inside it)"
+        },
+        "show_breadcrumb": {
+            "type": "checkbox",
+            "text": "Show breadcrumb",
+            "enable": "show_hero"
+        },
+        "title": {
+            "label": "Title",
+            "description": "Leave empty to use the menu item's Page Heading, or its title.",
+            "enable": "show_hero"
+        },
+        "intro": {
+            "label": "Introduction",
+            "type": "textarea",
+            "attrs": {
+                "rows": 3
+            },
+            "description": "Leave empty to use the translated text (Language Overrides: MIT_DIR_INTRO).",
+            "enable": "show_hero"
+        },
+        "show_filters": {
+            "label": "Filters",
+            "type": "checkbox",
+            "text": "Show search, diocese, group and letter filters"
+        },
+        "show_az": {
+            "type": "checkbox",
+            "text": "Show the A to Z letter filter (A to Z order only)",
+            "enable": "show_filters"
+        },
+        "show_count": {
+            "type": "checkbox",
+            "text": "Show the number of clergy",
+            "enable": "show_filters"
+        },
+        "show_photo": {
+            "label": "Card",
+            "type": "checkbox",
+            "text": "Show photo (or initials)"
+        },
+        "show_parish": {
+            "type": "checkbox",
+            "text": "Show parish"
+        },
+        "show_contact": {
+            "type": "checkbox",
+            "text": "Show e-mail and phone buttons"
+        },
+        "columns": {
+            "label": "Columns",
+            "description": "Cards per row on large screens.",
+            "type": "select",
+            "options": {
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5",
+                "6": "6"
+            }
+        },
+        "columns_l": {
+            "label": "Columns up to 1100px",
+            "type": "select",
+            "options": {
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5",
+                "6": "6"
+            }
+        },
+        "columns_m": {
+            "label": "Columns up to 860px",
+            "type": "select",
+            "options": {
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5",
+                "6": "6"
+            }
+        },
+        "columns_s": {
+            "label": "Columns on phones (up to 560px)",
+            "type": "select",
+            "options": {
+                "1": "1",
+                "2": "2",
+                "3": "3",
+                "4": "4",
+                "5": "5",
+                "6": "6"
+            }
+        },
+        "gap": {
+            "label": "Gap",
+            "type": "select",
+            "options": {
+                "Small": "small",
+                "Default": "",
+                "Large": "large"
+            }
+        },
+        "photo_ratio": {
+            "label": "Photo shape",
+            "type": "select",
+            "options": {
+                "Landscape 5:4": "",
+                "Landscape 4:3": "4/3",
+                "Square": "1/1",
+                "Portrait 4:5": "4/5",
+                "Portrait 3:4": "3/4"
+            },
+            "enable": "show_photo"
+        },
+        "card_align": {
+            "label": "Card text",
+            "type": "select",
+            "options": {
+                "Centered": "",
+                "Left": "left"
+            }
+        },
+        "color_primary": {
+            "label": "Primary color",
+            "description": "Pills, letters, Call button. Leave empty to use the theme value (Settings > Custom Code > CSS/LESS, Clergy directory section).",
+            "type": "color"
+        },
+        "color_accent": {
+            "label": "Accent color",
+            "description": "E-mail button and Reset.",
+            "type": "color"
+        },
+        "color_deep": {
+            "label": "Name color",
+            "description": "Names, parish and the contact pop-up.",
+            "type": "color"
+        },
+        "color_gold": {
+            "label": "Heading color",
+            "description": "Letter and group headings, search icon.",
+            "type": "color"
+        },
+        "color_line": {
+            "label": "Border color",
+            "description": "Card, pill and letter borders.",
+            "type": "color"
+        },
+        "class": {
+            "label": "Class",
+            "type": "text"
+        },
+        "id": {
+            "label": "ID",
+            "type": "text"
+        }
+    },
+    "fieldset": {
+        "default": {
+            "type": "tabs",
+            "fields": [
+                {
+                    "title": "Content",
+                    "fields": [
+                        "order",
+                        "diocese",
+                        "show_hero",
+                        "show_breadcrumb",
+                        "title",
+                        "intro",
+                        "show_filters",
+                        "show_az",
+                        "show_count",
+                        "show_photo",
+                        "show_parish",
+                        "show_contact"
+                    ]
+                },
+                {
+                    "title": "Layout",
+                    "fields": [
+                        "columns",
+                        "columns_l",
+                        "columns_m",
+                        "columns_s",
+                        "gap",
+                        "photo_ratio",
+                        "card_align"
+                    ]
+                },
+                {
+                    "title": "Style",
+                    "fields": [
+                        "color_primary",
+                        "color_accent",
+                        "color_deep",
+                        "color_gold",
+                        "color_line"
+                    ]
+                },
+                {
+                    "title": "Advanced",
+                    "fields": [
+                        "id",
+                        "class"
+                    ]
+                }
+            ]
+        }
+    }
+}

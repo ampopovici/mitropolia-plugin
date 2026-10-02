@@ -1,0 +1,16 @@
+{
+ "name": "mitropolia_hierarchs_list",
+ "title": "Hierarchs list",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "category_id": {"label": "Category ID", "description": "Leave empty: the page shows the Hierarchs category being viewed. Current hierarchs are the articles in it; departed hierarchs are the articles in its sub-category."},
+  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["category_id"]}, {"title": "Advanced", "fields": ["class"]}]}}
+}

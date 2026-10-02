@@ -1,0 +1,16 @@
+{
+ "name": "mitropolia_tag_page",
+ "title": "Tag page",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
+ "fields": {
+  "tag_id": {"label": "Tag ID", "description": "Leave empty: the page shows the tag being viewed. Enter an ID only to preview a tag in the builder."},
+  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ },
+ "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["tag_id"]}, {"title": "Advanced", "fields": ["class"]}]}}
+}
