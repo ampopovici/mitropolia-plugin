@@ -26,32 +26,33 @@ final class Search
     private const GROUPS = ['news', 'pastoral-letters', 'words-of-wisdom', 'events', 'documents', 'publications', 'media', 'galleries', 'hierarchs', 'parishes', 'pages'];
     private const ALIAS_GROUP = ['revista-credinta' => 'publications', 'almanahul-credinta' => 'publications'];
     private const SKIP = ['clergy', 'static', 'itinerary'];
-    /** Words searched together; written without diacritics, lower case. */
+    /** Words searched together (compared without diacritics). */
     private const SYNONYMS = [
-        ['pasti', 'pascha', 'pascua', 'invierea', 'inviere', 'resurrection', 'resurreccion', 'easter'],
-        ['craciun', 'nasterea domnului', 'nativity', 'christmas', 'navidad', 'natividad'],
-        ['boboteaza', 'botezul domnului', 'theophany', 'epiphany', 'teofania', 'epifania'],
-        ['rusalii', 'cincizecimea', 'pentecost', 'pentecostes'],
+        ['paști', 'pascha', 'pascua', 'învierea', 'înviere', 'resurrection', 'resurrección', 'easter'],
+        ['crăciun', 'nașterea domnului', 'nativity', 'christmas', 'navidad', 'natividad'],
+        ['boboteaza', 'botezul domnului', 'theophany', 'epiphany', 'teofanía', 'epifanía'],
+        ['rusalii', 'cincizecimea', 'pentecost', 'pentecostés'],
         ['postul mare', 'great lent', 'gran cuaresma', 'cuaresma'],
-        ['adormirea', 'dormition', 'dormicion'],
-        ['schimbarea la fata', 'transfiguration', 'transfiguracion'],
-        ['inaltarea domnului', 'ascension', 'ascension del senor'],
+        ['adormirea', 'dormition', 'dormición'],
+        ['schimbarea la față', 'transfiguration', 'transfiguración'],
+        ['înălțarea domnului', 'ascension', 'ascensión del señor'],
         ['botez', 'baptism', 'bautismo'],
         ['cununie', 'cununia', 'wedding', 'marriage', 'matrimonio', 'boda'],
-        ['spovedanie', 'spovedania', 'confession', 'confesion'],
+        ['spovedanie', 'spovedania', 'confession', 'confesión'],
         ['liturghie', 'liturghia', 'liturgy', 'liturgia'],
         ['mitropolit', 'mitropolitul', 'metropolitan', 'metropolitano', 'metropolita'],
         ['episcop', 'episcopul', 'bishop', 'obispo'],
         ['preot', 'preotul', 'priest', 'sacerdote'],
         ['parohie', 'parohia', 'parish', 'parroquia'],
         ['hram', 'hramul', 'feast day', 'patronal', 'fiesta patronal'],
-        ['tabara', 'camp', 'campamento'],
-        ['tineri', 'tineret', 'youth', 'jovenes', 'juventud'],
-        ['hirotonie', 'hirotonia', 'ordination', 'ordenacion'],
-        ['tarnosire', 'sfintire', 'consecration', 'consagracion'],
+        ['tabără', 'camp', 'campamento'],
+        ['tineri', 'tineret', 'youth', 'jóvenes', 'juventud'],
+        ['hirotonie', 'hirotonia', 'ordination', 'ordenación'],
+        ['târnosire', 'sfințire', 'consecration', 'consagración'],
         ['congres', 'congresul', 'congress', 'congreso'],
-        ['pastorala', 'scrisoare pastorala', 'pastoral letter', 'carta pastoral'],
+        ['pastorală', 'scrisoare pastorală', 'pastoral letter', 'carta pastoral'],
     ];
+
     private const UI = [
         'title'    => ['Căutare', 'Search', 'Búsqueda'],
         'intro'    => ['Căutați în știri, pastorale, evenimente, documente, publicații și parohii.', 'Search news, pastoral letters, events, documents, publications and parishes.', 'Busque en noticias, cartas pastorales, eventos, documentos, publicaciones y parroquias.'],
@@ -125,31 +126,35 @@ final class Search
     private static function terms(string $q): array
     {
         $f = ' ' . trim(preg_replace('/[^\p{L}\p{N}]+/u', ' ', self::fold($q))) . ' ';
+        $sets = [];
+        foreach (self::SYNONYMS as $set) {
+            $sets[] = array_combine(array_map([self::class, 'fold'], $set), $set);
+        }
         $terms = [];
         $phrases = [];
-        foreach (self::SYNONYMS as $set) {
-            foreach ($set as $w) {
+        foreach ($sets as $i => $set) {
+            foreach (array_keys($set) as $w) {
                 if (str_contains($w, ' ')) {
-                    $phrases[$w] = $set;
+                    $phrases[$w] = $i;
                 }
             }
         }
         uksort($phrases, fn ($a, $b) => mb_strlen($b) <=> mb_strlen($a));
-        foreach ($phrases as $p => $set) {
+        foreach ($phrases as $p => $i) {
             if (str_contains($f, ' ' . $p . ' ')) {
-                $terms[] = ['w' => $p, 'alt' => $set];
+                $terms[] = ['w' => $p, 'alt' => array_keys($sets[$i]), 'show' => array_values($sets[$i])];
                 $f = str_replace(' ' . $p . ' ', ' ', $f);
             }
         }
         foreach (array_filter(explode(' ', trim($f)), fn ($w) => mb_strlen($w) >= 2) as $w) {
-            $alt = [$w];
-            foreach (self::SYNONYMS as $set) {
-                if (in_array($w, $set, true)) {
-                    $alt = $set;
+            $t = ['w' => $w, 'alt' => [$w], 'show' => [$w]];
+            foreach ($sets as $set) {
+                if (isset($set[$w])) {
+                    $t = ['w' => $w, 'alt' => array_keys($set), 'show' => array_values($set)];
                     break;
                 }
             }
-            $terms[] = ['w' => $w, 'alt' => $alt];
+            $terms[] = $t;
         }
         return array_slice($terms, 0, 6);
     }
@@ -463,8 +468,8 @@ final class Search
             $word = $total === 1 ? self::ui('r1') : (self::lang() === 'ro' && ($total % 100 === 0 || $total % 100 >= 20) ? self::ui('rde') : self::ui('rn'));
             $alts = [];
             foreach ($terms as $t) {
-                foreach ($t['alt'] as $a) {
-                    if ($a !== $t['w'] && count($alts) < 6) {
+                foreach ($t['show'] as $k => $a) {
+                    if ($t['alt'][$k] !== $t['w'] && count($alts) < 6) {
                         $alts[] = $a;
                     }
                 }
