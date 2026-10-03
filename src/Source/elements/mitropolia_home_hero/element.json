@@ -27,6 +27,10 @@
    "label": "All news button",
    "description": "Leave empty for the standard wording in the page language."
   },
+  "list_text": {
+   "label": "List title",
+   "description": "Leave empty for the standard wording in the page language."
+  },
   "class": {
    "label": "Extra CSS class",
    "description": "Optional."
@@ -42,6 +46,7 @@
       "count",
       "read_text",
       "all_text",
+      "list_text",
       "class"
      ]
     }

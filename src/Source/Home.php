@@ -17,6 +17,7 @@ final class Home
 {
     private const UI = [
         'read'        => ['Citește știrea', 'Read the story', 'Leer la noticia'],
+        'latest'      => ['Ultimele știri', 'Latest news', 'Últimas noticias'],
         'all_news'    => ['Toate știrile', 'All news', 'Todas las noticias'],
         'prev'        => ['Știrea anterioară', 'Previous story', 'Noticia anterior'],
         'next'        => ['Știrea următoare', 'Next story', 'Noticia siguiente'],
@@ -103,27 +104,28 @@ final class Home
             $read = self::t($props, 'read_text', 'read');
             $all = self::t($props, 'all_text', 'all_news');
             $list = News::homeListUrl();
-            $nav = function (int $cur) use ($items, $e): string {
-                if (count($items) < 2) {
-                    return '';
-                }
-                $n = count($items);
-                return '<div class="mh-hero-nav"><button type="button" class="mh-circ" data-mh-prev aria-label="' . $e(self::ui('prev')) . '">' . self::I_PREV . '</button>'
-                    . '<span class="mh-dots">' . implode('', array_map(fn ($i) => '<button type="button" data-mh-dot="' . $i . '" aria-label="' . $e(sprintf(self::ui('show'), $i + 1)) . '"' . ($i === $cur ? ' aria-current="true"' : '') . '></button>', range(0, $n - 1))) . '</span>'
-                    . '<button type="button" class="mh-circ" data-mh-next aria-label="' . $e(self::ui('next')) . '">' . self::I_NEXT . '</button></div>';
-            };
             $season = self::season();
-            $h = '<div class="' . self::cls($props, 'mh-hero') . ($season !== '' ? ' mh-season-' . $season : '') . '" data-mh-hero><span class="mh-wm" aria-hidden="true"></span><div class="mh-hero-in">';
+            $h = '<div class="' . self::cls($props, 'mh-hero') . ($season !== '' ? ' mh-season-' . $season : '') . '" data-mh-hero><span class="mh-wm" aria-hidden="true"></span><div class="mh-hero-in">'
+                . '<div class="mh-hb-main">';
             foreach ($items as $i => $it) {
                 $tag = $i === 0 ? 'h1' : 'h2';
                 $h .= '<div class="mh-slide"' . ($i ? ' hidden' : '') . '>'
-                    . '<div class="mh-hero-tx"><div class="mh-hero-kick">' . $e(trim($it->kicker . ($it->kicker !== '' ? ' · ' : '') . $it->date)) . '</div>'
+                    . '<a class="mh-hero-ph" href="' . $e($it->url) . '" tabindex="-1" aria-hidden="true">'
+                    . ($it->img !== '' ? '<img src="' . $e($it->img) . '" alt=""' . ($i ? ' loading="lazy"' : ' fetchpriority="high"') . '>' : '<span class="mh-noimg"></span>') . '</a>'
+                    . '<div class="mh-hero-kick">' . $e(trim($it->kicker . ($it->kicker !== '' ? ' · ' : '') . $it->date)) . '</div>'
                     . '<' . $tag . ' class="mh-hero-h"><a href="' . $e($it->url) . '">' . $e($it->title) . '</a></' . $tag . '>'
                     . '<div class="mh-hero-btns"><a class="mh-btn mh-btn-gold" href="' . $e($it->url) . '">' . $e($read) . '</a>'
-                    . '<a class="mh-btn mh-btn-ghost" href="' . $e($list) . '">' . $e($all) . '</a></div>' . $nav($i) . '</div>'
-                    . '<div class="mh-hero-ph">'
-                    . ($it->img !== '' ? '<img src="' . $e($it->img) . '" alt="' . $e($it->alt) . '"' . ($i ? ' loading="lazy"' : ' fetchpriority="high"') . '>' : '<span class="mh-noimg"></span>')
-                    . '</div></div>';
+                    . '<a class="mh-btn mh-btn-ghost" href="' . $e($list) . '">' . $e($all) . '</a></div></div>';
+            }
+            $h .= '</div>';
+            if (count($items) > 1) {
+                $h .= '<div class="mh-hb-list"><span class="mh-hb-label">' . $e(self::t($props, 'list_text', 'latest')) . '</span>';
+                foreach ($items as $i => $it) {
+                    $h .= '<button type="button" class="mh-hb-item" data-mh-dot="' . $i . '"' . ($i ? '' : ' aria-current="true"') . '>'
+                        . '<span class="mh-hb-num">' . sprintf('%02d', $i + 1) . '</span><span class="mh-hb-tx"><span class="mh-hb-date">' . $e($it->date) . '</span>'
+                        . '<span class="mh-hb-t">' . $e($it->title) . '</span></span></button>';
+                }
+                $h .= '</div>';
             }
             return $h . '</div></div>' . self::js();
         } catch (\Throwable $x) {
