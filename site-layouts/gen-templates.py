@@ -130,7 +130,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(HERE, "templates"), exist_ok=True)
     for key, (tid, name, typ, cats, fn) in TEMPLATES.items():
         for l, code in LANGS.items():
-            tpl = {"type": typ, "query": {"catid": cats, "tag": [], "lang": code},
+            tpl = {"type": typ, "query": {"catid": cats, "tag": [], "lang": code.lower()},  # YOOtheme matches lowercase codes
                    "name": name + " · " + LANG_LABEL[l], "layout": fn(l)}
             # RO keeps the id of the old all-language template; EN and ES get a stable id of their own
             tpl["id"] = tid if l == "ro" else "mx" + hashlib.md5((key + l).encode()).hexdigest()[:6]
