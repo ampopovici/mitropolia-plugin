@@ -64,6 +64,8 @@ final class AdminTools
                 return self::docCopy(json_decode((string) $p->getRaw('files'), true) ?: []);
             case 'doc_tags':
                 return self::docTags(json_decode((string) $p->getRaw('tags'), true) ?: []);
+            case 'doc_tag_add':
+                return self::docTagAdd(array_map('intval', json_decode((string) $p->getRaw('ids'), true) ?: []), (string) $p->getString('tag'));
             case 'doc_save':
                 return self::docSave(json_decode((string) $p->getRaw('doc'), true) ?: []);
         }
@@ -389,5 +391,34 @@ final class AdminTools
         }
         Admin::ensureWorkflow([$cat]);
         return ['ok' => true, 'id' => $id];
+    }
+
+    /** Adds one tag (by alias, in each article's language) to documents, keeping their other tags. */
+    private static function docTagAdd(array $ids, string $alias): array
+    {
+        $db = Admin::db();
+        $cats = array_filter([Admin::catByAlias('documents-ro'), Admin::catByAlias('documents-en'), Admin::catByAlias('documents-es')]);
+        $out = [];
+        foreach (array_slice($ids, 0, 60) as $id) {
+            $table = Admin::table();
+            if (!$table->load($id) || !in_array((int) $table->catid, $cats, true)) {
+                $out[] = [$id, 'not a document'];
+                continue;
+            }
+            $tid = (int) $db->setQuery($db->getQuery(true)->select('id')->from('#__tags')->where('alias = ' . $db->quote($alias))->where('published = 1'), 0, 1)->loadResult();
+            if (!$tid) {
+                $out[] = [$id, 'missing tag'];
+                continue;
+            }
+            $have = array_map('intval', $db->setQuery($db->getQuery(true)->select('tag_id')->from('#__contentitem_tag_map')
+                ->where('type_alias = ' . $db->quote('com_content.article'))->where('content_item_id = ' . (int) $id))->loadColumn());
+            if (in_array($tid, $have, true)) {
+                $out[] = [$id, 'already'];
+                continue;
+            }
+            $table->newTags = array_merge($have, [$tid]);
+            $out[] = [$id, $table->store() ? 'tagged' : 'failed'];
+        }
+        return ['ok' => true, 'items' => $out];
     }
 }
