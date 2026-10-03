@@ -59,8 +59,12 @@
 .mh-hero .mh-btn-ghost { border-color: var(--h-line); color: var(--h-ink) !important; }
 .mh-hero .mh-btn-ghost:hover { border-color: var(--h-ink); }
 .mh-hero-nav { display: flex; align-items: center; gap: 18px; margin-top: 48px; }
-.mh-circ { width: 46px; height: 46px; border-radius: 50%; border: 1px solid var(--h-line); background: transparent; color: var(--h-ink); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: border-color .2s, background .2s; }
+.mh-circ { width: 56px; height: 56px; border-radius: 50%; border: 1px solid var(--h-line); background: transparent; color: var(--h-ink); display: flex; align-items: center; justify-content: center; cursor: pointer; padding: 0; transition: border-color .2s, background .2s; }
 .mh-circ:hover { border-color: var(--h-ink); background: rgba(255,255,255,.06); }
+.mh-dots { display: flex; gap: 14px; }
+.mh-dots button { width: 14px; height: 14px; border-radius: 50%; padding: 0; cursor: pointer; border: 2px solid var(--h-ink); background: transparent; opacity: .7; transition: background .2s, border-color .2s, opacity .2s; }
+.mh-dots button[aria-current] { width: 18px; height: 18px; border-color: var(--h-accent); background: var(--h-accent); opacity: 1; }
+.mh-dots { align-items: center; }
 .mh-count { display: inline-flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 600; letter-spacing: .14em; color: var(--h-sub); font-variant-numeric: tabular-nums; }
 .mh-count b { color: var(--h-accent); font-weight: 600; }
 .mh-count i { display: block; width: 36px; height: 1px; background: var(--h-line); }

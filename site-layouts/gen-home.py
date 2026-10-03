@@ -72,10 +72,10 @@ L = {
   stay_h="Manténgase en contacto", stay_t="Reciba por correo electrónico las cartas pastorales, las noticias y cada nuevo número de la revista.", stay_b="Suscribirse", stay="/es/contacto"),
 }
 # Partner logos, in gold on the navy band. (image, small line, big line, link); a full logo has no lines.
-PARTNERS = [("patriarhia-romana.svg", "", "", "https://patriarhia.ro"),
-            ("episcopia-canada.png", "Episcopia Ortodoxă Română", "a Canadei", "https://www.episcopia.ca"),
-            ("assembly.png", "Assembly of Canonical", "Orthodox Bishops", "https://www.assemblyofbishops.org"),
-            ("sf-parascheva.png", "St. Parascheva", "Charity", "https://www.spcharity.org"),
+PARTNERS = [("patriarhia-romana-gold.svg", "Patriarhia", "Română", "https://patriarhia.ro"),
+            ("episcopia-canada.png", "", "", "https://www.episcopia.ca"),
+            ("assembly-logo.png", "", "", "https://www.assemblyofbishops.org"),
+            ("cross-ring.svg", "Saint Paraskeva", "Orthodox Charity", "https://www.spcharity.org"),
             ("radio-trinitas.svg", "", "", "https://radiotrinitas.ro"),
             ("trinitas-tv.svg", "", "", "https://trinitas.tv"),
             ("basilica-ro.svg", "", "", "https://basilica.ro"),

@@ -109,7 +109,7 @@ final class Home
                 }
                 $n = count($items);
                 return '<div class="mh-hero-nav"><button type="button" class="mh-circ" data-mh-prev aria-label="' . $e(self::ui('prev')) . '">' . self::I_PREV . '</button>'
-                    . '<span class="mh-count" aria-hidden="true"><b>' . sprintf('%02d', $cur + 1) . '</b><i></i>' . sprintf('%02d', $n) . '</span>'
+                    . '<span class="mh-dots">' . implode('', array_map(fn ($i) => '<button type="button" data-mh-dot="' . $i . '" aria-label="' . $e(sprintf(self::ui('show'), $i + 1)) . '"' . ($i === $cur ? ' aria-current="true"' : '') . '></button>', range(0, $n - 1))) . '</span>'
                     . '<button type="button" class="mh-circ" data-mh-next aria-label="' . $e(self::ui('next')) . '">' . self::I_NEXT . '</button></div>';
             };
             $season = self::season();
