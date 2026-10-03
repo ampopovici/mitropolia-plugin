@@ -517,9 +517,7 @@ final class Hierarchs
                 return '';
             }
             $title = trim((string) ($props['title'] ?? '')) ?: Text::_('MIT_HP_ITINERARY');
-            $h = '<div class="mhp mh-hitin" data-mh-it><div class="mhp-card"><div class="mhp-card-h"><h2 class="mpx-h2">' . $e($title) . '</h2>'
-                . '<div class="mhp-tabs" role="tablist"><button type="button" class="on" data-mh-m="up">' . $e(Text::_('MIT_HP_UPCOMING')) . '</button>'
-                . '<button type="button" data-mh-m="past">' . $e(Text::_('MIT_HP_RECENT')) . '</button></div></div>';
+            $h = '<div class="mhp mh-hitin" data-mh-it><div class="mhp-card"><div class="mhp-card-h"><h2 class="mpx-h2">' . $e($title) . '</h2></div>';
             if (count($sets) > 1) {
                 $h .= '<div class="mh-pills mh-pills-full" role="tablist">';
                 foreach ($sets as $i => [$name]) {
@@ -528,11 +526,9 @@ final class Hierarchs
                 $h .= '</div>';
             }
             foreach ($sets as $i => [, $st]) {
-                foreach (['up', 'past'] as $m) {
-                    $h .= '<div data-mh-pane="' . $i . '-' . $m . '"' . ($i === 0 && $m === 'up' ? '' : ' hidden') . '>'
-                        . ($st[$m] ? implode('', $st[$m]) : '<p class="mh-it-none">' . $e(Text::_($m === 'up' ? 'MIT_HP_NO_UPCOMING' : 'MIT_HP_NO_RECENT')) . '</p>')
-                        . ($st['url'] !== '' ? '<a class="mh-it-more" href="' . $e($st['url']) . '">' . $e(Text::_('MIT_HP_FULL_ITIN')) . ' →</a>' : '') . '</div>';
-                }
+                $h .= '<div data-mh-pane="' . $i . '-up"' . ($i === 0 ? '' : ' hidden') . '>'
+                    . ($st['up'] ? implode('', $st['up']) : '<p class="mh-it-none">' . $e(Text::_('MIT_HP_NO_UPCOMING')) . '</p>')
+                    . ($st['url'] !== '' ? '<a class="mh-it-more" href="' . $e($st['url']) . '">' . $e(Text::_('MIT_HP_FULL_ITIN')) . ' →</a>' : '') . '</div>';
             }
             $h .= '</div></div>' . self::assets() . <<<'HTML'
 <script>

@@ -71,10 +71,15 @@ L = {
   part="Socios y amigos de la Metrópolis",
   stay_h="Manténgase en contacto", stay_t="Reciba por correo electrónico las cartas pastorales, las noticias y cada nuevo número de la revista.", stay_b="Suscribirse", stay="/es/contacto"),
 }
-PARTNERS = [("Patriarhia Română", "https://patriarhia.ro", "patriarhia-romana.png"), ("Episcopia Ortodoxă Română a Canadei", "https://www.episcopia.ca", "episcopia.png"),
-            ("Assembly of Canonical Orthodox Bishops", "https://www.assemblyofbishops.org", "assembly.png"), ("Trinitas TV", "https://www.trinitastv.ro", "trinitas-tv.png"),
-            ("Radio Trinitas", "https://www.radiotrinitas.ro", "radio-trinitas.png"), ("Basilica", "https://www.basilica.ro", "basilica-ro.png"),
-            ("Ziarul Lumina", "https://ziarullumina.ro", "ziar-lumina.png"), ("St. Parascheva Charity", "https://www.spcharity.org", "sf-parascheva.png")]
+# Partner logos, in gold on the navy band. (image, small line, big line, link); a full logo has no lines.
+PARTNERS = [("patriarhia-romana.svg", "", "", "https://patriarhia.ro"),
+            ("episcopia-canada.png", "Episcopia Ortodoxă Română", "a Canadei", "https://www.episcopia.ca"),
+            ("assembly.png", "Assembly of Canonical", "Orthodox Bishops", "https://www.assemblyofbishops.org"),
+            ("sf-parascheva.png", "St. Parascheva", "Charity", "https://www.spcharity.org"),
+            ("radio-trinitas.svg", "", "", "https://radiotrinitas.ro"),
+            ("trinitas-tv.svg", "", "", "https://trinitas.tv"),
+            ("basilica-ro.svg", "", "", "https://basilica.ro"),
+            ("ziarul-lumina.svg", "", "", "https://ziarullumina.ro")]
 
 
 def el(t, props=None, children=None, **kw):
@@ -128,7 +133,7 @@ def layout(l):
     S.append(section("Quick access", "mh-s-tiles", [row(col([grid(
         [el("grid_item", {"image": ICON + i + ".svg", "image_alt": "", "title": t, "content": "<p>" + x + "</p>", "link": u}) for i, t, x, u in c["tiles"]],
         ("2", "4"), "mh-tiles", panel_style="card-default", panel_link=True, image_width="28", image_height="28", image_align="top", title_style="")]))]))
-    S.append(section("News", "mh-s-news", [row(col([kick(c["news_k"], "mh-center"), h2(c["news_h"], "mh-center"),
+    S.append(section("News", "mh-s-news", [row(col([h2(c["news_h"], "mh-center"),
         el("mitropolia_home_news", {"offset": 4, "count": 3})]))]))
     S.append(section("Hierarchs and visits", "mh-s-hier", [
         row(col([h2(c["hier_k"])])),
@@ -143,10 +148,10 @@ def layout(l):
                           "link_style": "default", "panel_style": "card-default", "title_element": "h2", "title_style": "", "meta_style": "", "meta_align": "above-title",
                           "class": "mh-donate"})], "2-5"), gutter="large")]))
     S.append(section("Partners", "mh-s-partners", [row(col([
-        el("text", {"content": "<p>" + c["part"] + "</p>", "margin": "remove", "class": "mh-plabel mh-center"}),
-        grid([el("grid_item", {"image": "/images/partners/" + f, "image_alt": t, "link": u}) for t, u, f in PARTNERS],
-             ("4", "8"), "mh-logos", panel_link=True, grid_column_gap="medium", grid_row_gap="medium", margin="medium", image_align="top",
-             grid_default="2", text_align="center", panel_style="")]))]))
+        grid([el("grid_item", dict({"image": "/images/partners/" + f, "image_alt": (sm + " " + bg).strip() or f.split(".")[0].replace("-", " ").title(), "link": u},
+                                   **({"meta": sm, "title": bg} if bg else {}))) for f, sm, bg, u in PARTNERS],
+             ("2", "4"), "mh-logos", panel_link=True, grid_column_gap="large", grid_row_gap="large", image_align="left", image_grid_width="auto",
+             image_vertical_align=True, meta_align="above-title", title_style="", meta_style="", panel_style="")]))]))
     S.append(section("Stay connected", "mh-s-stay", [row(
         col([h2(c["stay_h"]), lead(c["stay_t"])], "2-5", vertical_align="middle"),
         col([el("button", {"margin": "remove", "text_align": "right", "text_align_breakpoint": "m"},

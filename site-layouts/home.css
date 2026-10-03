@@ -107,6 +107,13 @@
 // hierarchs: the cards of the Hierarchs page and the itinerary card of the hierarch page
 .mh-hcards .mhl-cards { max-width: none; padding-bottom: 0; gap: 24px; }
 .mh-hcards .mhl-cards::before { display: none; }
+// links as menu lines instead of buttons (homepage only)
+.mh-hcards .mhl-links { display: block; width: 100%; margin-top: auto; padding: 0 0 8px; border-top: 1px solid #EFE6D4; }
+.mh-hcards .mhl-links a { display: flex; justify-content: space-between; align-items: center; height: auto; padding: 12px 4px; border: 0; border-bottom: 1px solid #EFE6D4; border-radius: 0; background: none; font-size: 15px; font-weight: 600; text-align: left; white-space: normal; color: #203D78; }
+.mh-hcards .mhl-links a:last-child { border-bottom: 0; }
+.mh-hcards .mhl-links a::after { content: "→"; color: #B99755; transition: transform .2s; }
+.mh-hcards .mhl-links a:hover { background: none; color: #A32D36; border-color: #EFE6D4; }
+.mh-hcards .mhl-links a:hover::after { transform: translateX(3px); color: #A32D36; }
 .mh-hitin .mhp-card { box-shadow: 0 30px 60px -38px rgba(23,46,92,.4); border: 1px solid #E4D8BE; }
 .mh-hitin .mh-pills-full { margin: 4px 0 12px; }
 .mh-pills { display: flex; gap: 4px; background: #EFE3CB; border-radius: 999px; padding: 4px; }
@@ -163,12 +170,15 @@
 .mh-donate .el-content { font-family: 'Source Serif 4', Georgia, serif; font-size: 18px; line-height: 1.6; color: #F7F3EA; margin-top: 18px; }
 .mh-donate .el-link { display: inline-flex; margin-top: 26px; background: #FFFFFF !important; color: #A32D36 !important; border: 0 !important; border-radius: 999px; padding: 15px 32px; font-size: 14px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; line-height: 1.2; }
 
-// partners: logos
-.mh-s-partners .mh-plabel, .mh-s-partners .mh-plabel p { font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #6B5A34; margin: 0; }
-.mh-logos .el-item { display: flex; align-items: center; justify-content: center; height: 100%; }
-.mh-logos .el-item > * { margin: 0 !important; }
-.mh-logos img { max-height: 64px; max-width: 150px; width: auto; height: auto; object-fit: contain; transition: transform .2s; }
-.mh-logos a:hover img { transform: scale(1.04); }
+// partners: logos in gold on navy (any logo with a transparent background is turned gold by the filter)
+.mh-s-partners { background: #203D78; border-top: 0; padding: 60px 0; }
+.mh-logos .el-item { display: flex; align-items: center; justify-content: center; height: 100%; text-decoration: none !important; }
+.mh-logos .el-item > .uk-grid { align-items: center; flex-wrap: nowrap; margin-left: -14px; }
+.mh-logos .el-item > .uk-grid > * { padding-left: 14px; }
+.mh-logos img { height: 58px; width: auto; max-width: 260px; object-fit: contain; filter: brightness(0) saturate(100%) invert(73%) sepia(21%) saturate(749%) hue-rotate(355deg) brightness(91%) contrast(87%); transition: opacity .2s; }
+.mh-logos .el-meta { font-family: 'Source Sans 3', sans-serif; font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #C8A46A; line-height: 1.2; margin: 0; }
+.mh-logos .el-title { font-family: 'Source Sans 3', sans-serif; font-size: 21px; font-weight: 800; letter-spacing: .01em; text-transform: uppercase; color: #C8A46A; line-height: 1.05; margin: 2px 0 0; }
+.mh-logos a.el-item:hover img, .mh-logos a.el-item:hover .el-meta, .mh-logos a.el-item:hover .el-title { opacity: .8; }
 
 // stay connected
 .mh-s-stay .mh-h2 { font-size: 44px; margin: 0; }

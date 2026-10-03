@@ -90,7 +90,10 @@ final class AdminTools
             case 'doc_save':
                 return self::docSave(json_decode((string) $p->getRaw('doc'), true) ?: []);
             case 'site_asset':
-                return self::siteAsset((string) $p->getCmd('name'), (string) $p->getRaw('data'));
+                $data = (string) $p->getRaw('data');
+                return self::siteAsset((string) $p->getCmd('name'), $p->getInt('b64') ? (string) base64_decode($data, true) : $data, $p->getCmd('dir') === 'partners' ? 'partners' : 'site');
+            case 'logo_get':
+                return self::logoGet((string) $p->getString('url'), (string) $p->getCmd('name'));
             case 'page_layout':
                 return self::pageLayout($p->getInt('id'), (string) $p->getRaw('layout'));
         }
@@ -722,7 +725,7 @@ final class AdminTools
     }
 
     /** Saves a small site graphic (SVG, PNG or WebP) into images/site/, e.g. the seal watermark. */
-    private static function siteAsset(string $name, string $data): array
+    private static function siteAsset(string $name, string $data, string $dir = 'site'): array
     {
         if (!preg_match('/^[a-z0-9-]{1,40}\.(svg|png|webp)$/', $name) || $data === '' || strlen($data) > 4000000) {
             return ['ok' => false, 'error' => 'bad name or data'];
@@ -734,8 +737,25 @@ final class AdminTools
         } elseif (!@getimagesizefromstring($data)) {
             return ['ok' => false, 'error' => 'not an image'];
         }
-        $abs = JPATH_ROOT . '/images/site/' . $name;
+        if (!is_dir(JPATH_ROOT . '/images/' . $dir)) {
+            @mkdir(JPATH_ROOT . '/images/' . $dir, 0755, true);
+        }
+        $abs = JPATH_ROOT . '/images/' . $dir . '/' . $name;
         $ok = @file_put_contents($abs, $data);
-        return ['ok' => (bool) $ok, 'path' => 'images/site/' . $name, 'bytes' => (int) $ok];
+        return ['ok' => (bool) $ok, 'path' => 'images/' . $dir . '/' . $name, 'bytes' => (int) $ok];
+    }
+
+    /** Copies a partner logo (SVG or PNG) from the partner's own site into images/partners/. */
+    private static function logoGet(string $url, string $name): array
+    {
+        if (!preg_match('#^https://(www\.)?(patriarhia\.ro|episcopia\.ca|assemblyofbishops\.org|spcharity\.org)/[^\s"\'<>]+\.(svg|png)$#i', $url)) {
+            return ['ok' => false, 'error' => 'url not allowed'];
+        }
+        $ctx = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Mozilla/5.0 (Mitropolia staging)']]);
+        $data = @file_get_contents($url, false, $ctx);
+        if ($data === false || strlen($data) < 100) {
+            return ['ok' => false, 'error' => 'download failed'];
+        }
+        return self::siteAsset($name, $data, 'partners');
     }
 }
