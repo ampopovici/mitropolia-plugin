@@ -179,16 +179,33 @@ final class Search
 
     /* ------------------------------------------------------------------ query */
 
+    /** Categories searched: everything except the sections in SKIP. */
+    private static function catIds(): array
+    {
+        $db = self::db();
+        $rows = $db->setQuery($db->getQuery(true)->select(['id', 'path'])->from('#__categories')
+            ->where('extension = ' . $db->quote('com_content'))->where('published = 1'))->loadObjectList();
+        $ids = [];
+        foreach ($rows as $r) {
+            if (!in_array(self::group((string) $r->path), self::SKIP, true)) {
+                $ids[] = (int) $r->id;
+            }
+        }
+        return $ids ?: [0];
+    }
+
     private static function find(array $terms, bool $allLang): array
     {
         $db = self::db();
         $app = Factory::getApplication();
         $now = Factory::getDate()->toSql();
         $levels = array_map('intval', $app->getIdentity()->getAuthorisedViewLevels()) ?: [1];
+        $cats = self::catIds();
         $q = $db->getQuery(true)
             ->select(['a.id', 'a.title', 'a.alias', 'a.catid', 'a.language', 'a.images', 'a.publish_up', 'a.introtext', $db->quoteName('a.fulltext'), 'c.path'])
             ->from($db->quoteName('#__content', 'a'))
-            ->join('INNER', $db->quoteName('#__categories', 'c') . ' ON c.id = a.catid AND c.published = 1 AND c.extension = ' . $db->quote('com_content'))
+            ->join('INNER', $db->quoteName('#__categories', 'c') . ' ON c.id = a.catid')
+            ->whereIn('a.catid', $cats)
             ->where('a.state = 1')
             ->where('(a.publish_up IS NULL OR a.publish_up <= ' . $db->quote($now) . ')')
             ->where('(a.publish_down IS NULL OR a.publish_down > ' . $db->quote($now) . ')')
@@ -198,12 +215,19 @@ final class Search
         }
         foreach ($terms as $t) {
             $or = [];
+            $fv = [];
             foreach ($t['alt'] as $alt) {
                 $like = $db->quote('%' . $db->escape($alt, true) . '%', false);
                 $or[] = 'a.title LIKE ' . $like;
                 $or[] = 'a.introtext LIKE ' . $like;
                 $or[] = $db->quoteName('a.fulltext') . ' LIKE ' . $like;
-                $or[] = 'EXISTS (SELECT 1 FROM #__fields_values v WHERE v.item_id = a.id AND v.value LIKE ' . $like . ')';
+                $fv[] = 'value LIKE ' . $like;
+            }
+            // custom fields (parish address, gallery and video titles...): one pass over the field values
+            $ids = $db->setQuery('SELECT DISTINCT item_id FROM #__fields_values WHERE ' . implode(' OR ', $fv), 0, 3000)->loadColumn();
+            $ids = array_values(array_filter(array_map('intval', $ids)));
+            if ($ids) {
+                $or[] = 'a.id IN (' . implode(',', $ids) . ')';
             }
             $q->where('(' . implode(' OR ', $or) . ')');
         }
