@@ -266,7 +266,8 @@ final class Events
             $name = ($x['parish-name-' . $l] ?? '') ?: (($l === 'es' ? ($x['parish-name-en'] ?? '') : '') ?: (($x['parish-name-ro'] ?? '') ?: (string) $r->title));
             $city = trim(implode(', ', array_filter([(string) ($x['parish-city'] ?? ''), (string) ($x['parish-state'] ?? '')])));
             $pt = null;
-            if (preg_match('/^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/', (string) ($x['parish-location'] ?? ''), $m)) {
+            if (preg_match('/(-?\d+(?:\.\d+)?)\s*[, ]\s*(-?\d+(?:\.\d+)?)/', (string) ($x['parish-location'] ?? ''), $m)
+                && abs((float) $m[1]) <= 90 && abs((float) $m[2]) <= 180 && ((float) $m[1] || (float) $m[2])) {
                 $pt = [(float) $m[1], (float) $m[2]];
             }
             $out[(int) $r->id] = [
@@ -750,7 +751,7 @@ final class Events
 .mev .meta{font-size:14px;color:var(--mp-muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .mev .meta .dot{width:3px;height:3px;border-radius:50%;background:var(--mp-gold)}
 .mev .kick{font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--mp-red)}
-.mev .where{gap:6px;color:#3C4A66}.mev .where svg{flex:none;color:var(--mp-red)}
+.mev .where{gap:6px;color:#3C4A66;flex-wrap:nowrap;align-items:flex-start}.mev .where svg{margin-top:2px}.mev .where svg{flex:none;color:var(--mp-red)}
 .mev-sec{padding:24px 0 56px}
 .mev .sechead{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap;margin:24px 0 22px}
 .mev .sechead .more{font-weight:600;color:var(--mp-red)}
