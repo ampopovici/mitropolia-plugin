@@ -14,7 +14,7 @@ use Joomla\Database\ParameterType;
 
 /**
  * Events ("Events list" and "Event" builder elements), as in the approved mockups with Alex's changes of Oct 2:
- * no calendar subscription, no links to news reports, and date boxes that show the whole span (7–9 DEC),
+ * no calendar buttons, no links to news reports, and date boxes that show the whole span (7–9 DEC),
  * like the pastoral itinerary.
  * An event is an article in Events (RO/EN/ES), one per language, linked as associations. Fields: event-start,
  * event-end, event-all-day, event-parish, event-place, event-address, event-group, event-registration,
@@ -44,7 +44,6 @@ final class Events
         'ended'     => ['Acest eveniment s-a încheiat.', 'This event has ended.', 'Este evento ya terminó.'],
         'photos'    => ['Fotografii', 'Photos', 'Fotos'],
         'seephotos' => ['Vedeți fotografiile', 'View photos', 'Ver las fotos'],
-        'addcal'    => ['Adaugă în calendar', 'Add to calendar', 'Añadir al calendario'],
         'dir'       => ['Indicații', 'Directions', 'Cómo llegar'],
         'date'      => ['Data', 'Date', 'Fecha'],
         'time'      => ['Ora', 'Time', 'Hora'],
@@ -98,7 +97,6 @@ final class Events
     private const I_CLOCK = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
     private const I_USER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
     private const I_MAIL = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
-    private const I_PLUS = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M12 13v5M9.5 15.5h5"/></svg>';
     private const I_DIR = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l18-8-8 18-2-8z"/></svg>';
     private const I_FB = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M14 8h3V4h-3c-2.8 0-4 1.7-4 4v2H8v4h2v8h4v-8h3l1-4h-4V8.5c0-.3.2-.5.5-.5z"/></svg>';
     private const I_LINK = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1"/><path d="M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1"/></svg>';
@@ -642,13 +640,10 @@ final class Events
         $addr = $ev->parish ? trim(implode(', ', array_filter([$ev->parish['street'], $ev->parish['city'], $ev->parish['country']]))) : trim($ev->place . ', ' . $ev->address, ', ');
         $pt = $ev->parish['point'] ?? null;
         $dirUrl = $pt ? 'https://www.google.com/maps/dir/?api=1&destination=' . $pt[0] . ',' . $pt[1] : ($addr !== '' ? 'https://www.google.com/maps/dir/?api=1&destination=' . rawurlencode($addr) : '');
-        // calendar file data (built in the browser)
-        $ics = json_encode(['t' => $ev->title, 's' => $ev->start, 'e' => $ev->end, 'd2' => self::d2($ev), 'ad' => $ev->allday || self::clock($ev->start) === '', 'loc' => trim($pn . ', ' . ($addr ?: $pc), ', '), 'u' => $here], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS);
 
         $btns = '';
         if (!$past) {
-            $btns = $regBtn . '<button type="button" class="btn line" data-ics=\'' . $ics . '\'>' . self::I_PLUS . ' ' . $e(self::ui('addcal')) . '</button>'
-                . ($dirUrl !== '' ? '<a class="btn line" href="' . $e($dirUrl) . '" target="_blank" rel="noopener">' . self::I_DIR . ' ' . $e(self::ui('dir')) . '</a>' : '');
+            $btns = $regBtn . ($dirUrl !== '' ? '<a class="btn line" href="' . $e($dirUrl) . '" target="_blank" rel="noopener">' . self::I_DIR . ' ' . $e(self::ui('dir')) . '</a>' : '');
         } elseif ($photos) {
             $btns = '<a class="btn line" href="#mev-photos">' . $e(self::ui('seephotos')) . '</a>';
         }
@@ -843,14 +838,6 @@ document.querySelectorAll('.mev .chips').forEach(function(box){var root=box.clos
  root.querySelectorAll('[data-list]>[data-g]').forEach(function(x){x.hidden=!!g&&x.dataset.g!==g;});
  root.querySelectorAll('[data-list] .month').forEach(function(h){var x=h.nextElementSibling,any=false;while(x&&!x.classList.contains('month')){if(!x.hidden)any=true;x=x.nextElementSibling;}h.hidden=!any;});
  var up=root.querySelector('[data-up]');if(up){var n=up.querySelectorAll('.evrow:not([hidden])').length,c=up.querySelector('[data-count]');if(c)c.textContent=n+' '+(n===1?c.dataset.one:c.dataset.many);var em=up.querySelector('[data-empty]');if(em)em.hidden=n>0;}});});
-/* add to calendar: a small .ics file made in the browser */
-document.querySelectorAll('.mev [data-ics]').forEach(function(b){b.addEventListener('click',function(){var d=JSON.parse(b.dataset.ics);
- var z=function(n){return String(n).padStart(2,'0');},ymd=function(s){return s.slice(0,10).replace(/-/g,'');},hm=function(s){var m=s.match(/(\d{2}):(\d{2})/);return m?m[1]+m[2]+'00':'000000';};
- var nx=function(s){var x=new Date(s.slice(0,10)+'T12:00:00');x.setDate(x.getDate()+1);return x.getFullYear()+z(x.getMonth()+1)+z(x.getDate());};
- var st,en;if(d.ad){st='DTSTART;VALUE=DATE:'+ymd(d.s);en='DTEND;VALUE=DATE:'+nx(d.d2||d.s);}else{st='DTSTART:'+ymd(d.s)+'T'+hm(d.s);en='DTEND:'+(d.e?ymd(d.e)+'T'+hm(d.e):ymd(d.s)+'T'+z(Math.min(23,+hm(d.s).slice(0,2)+2))+hm(d.s).slice(2));}
- var esc=function(s){return String(s||'').replace(/[\\,;]/g,function(c){return '\\'+c;}).replace(/\n/g,'\\n');};
- var ics=['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mitropolia//Events//RO','BEGIN:VEVENT','UID:'+Date.now()+'\u0040mitropolia.us','DTSTAMP:'+new Date().toISOString().replace(/[-:]/g,'').slice(0,15)+'Z',st,en,'SUMMARY:'+esc(d.t),'LOCATION:'+esc(d.loc),'URL:'+d.u,'END:VEVENT','END:VCALENDAR'].join('\r\n');
- var a=document.createElement('a');a.href=URL.createObjectURL(new Blob([ics],{type:'text/calendar'}));a.download=(d.t||'event').replace(/[^\wÀ-ɏ -]+/g,'').slice(0,60)+'.ics';document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove();},500);});});
 /* copy link */
 document.querySelectorAll('.mev [data-copy]').forEach(function(b){b.addEventListener('click',function(){var t=b.dataset.copy;(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){b.title=b.dataset.done;b.style.background='#203D78';b.style.color='#fff';setTimeout(function(){b.style.background='';b.style.color='';},1200);}).catch(function(){window.prompt('',t);});});});
 /* map */
