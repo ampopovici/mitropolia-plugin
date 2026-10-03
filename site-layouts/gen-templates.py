@@ -4,7 +4,7 @@ article or written in the page language; lists, filters and article bodies stay 
 Styles: pages.css, pasted into YOOtheme > Settings > CSS after the homepage styles.
 
 python3 gen-templates.py   ->  templates/<key>-<lang>.json  ({"tpl": {...}} ready for POST builder/template)"""
-import json, os, re
+import hashlib, json, os, re
 
 V = "5.0.50"
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -132,8 +132,8 @@ if __name__ == "__main__":
         for l, code in LANGS.items():
             tpl = {"type": typ, "query": {"catid": cats, "tag": [], "lang": code},
                    "name": name + " · " + LANG_LABEL[l], "layout": fn(l)}
-            if l == "ro":
-                tpl["id"] = tid
+            # RO keeps the id of the old all-language template; EN and ES get a stable id of their own
+            tpl["id"] = tid if l == "ro" else "mx" + hashlib.md5((key + l).encode()).hexdigest()[:6]
             with open(os.path.join(HERE, "templates", key + "-" + l + ".json"), "w", encoding="utf-8") as f:
                 json.dump({"tpl": tpl}, f, ensure_ascii=False)
     print("ok")
