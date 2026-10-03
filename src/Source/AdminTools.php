@@ -363,8 +363,9 @@ final class AdminTools
         $as = self::assoc($id);
         $en = !empty($as['en-US']) ? $db->setQuery($db->getQuery(true)->select(['title', 'introtext', $db->quoteName('fulltext')])->from('#__content')->where('id = ' . (int) $as['en-US']))->loadObject() : null;
         $fields = $db->setQuery('SELECT f.name, v.value FROM #__fields_values v INNER JOIN #__fields f ON f.id = v.field_id WHERE v.item_id = ' . $db->quote((string) $id))->loadAssocList('name', 'value');
+        $enFields = !empty($as['en-US']) ? $db->setQuery('SELECT f.name, v.value FROM #__fields_values v INNER JOIN #__fields f ON f.id = v.field_id WHERE v.item_id = ' . $db->quote((string) $as['en-US']))->loadAssocList('name', 'value') : [];
         return ['ok' => true, 'id' => $id, 'cat' => (int) $a->catid, 'dt' => substr((string) $a->publish_up, 0, 10), 'title' => (string) $a->title,
-            'intro' => (string) $a->introtext, 'full' => (string) $a->fulltext, 'metadesc' => (string) $a->metadesc, 'fields' => $fields,
+            'intro' => (string) $a->introtext, 'full' => (string) $a->fulltext, 'metadesc' => (string) $a->metadesc, 'fields' => $fields, 'en_fields' => $enFields,
             'en_title' => $en ? (string) $en->title : '', 'en_intro' => $en ? (string) $en->introtext : '', 'en_full' => $en ? (string) $en->fulltext : '',
             'es' => $as['es-ES'] ?? 0];
     }
@@ -416,10 +417,14 @@ final class AdminTools
             return ['ok' => false, 'error' => 'store failed' . (method_exists($table, 'getError') ? ': ' . $table->getError() : '')];
         }
         $esId = (int) $table->id;
-        $vals = $db->setQuery($db->getQuery(true)->select(['field_id', 'value'])->from('#__fields_values')->where('item_id = ' . $db->quote((string) $id)))->loadObjectList();
+        $vals = $db->setQuery($db->getQuery(true)->select(['v.field_id', 'v.value', 'f.name'])->from($db->quoteName('#__fields_values', 'v'))
+            ->join('INNER', $db->quoteName('#__fields', 'f') . ' ON f.id = v.field_id')->where('v.item_id = ' . $db->quote((string) $id)))->loadObjectList();
+        // values in the target language (e.g. the feast name), sent as fields={"pastoral-feast":"Natividad del Señor"}
+        $over = json_decode((string) $p->getRaw('fields'), true) ?: [];
         $db->setQuery($db->getQuery(true)->delete('#__fields_values')->where('item_id = ' . $db->quote((string) $esId)))->execute();
         foreach ($vals as $v) {
-            $o = (object) ['field_id' => (int) $v->field_id, 'item_id' => (string) $esId, 'value' => (string) $v->value];
+            $val = array_key_exists((string) $v->name, $over) ? (string) $over[(string) $v->name] : (string) $v->value;
+            $o = (object) ['field_id' => (int) $v->field_id, 'item_id' => (string) $esId, 'value' => $val];
             $db->insertObject('#__fields_values', $o);
         }
         // tags: the same as the Romanian article
