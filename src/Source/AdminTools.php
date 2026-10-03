@@ -61,6 +61,12 @@ final class AdminTools
                 $db = Admin::db();
                 return ['ok' => true, 'items' => $db->setQuery($db->getQuery(true)->select(['c.id', 'c.alias', 'c.parent_id', 'c.language', 'c.title', 'c.published', '(SELECT COUNT(*) FROM #__content a WHERE a.catid = c.id AND a.state IN (0,1)) AS n'])
                     ->from($db->quoteName('#__categories', 'c'))->where('c.extension = ' . $db->quote('com_content'))->order('c.lft'))->loadObjectList()];
+            case 'sec_list':
+                return self::secList();
+            case 'sec_src':
+                return self::secSrc($p->getInt('id'));
+            case 'sec_save':
+                return self::secSave();
             case 'es_list':
                 return self::esList($p->getInt('year'));
             case 'es_src':
@@ -243,9 +249,12 @@ final class AdminTools
         $p = $app->getInput()->post;
         $c = self::cats();
         $id = $p->getInt('id');
+        // lang=en-US saves the English copy instead of the Spanish one
+        $lang = $p->getCmd('lang') === 'en-US' ? 'en-US' : 'es-ES';
+        $tcat = $lang === 'en-US' ? $c['en'] : $c['es'];
         $db = Admin::db();
         $ro = $db->setQuery($db->getQuery(true)->select('*')->from('#__content')->where('id = ' . $id))->loadObject();
-        if (!$ro || (int) $ro->catid !== $c['ro'] || !$c['es']) {
+        if (!$ro || (int) $ro->catid !== $c['ro'] || !$tcat) {
             return ['ok' => false, 'error' => 'not a Romanian news article'];
         }
         $title = Admin::plainTitle((string) $p->getString('title'));
@@ -255,7 +264,7 @@ final class AdminTools
             return ['ok' => false, 'error' => 'title and text are required'];
         }
         $as = self::assoc($id);
-        $esId = (int) ($as['es-ES'] ?? 0);
+        $esId = (int) ($as[$lang] ?? 0);
         $now = Factory::getDate()->toSql();
         $table = Admin::table();
         if ($esId) {
@@ -268,13 +277,13 @@ final class AdminTools
             $table->modified_by = (int) $app->getIdentity()->id;
         } else {
             $table->bind([
-                'title' => $title, 'alias' => Admin::uniqueAlias($c['es'], Admin::slug($title, 120) ?: 'noticia'),
-                'catid' => $c['es'], 'state' => (int) $ro->state, 'access' => (int) $ro->access, 'language' => 'es-ES',
+                'title' => $title, 'alias' => Admin::uniqueAlias($tcat, Admin::slug($title, 120) ?: ($lang === 'en-US' ? 'news' : 'noticia')),
+                'catid' => $tcat, 'state' => (int) $ro->state, 'access' => (int) $ro->access, 'language' => $lang,
                 'introtext' => $intro, 'fulltext' => $full, 'created' => (string) $ro->created, 'created_by' => (int) $ro->created_by,
                 'created_by_alias' => (string) $ro->created_by_alias, 'publish_up' => (string) $ro->publish_up, 'featured' => (int) $ro->featured,
                 'images' => (string) $ro->images, 'urls' => (string) $ro->urls ?: '{}', 'attribs' => (string) $ro->attribs ?: '{}',
                 'metadata' => (string) $ro->metadata ?: '{}', 'metakey' => '', 'metadesc' => mb_substr(trim((string) $p->getString('metadesc')), 0, 300),
-                'note' => 'traducere ES (Claude), din RO ' . $id,
+                'note' => 'traducere ' . strtoupper(substr($lang, 0, 2)) . ' (Claude), din RO ' . $id,
             ]);
         }
         if (!$table->check() || !$table->store()) {
@@ -289,6 +298,133 @@ final class AdminTools
             $db->insertObject('#__fields_values', $o);
         }
         $ids = $as;
+        $ids[$lang] = $esId;
+        $ids = array_filter($ids);
+        $db->setQuery($db->getQuery(true)->delete('#__associations')->where('context = ' . $db->quote('com_content.item'))
+            ->where('id IN (' . implode(',', array_map('intval', $ids)) . ')'))->execute();
+        $key = md5(json_encode($ids));
+        foreach ($ids as $aid) {
+            $o = (object) ['id' => (int) $aid, 'context' => 'com_content.item', 'key' => $key, 'parent_id' => 0];
+            $db->insertObject('#__associations', $o);
+        }
+        Admin::ensureWorkflow([$tcat]);
+        return ['ok' => true, 'es' => $esId, 'assoc' => $ids];
+    }
+
+    /* ------------------------------------------------------------------ Spanish copies of pastoral letters and words and messages */
+
+    /** Romanian hierarch category => Spanish one, found by parent section and position. */
+    private static function secMap(): array
+    {
+        $db = Admin::db();
+        $map = [];
+        foreach (['pastoral-letters', 'words-of-wisdom'] as $sec) {
+            $ro = Admin::catByAlias($sec . '-ro');
+            $es = Admin::catByAlias($sec . '-es');
+            if (!$ro || !$es) {
+                continue;
+            }
+            $kids = fn ($p) => $db->setQuery($db->getQuery(true)->select('id')->from('#__categories')->where('parent_id = ' . (int) $p)->where('extension = ' . $db->quote('com_content'))->order('lft'))->loadColumn();
+            $r = $kids($ro);
+            $e = $kids($es);
+            foreach ($r as $i => $id) {
+                if (isset($e[$i])) {
+                    $map[(int) $id] = (int) $e[$i];
+                }
+            }
+        }
+        return $map;
+    }
+
+    private static function secList(): array
+    {
+        $map = self::secMap();
+        $db = Admin::db();
+        $rows = $map ? $db->setQuery($db->getQuery(true)->select(['id', 'title', 'catid', 'publish_up', 'state'])->from('#__content')
+            ->where('catid IN (' . implode(',', array_keys($map)) . ')')->where('state IN (0,1)')->order('publish_up ASC'))->loadObjectList() : [];
+        $out = [];
+        foreach ($rows as $r) {
+            $as = self::assoc((int) $r->id);
+            $out[] = ['id' => (int) $r->id, 'cat' => (int) $r->catid, 'dt' => substr((string) $r->publish_up, 0, 10), 'title' => (string) $r->title,
+                'en' => $as['en-US'] ?? 0, 'es' => $as['es-ES'] ?? 0];
+        }
+        return ['ok' => true, 'map' => $map, 'items' => $out];
+    }
+
+    private static function secSrc(int $id): array
+    {
+        $map = self::secMap();
+        $db = Admin::db();
+        $a = $db->setQuery($db->getQuery(true)->select(['id', 'title', 'introtext', $db->quoteName('fulltext'), 'metadesc', 'publish_up', 'catid'])
+            ->from('#__content')->where('id = ' . $id))->loadObject();
+        if (!$a || !isset($map[(int) $a->catid])) {
+            return ['ok' => false, 'error' => 'not a Romanian pastoral letter or message'];
+        }
+        $as = self::assoc($id);
+        $en = !empty($as['en-US']) ? $db->setQuery($db->getQuery(true)->select(['title', 'introtext', $db->quoteName('fulltext')])->from('#__content')->where('id = ' . (int) $as['en-US']))->loadObject() : null;
+        $fields = $db->setQuery('SELECT f.name, v.value FROM #__fields_values v INNER JOIN #__fields f ON f.id = v.field_id WHERE v.item_id = ' . $db->quote((string) $id))->loadAssocList('name', 'value');
+        return ['ok' => true, 'id' => $id, 'cat' => (int) $a->catid, 'dt' => substr((string) $a->publish_up, 0, 10), 'title' => (string) $a->title,
+            'intro' => (string) $a->introtext, 'full' => (string) $a->fulltext, 'metadesc' => (string) $a->metadesc, 'fields' => $fields,
+            'en_title' => $en ? (string) $en->title : '', 'en_intro' => $en ? (string) $en->introtext : '', 'en_full' => $en ? (string) $en->fulltext : '',
+            'es' => $as['es-ES'] ?? 0];
+    }
+
+    /** Saves the Spanish copy (published like the Romanian), copies the custom fields and links the three languages. */
+    private static function secSave(): array
+    {
+        $app = Factory::getApplication();
+        $p = $app->getInput()->post;
+        $map = self::secMap();
+        $id = $p->getInt('id');
+        $db = Admin::db();
+        $ro = $db->setQuery($db->getQuery(true)->select('*')->from('#__content')->where('id = ' . $id))->loadObject();
+        if (!$ro || !isset($map[(int) $ro->catid])) {
+            return ['ok' => false, 'error' => 'not a Romanian pastoral letter or message'];
+        }
+        $esCat = $map[(int) $ro->catid];
+        $title = Admin::plainTitle((string) $p->getString('title'));
+        $intro = trim((string) $p->getRaw('intro'));
+        $full = trim((string) $p->getRaw('full'));
+        if ($title === '' || ($intro === '' && $full === '')) {
+            return ['ok' => false, 'error' => 'title and text are required'];
+        }
+        $as = self::assoc($id);
+        $esId = (int) ($as['es-ES'] ?? 0);
+        $now = Factory::getDate()->toSql();
+        $table = Admin::table();
+        $meta = mb_substr(trim((string) $p->getString('metadesc')), 0, 300);
+        if ($esId) {
+            $table->load($esId);
+            $table->title = $title;
+            $table->introtext = $intro;
+            $table->fulltext = $full;
+            $table->metadesc = $meta;
+            $table->modified = $now;
+            $table->modified_by = (int) $app->getIdentity()->id;
+        } else {
+            $table->bind([
+                'title' => $title, 'alias' => Admin::uniqueAlias($esCat, Admin::slug($title, 120) ?: 'carta-pastoral'),
+                'catid' => $esCat, 'state' => (int) $ro->state, 'access' => (int) $ro->access, 'language' => 'es-ES',
+                'introtext' => $intro, 'fulltext' => $full, 'created' => (string) $ro->created, 'created_by' => (int) $ro->created_by,
+                'created_by_alias' => (string) $ro->created_by_alias, 'publish_up' => (string) $ro->publish_up, 'featured' => (int) $ro->featured,
+                'images' => (string) $ro->images, 'urls' => (string) $ro->urls ?: '{}', 'attribs' => (string) $ro->attribs ?: '{}',
+                'metadata' => (string) $ro->metadata ?: '{}', 'metakey' => '', 'metadesc' => $meta,
+                'note' => 'traducere ES (Claude), din RO ' . $id,
+            ]);
+        }
+        if (!$table->check() || !$table->store()) {
+            return ['ok' => false, 'error' => 'store failed' . (method_exists($table, 'getError') ? ': ' . $table->getError() : '')];
+        }
+        $esId = (int) $table->id;
+        $vals = $db->setQuery($db->getQuery(true)->select(['field_id', 'value'])->from('#__fields_values')->where('item_id = ' . $db->quote((string) $id)))->loadObjectList();
+        $db->setQuery($db->getQuery(true)->delete('#__fields_values')->where('item_id = ' . $db->quote((string) $esId)))->execute();
+        foreach ($vals as $v) {
+            $o = (object) ['field_id' => (int) $v->field_id, 'item_id' => (string) $esId, 'value' => (string) $v->value];
+            $db->insertObject('#__fields_values', $o);
+        }
+        // tags: the same as the Romanian article
+        $tags = $db->setQuery($db->getQuery(true)->select('tag_id')->from('#__contentitem_tag_map')->where('type_alias = ' . $db->quote('com_content.article'))->where('content_item_id = ' . $id))->loadColumn();
+        $ids = $as;
         $ids['es-ES'] = $esId;
         $ids = array_filter($ids);
         $db->setQuery($db->getQuery(true)->delete('#__associations')->where('context = ' . $db->quote('com_content.item'))
@@ -298,8 +434,8 @@ final class AdminTools
             $o = (object) ['id' => (int) $aid, 'context' => 'com_content.item', 'key' => $key, 'parent_id' => 0];
             $db->insertObject('#__associations', $o);
         }
-        Admin::ensureWorkflow([$c['es']]);
-        return ['ok' => true, 'es' => $esId, 'assoc' => $ids];
+        Admin::ensureWorkflow([$esCat]);
+        return ['ok' => true, 'es' => $esId, 'cat' => $esCat, 'assoc' => $ids, 'ro_tags' => $tags];
     }
 
     /* ------------------------------------------------------------------ documents import */
