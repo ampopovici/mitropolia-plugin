@@ -15,7 +15,7 @@ use Joomla\Database\ParameterType;
 /**
  * Documents ("Documents list" and "Document" builder elements), as in the approved mockup of Oct 2.
  * All documents sit in one category per language (documents-ro / documents-en / documents-es), one article per
- * language, linked as associations. The file is the doc-file field. Ordinary Joomla tags (one set per language)
+ * language, linked as associations. The file is the document-pdf field, the date the document-date field (else the publish date). Ordinary Joomla tags (one set per language)
  * do the filtering. Spanish falls back to the English documents while the Spanish category is empty.
  * The magazine and the almanac have their own templates.
  */
@@ -140,13 +140,17 @@ final class Documents
         }
         $ids = array_map(fn ($r) => (int) $r->id, $rows);
         $db = self::db();
-        $files = [];
-        $q = $db->getQuery(true)->select(['v.item_id', 'v.value'])->from($db->quoteName('#__fields_values', 'v'))
+        $files = $dates = [];
+        $q = $db->getQuery(true)->select(['v.item_id', 'f.name', 'v.value'])->from($db->quoteName('#__fields_values', 'v'))
             ->join('INNER', $db->quoteName('#__fields', 'f') . ' ON f.id = v.field_id')
-            ->where('f.name = ' . $db->quote('doc-file'))
+            ->whereIn('f.name', ['document-pdf', 'document-date'], ParameterType::STRING)
             ->whereIn('v.item_id', array_map('strval', $ids), ParameterType::STRING);
         foreach ($db->setQuery($q)->loadObjectList() as $r) {
-            $files[(int) $r->item_id] = self::filePath((string) $r->value);
+            if ($r->name === 'document-pdf') {
+                $files[(int) $r->item_id] = self::filePath((string) $r->value);
+            } elseif (trim((string) $r->value) !== '') {
+                $dates[(int) $r->item_id] = trim((string) $r->value);
+            }
         }
         $tags = self::tags($ids);
         $langs = self::languages($ids);
@@ -160,7 +164,7 @@ final class Documents
                 'catid' => (int) $r->catid,
                 'lang'  => (string) $r->language,
                 'intro' => (string) $r->introtext,
-                'date'  => (string) ($r->publish_up ?: $r->modified),
+                'date'  => $dates[$id] ?? (string) ($r->publish_up ?: $r->modified),
                 'mod'   => (string) $r->modified,
                 'file'  => $file,
                 'ext'   => strtoupper(pathinfo(parse_url($file, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION)) ?: 'PDF',
