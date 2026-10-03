@@ -71,6 +71,8 @@ final class AdminTools
                 return self::docTagAdd(array_map('intval', json_decode((string) $p->getRaw('ids'), true) ?: []), (string) $p->getString('tag'));
             case 'news_peek':
                 return self::newsPeek($p->getInt('id'));
+            case 'news_import':
+                return self::newsImport(json_decode((string) $p->getRaw('item'), true) ?: []);
             case 'old_page':
                 return self::oldPage((string) $p->getString('url'));
             case 'pub_diag':
@@ -636,5 +638,58 @@ final class AdminTools
         $og = preg_match('#<meta property="og:image" content="([^"]+)"#i', $h, $m) ? $m[1] : '';
         $body = $start !== false ? substr($h, $start, 400000) : substr($h, 0, 400000);
         return ['ok' => true, 'title' => $title, 'date' => $date, 'og' => $og, 'len' => strlen($h), 'body' => $body];
+    }
+
+    /**
+     * Imports one news article from the old site with its old id (so old links keep working).
+     * item: {id, lang: ro|en, title, alias, publish_up (UTC), introtext, image (images/...), assoc (id of the other language)}
+     */
+    private static function newsImport(array $d): array
+    {
+        $app = Factory::getApplication();
+        $db = Admin::db();
+        $id = (int) ($d['id'] ?? 0);
+        $l = (string) ($d['lang'] ?? '');
+        $tag = ['ro' => 'ro-RO', 'en' => 'en-US'][$l] ?? '';
+        $cat = $tag ? Admin::catByAlias('news-' . $l) : 0;
+        $title = Admin::plainTitle((string) ($d['title'] ?? ''));
+        $intro = trim((string) ($d['introtext'] ?? ''));
+        $pub = (string) ($d['publish_up'] ?? '');
+        if ($id < 2000 || !$cat || $title === '' || $intro === '' || !preg_match('#^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$#', $pub)) {
+            return ['ok' => false, 'error' => 'bad item ' . $id];
+        }
+        if ((int) $db->setQuery('SELECT COUNT(*) FROM #__content WHERE id = ' . $id)->loadResult()) {
+            return ['ok' => false, 'error' => 'id ' . $id . ' exists'];
+        }
+        $img = Admin::safeRel((string) ($d['image'] ?? ''));
+        $images = json_encode(['image_intro' => $img, 'float_intro' => '', 'image_intro_alt' => '', 'image_intro_caption' => '', 'image_fulltext' => '', 'float_fulltext' => '', 'image_fulltext_alt' => '', 'image_fulltext_caption' => ''], JSON_UNESCAPED_SLASHES);
+        $alias = Admin::uniqueAlias($cat, Admin::slug((string) ($d['alias'] ?? '') ?: $title, 180) ?: 'stire');
+        $row = (object) [
+            'id' => $id, 'asset_id' => 0, 'title' => $title, 'alias' => $alias, 'introtext' => $intro, 'fulltext' => '', 'state' => 1, 'catid' => $cat,
+            'created' => $pub, 'created_by' => (int) ($d['created_by'] ?? 0) ?: (int) $app->getIdentity()->id, 'created_by_alias' => '',
+            'modified' => $pub, 'modified_by' => 0, 'publish_up' => $pub, 'images' => $images,
+            'urls' => '{"urla":false,"urlatext":"","targeta":"","urlb":false,"urlbtext":"","targetb":"","urlc":false,"urlctext":"","targetc":""}',
+            'attribs' => '{}', 'version' => 1, 'ordering' => 0, 'metakey' => '', 'metadesc' => '', 'access' => 1, 'hits' => 0,
+            'metadata' => '{"robots":"","author":"","rights":""}', 'featured' => 0, 'language' => $tag, 'note' => 'import mitropolia.us (Claude), Oct 2',
+        ];
+        $db->insertObject('#__content', $row);
+        // store once through the table so the asset and the other bookkeeping are made
+        $table = Admin::table();
+        if ($table->load($id)) {
+            $table->store();
+        }
+        Admin::ensureWorkflow([$cat]);
+        $other = (int) ($d['assoc'] ?? 0);
+        if ($other) {
+            $ids = array_filter([$tag => $id, ($tag === 'ro-RO' ? 'en-US' : 'ro-RO') => $other]);
+            $db->setQuery($db->getQuery(true)->delete('#__associations')->where('context = ' . $db->quote('com_content.item'))
+                ->where('id IN (' . implode(',', array_map('intval', $ids)) . ')'))->execute();
+            $key = md5(json_encode($ids));
+            foreach ($ids as $aid) {
+                $o = (object) ['id' => (int) $aid, 'context' => 'com_content.item', 'key' => $key, 'parent_id' => 0];
+                $db->insertObject('#__associations', $o);
+            }
+        }
+        return ['ok' => true, 'id' => $id, 'alias' => $alias];
     }
 }
