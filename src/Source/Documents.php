@@ -667,7 +667,7 @@ final class Documents
 .mdx-title{font-size:31px}.mdx-head{padding:32px 0 24px}.mdx-dacts{width:100%}.mdx-dacts .mdx-btn{flex:1;justify-content:center}
 .mdx-viewer{display:none}.mdx .mdx-phone{display:flex}}
 </style>
-<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
+<script>
 document.addEventListener('DOMContentLoaded',function(){
 /* PDF in the page only on wider screens, so phones don't load it */
 document.querySelectorAll('.mdx [data-pdf]').forEach(function(f){if(window.matchMedia('(min-width:641px)').matches){f.setAttribute('s'+'rc',f.dataset.pdf);}});
@@ -694,7 +694,7 @@ document.querySelectorAll('.mdx [data-pdf]').forEach(function(f){if(window.match
  run(false);
 });
 });
-});</script>
+</script>
 HTML;
     }
 }

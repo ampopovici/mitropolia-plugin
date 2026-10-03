@@ -533,7 +533,7 @@ final class Media
 @media (max-width:640px){.mmd-audio{grid-template-columns:minmax(0,1fr);padding:16px}.mmd-cover{max-width:220px}.mmd-big{width:64px;height:64px}.mmd-big svg{width:28px;height:28px}}
 @media (prefers-reduced-motion:reduce){.mmd-big,.mmd-badge,.mmd-yt img{transition:none}}
 </style>
-<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
+<script>
 document.addEventListener('DOMContentLoaded',function(){
 document.querySelectorAll('.mmd [data-yt]').forEach(function(b){b.addEventListener('click',function(){
  var f=document.createElement('iframe');
@@ -544,7 +544,7 @@ document.querySelectorAll('.mmd [data-yt]').forEach(function(b){b.addEventListen
  b.parentNode.replaceChild(f,b);});});
 document.querySelectorAll('.mmd audio[data-src]').forEach(function(a){a.setAttribute('s'+'rc',a.dataset.src);});
 });
-});</script>
+</script>
 HTML;
     }
 }

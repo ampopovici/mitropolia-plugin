@@ -419,7 +419,7 @@ final class Publications
 .mpb-stage{padding:10px 4px;gap:4px}.mpb-nav{width:40px;height:40px;background:rgba(255,255,255,.08)}.mpb-rd-top .mpb-dl{display:none}}
 @media (prefers-reduced-motion:reduce){.mpb-spread,.mpb .mpb-cov{transition:none}}
 </style>
-<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
+<script>
 document.addEventListener('DOMContentLoaded',function(){
 var root=document.querySelector('[data-mpb]');if(!root)return;
 var C=JSON.parse(root.dataset.mpb),U=C.ui;
@@ -466,7 +466,7 @@ var sx=null,stg=rd.querySelector('.mpb-stage');stg.addEventListener('pointerdown
 var rt=null;window.addEventListener('resize',function(){if(rd.hidden||!doc)return;clearTimeout(rt);rt=setTimeout(function(){cache={};show(0);},200);});
 var want=C.open||+(new URL(location.href).searchParams.get('n')||0);if(want&&C.issues[want])open(want);
 });
-});</script>
+</script>
 HTML;
     }
 
