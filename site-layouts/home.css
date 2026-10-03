@@ -38,15 +38,21 @@
 .mh-s-hero:has(.mh-season-lord) { --h-bg: #F7F3EA; --h-ph: #E6DCC6; --h-accent: #203D78; --h-ink: #1B2A4A; --h-sub: #6B5A34; --h-line: rgba(32,61,120,.3); --h-btn-ink: #FFFFFF; }
 .mh-s-hero { background: var(--h-bg); position: relative; overflow: hidden; transition: background .4s; }
 .mh-hero { position: relative; padding: 64px 0; }
+// On computer screens up to 1599px wide, menu + hero fill the screen height (--mh-top is the height above the hero, set by the page)
+@media (min-width: 960px) and (max-width: 1599px) {
+  .mh-s-hero { min-height: calc(100vh - var(--mh-top, 121px)); display: flex; flex-direction: column; justify-content: center; }
+  .mh-s-hero > .uk-container { width: 100%; box-sizing: border-box; }
+}
 .mh-wm { position: absolute; right: -120px; bottom: -160px; width: 760px; height: 760px; opacity: .06; background: var(--h-accent); -webkit-mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; pointer-events: none; }
 .mh-hero-in { position: relative; }
-.mh-slide { display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 64px; align-items: center; min-height: 420px; }
+.mh-slide { display: grid; grid-template-columns: minmax(0, 1fr) 540px; gap: 64px; align-items: center; min-height: 440px; }
 .mh-slide[hidden] { display: none; }
 .mh-hero-tx { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .mh-hero-kick { font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--h-sub); }
-.mh-hero-h { margin: 0; font-family: 'Baskervville', Georgia, serif; font-weight: 400; font-size: ~"clamp(28px, 1.3rem + 1.5vw, 44px)"; line-height: 1.15; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; color: var(--h-accent); text-transform: none; letter-spacing: 0; text-wrap: balance; }
+.mh-hero-h { margin: 0; font-family: 'Baskervville', Georgia, serif; font-weight: 400; font-size: ~"clamp(32px, 1.4rem + 2.2vw, 56px)"; line-height: 1.12; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; color: var(--h-accent); text-transform: none; letter-spacing: 0; text-wrap: balance; }
 .mh-hero-h a { color: inherit !important; text-decoration: none !important; }
 .mh-hero-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
+.mh-hero .mh-hero-btns { margin-top: 22px; }
 .mh-hero .mh-btn-gold { background: var(--h-accent); color: var(--h-btn-ink) !important; }
 .mh-hero .mh-btn-gold:hover { filter: brightness(1.08); }
 .mh-hero .mh-btn-ghost { border-color: var(--h-line); color: var(--h-ink) !important; }
@@ -57,7 +63,7 @@
 .mh-dots button { width: 12px; height: 12px; border-radius: 50%; padding: 0; cursor: pointer; border: 2px solid var(--h-ink); background: transparent; opacity: .7; }
 .mh-dots button[aria-current] { border-color: var(--h-accent); background: var(--h-accent); opacity: 1; }
 .mh-hero-ph { position: relative; }
-.mh-hero-ph img, .mh-hero-ph .mh-noimg { position: relative; display: block; width: 480px; max-width: 100%; height: 360px; aspect-ratio: auto; object-fit: cover; background: var(--h-ph); border-radius: 14px; }
+.mh-hero-ph img, .mh-hero-ph .mh-noimg { position: relative; display: block; width: 540px; max-width: 100%; height: 405px; aspect-ratio: auto; object-fit: cover; background: var(--h-ph); border-radius: 14px; }
 
 // quick links
 .mh-s-ql { background: #FFFFFF; border-bottom: 1px solid #E4D8BE; }
@@ -163,8 +169,8 @@
 .mh-s-stay .uk-button { border-radius: 999px; background: #203D78; color: #FFFFFF; padding: 0 34px; line-height: 54px; font-size: 14px; font-weight: 600; letter-spacing: .1em; }
 
 @media (max-width: 1180px) {
-  .mh-slide { grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; min-height: 360px; }
-  .mh-hero-ph img, .mh-hero-ph .mh-noimg { width: 400px; height: 300px; }
+  .mh-slide { grid-template-columns: minmax(0, 1fr) 440px; gap: 48px; min-height: 380px; }
+  .mh-hero-ph img, .mh-hero-ph .mh-noimg { width: 440px; height: 330px; }
   .mh-ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mh-s-ql .uk-subnav { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
 }
