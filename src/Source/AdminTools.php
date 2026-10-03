@@ -69,6 +69,10 @@ final class AdminTools
                 return self::docTags(json_decode((string) $p->getRaw('tags'), true) ?: []);
             case 'doc_tag_add':
                 return self::docTagAdd(array_map('intval', json_decode((string) $p->getRaw('ids'), true) ?: []), (string) $p->getString('tag'));
+            case 'news_peek':
+                return self::newsPeek($p->getInt('id'));
+            case 'old_page':
+                return self::oldPage((string) $p->getString('url'));
             case 'pub_diag':
                 return self::pubDiag();
             case 'pub_cats':
@@ -596,5 +600,41 @@ final class AdminTools
             $out[] = [$id, $ok ? 'ok' : 'failed', round(microtime(true) - $t, 1)];
         }
         return ['ok' => true, 'items' => $out];
+    }
+
+    /* ------------------------------------------------------------------ news from the old site */
+
+    /** A staging article as stored: text, images, fields, associations. */
+    private static function newsPeek(int $id): array
+    {
+        $db = Admin::db();
+        $a = $db->setQuery($db->getQuery(true)->select(['id', 'title', 'alias', 'catid', 'language', 'introtext', $db->quoteName('fulltext'), 'images', 'urls', 'attribs', 'metadata', 'metadesc', 'created', 'created_by', 'created_by_alias', 'publish_up', 'state', 'featured', 'access', 'note', 'hits'])
+            ->from('#__content')->where('id = ' . $id))->loadAssoc();
+        if (!$a) {
+            return ['ok' => false, 'error' => 'no article'];
+        }
+        $f = $db->setQuery('SELECT f.name, v.value FROM #__fields_values v INNER JOIN #__fields f ON f.id = v.field_id WHERE v.item_id = ' . $db->quote((string) $id))->loadAssocList('name', 'value');
+        $tags = $db->setQuery('SELECT tag_id FROM #__contentitem_tag_map WHERE type_alias = ' . $db->quote('com_content.article') . ' AND content_item_id = ' . $id)->loadColumn();
+        return ['ok' => true, 'a' => $a, 'fields' => $f, 'tags' => $tags, 'assoc' => self::assoc($id)];
+    }
+
+    /** The article part of a page on the old site (www.mitropolia.us only), for importing. */
+    private static function oldPage(string $url): array
+    {
+        if (!preg_match('#^https://www\.mitropolia\.us/index\.php/(ro|en)/[0-9]+[a-z0-9-]*$#', $url)) {
+            return ['ok' => false, 'error' => 'bad url'];
+        }
+        $ctx = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Mitropolia staging']]);
+        $h = @file_get_contents($url, false, $ctx);
+        if ($h === false) {
+            return ['ok' => false, 'error' => 'download failed'];
+        }
+        $h = preg_replace('#<(script|style|noscript)[^>]*>.*?</\1>#is', '', $h);
+        $start = stripos($h, 'itemprop="articleBody"');
+        $title = preg_match('#<h2[^>]*itemprop="headline"[^>]*>(.*?)</h2>#is', $h, $m) ? trim(strip_tags($m[1])) : (preg_match('#<title>(.*?)</title>#is', $h, $m) ? trim($m[1]) : '');
+        $date = preg_match('#<time[^>]*datetime="([^"]+)"[^>]*itemprop="datePublished"#i', $h, $m) || preg_match('#itemprop="datePublished"[^>]*datetime="([^"]+)"#i', $h, $m) ? $m[1] : '';
+        $og = preg_match('#<meta property="og:image" content="([^"]+)"#i', $h, $m) ? $m[1] : '';
+        $body = $start !== false ? substr($h, $start, 400000) : substr($h, 0, 400000);
+        return ['ok' => true, 'title' => $title, 'date' => $date, 'og' => $og, 'len' => strlen($h), 'body' => $body];
     }
 }
