@@ -1,14 +1,15 @@
 // ---- Pages (templates built in YOOtheme: page headers). Source: site-layouts/pages.css in the plugin repo.
 
 // section spacing: the classes decide it, not the section padding setting
-.mx-head, .mx-chips-band, .mx-body, .mx-band, .mx-head-art, .mx-body-art { padding-top: 0; padding-bottom: 0; }
+.mx-head, .mx-body, .mx-band, .mx-head-art, .mx-body-art { padding-top: 0; padding-bottom: 0; }
 
 // ivory page header of list pages
-.mx-head, .mx-chips-band, .mx-band { background: #EFE3CB; }
+.mx-head, .mx-band { background: #EFE3CB; }
 .mx-head { padding: 22px 0 48px; border-bottom: 1px solid #E4D8BE; }
-.mx-head-chips { padding-bottom: 0; border-bottom: 0; }
-.mx-chips-band { padding: 28px 0 48px; border-bottom: 1px solid #E4D8BE; }
-.mx-head-row { margin-top: 34px; align-items: flex-end; }
+.mx-head .mx-head-row { margin-top: 34px; align-items: flex-end; }
+.mx-head .mx-chips-row { margin-top: 28px; }
+.mx-head .mx-chips-row:not(:has(.mnx-chips)) { display: none; }
+.mx-head-text > * + * { margin-top: 0; }
 .mx-head-text { max-width: 680px; }
 .mx-head-tools .mnx { font-family: 'Source Sans 3', sans-serif; }
 .mx-body { padding: 0; }
@@ -32,7 +33,7 @@
 .mx-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 18px; }
 .mx-meta > * { margin: 0 !important; }
 .mx-meta p, .mx-date, .mx-reading { font-family: 'Source Sans 3', sans-serif; font-size: 14px; color: #6B6F7B; margin: 0; }
-.mx-meta > .mx-reading::before { content: ""; display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: #B99755; vertical-align: middle; margin-right: 10px; }
+.mx-meta > .mx-reading::before, .mx-meta > .mx-date:not(:first-child)::before { content: ""; display: inline-block; width: 3px; height: 3px; border-radius: 50%; background: #B99755; vertical-align: middle; margin-right: 10px; }
 .mx-title, h1.mx-title { font-family: 'Baskervville', Georgia, serif; font-weight: 500; font-size: 50px; line-height: 1.12; color: #172E5C; margin: 0; max-width: 1080px; letter-spacing: 0; text-transform: none; }
 .mx-head-art .uk-grid + .uk-grid, .mx-head-art .uk-grid-margin { margin-top: 0; }
 .mx-lead { margin: 36px 0 0 !important; }
@@ -41,9 +42,15 @@
 .mx-head-art { padding-bottom: 36px; }
 .mx-head-art:has(.mx-lead img) { padding-bottom: 56px; }
 .mx-body-art { padding: 0; }
+.mx-byline { margin-top: 0; }
+
+// pastoral letters: a little tighter, title 48px, author line under it
+.mx-head-letter { padding: 52px 0 36px; }
+.mx-head-letter .mx-meta { margin-bottom: 16px; }
+.mx-head-letter .mx-title, .mx-head-letter h1.mx-title { font-size: 48px; margin: 0 0 24px; max-width: 1000px; }
 
 @media (max-width: 1000px) {
-  .mx-title, h1.mx-title { font-size: 40px; }
+  .mx-title, h1.mx-title, .mx-head-letter h1.mx-title { font-size: 40px; }
 }
 @media (max-width: 640px) {
   .mx-h1, h1.mx-h1 { font-size: 40px; }
@@ -52,6 +59,13 @@
   .mx-head-art:has(.mx-lead img) { padding-bottom: 36px; }
   .mx-lead img { aspect-ratio: ~"3 / 2"; }
   .mx-head-tools { width: 100%; }
+}
+@media (max-width: 760px) {
+  .mx-head-760 .mx-h1, .mx-head-760 h1.mx-h1 { font-size: 40px; }
+  .mx-head-letter h1.mx-title { font-size: 32px; }
+}
+@media (max-width: 640px) {
+  .mx-head-letter { padding: 52px 0 36px; }
 }
 @media print {
   .mx-band { display: none !important; }

@@ -508,10 +508,26 @@ final class Pastorals
             }
         }
 
+        $introText = !empty($props['intro']) ? (string) $props['intro'] : ($isHierarch ? (string) self::hierarch($cat)['name'] : Text::_($words ? 'MIT_WM_INTRO' : 'MIT_PL_INTRO'));
         $head = '<div class="mnx-hero"><div class="mnx-hero-in">' . $crumbs
             . '<div class="mnx-hero-row"><div class="mnx-hero-text"><h1 class="mpx-h1">' . $e(!empty($props['title']) ? (string) $props['title'] : $title) . '</h1>'
-            . '<p class="mnx-intro">' . $e(!empty($props['intro']) ? (string) $props['intro'] : ($isHierarch ? (string) self::hierarch($cat)['name'] : Text::_($words ? 'MIT_WM_INTRO' : 'MIT_PL_INTRO'))) . '</p></div>'
+            . '<p class="mnx-intro">' . $e($introText) . '</p></div>'
             . $form . '</div>' . ($chips !== '' ? '<div class="mnx-chips">' . $chips . '</div>' : '') . '</div></div>';
+        // parts, for pages whose header is built with YOOtheme elements
+        $part = (string) ($props['part'] ?? '');
+        $cls = !empty($props['class']) ? ' ' . $e((string) $props['class']) : '';
+        if ($part === 'intro') {
+            return '<div class="mnx mpl mnx-tools' . $cls . '"><p class="mnx-intro">' . $e($introText) . '</p></div>';
+        }
+        if ($part === 'search') {
+            return $form !== '' ? '<div class="mnx mpl mnx-tools' . $cls . '">' . $form . '</div>' : '';
+        }
+        if ($part === 'chips') {
+            return $chips !== '' ? '<div class="mnx mpl mnx-tools' . $cls . '"><div class="mnx-chips">' . $chips . '</div></div>' : '';
+        }
+        if ($part === 'body') {
+            $head = '';
+        }
 
         $fr = self::fields(array_map(fn ($r) => (int) $r->id, $rows), ['pastoral-type', 'pastoral-feast']);
         $list = '';
@@ -635,6 +651,18 @@ final class Pastorals
             . '<div class="mpl-by">' . ($h['img'] !== '' ? '<img src="' . $e($h['img']) . '" alt="" width="56" height="56">' : '')
             . '<span><b>' . $e($h['name']) . '</b>' . (($h['full'] ?: $h['see']) !== '' ? '<span>' . $e(preg_replace('/\s*\R\s*/u', ' · ', $h['full'] ?: $h['see'])) . '</span>' : '') . '</span></div></header>';
 
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'kicker') {
+            return '<div class="mnx mpl mnx-tools">' . self::chip($f['pastoral-type'] ?? '', $f['pastoral-feast'] ?? '') . '</div>';
+        }
+        if ($part === 'byline') {
+            return '<div class="mnx mpl mnx-tools"><div class="mpl-by">' . ($h['img'] !== '' ? '<img src="' . $e($h['img']) . '" alt="" width="56" height="56">' : '')
+                . '<span><b>' . $e($h['name']) . '</b>' . (($h['full'] ?: $h['see']) !== '' ? '<span>' . $e(preg_replace('/\s*\R\s*/u', ' · ', $h['full'] ?: $h['see'])) . '</span>' : '') . '</span></div></div>';
+        }
+        if ($part === 'body') {
+            $head = '';
+        }
+
         // The "† NAME / by the mercy of God / title" head belongs to pastoral letters only, not to meditations, homilies or messages
         $letterHead = ($f['pastoral-type'] ?? '') !== 'pastoral-letter' ? '' : '<div class="mpl-lhead"><span class="mpl-who"><span class="mpl-x" aria-hidden="true"></span>' . $e($h['sign']) . '</span>'
             . '<span class="mpl-mercy">' . $e(Text::_('MIT_PL_BY_MERCY')) . '</span>'
@@ -708,6 +736,18 @@ final class Pastorals
             . '<span><b>' . $e($h['name']) . '</b>' . (($h['full'] ?: $h['see']) !== '' ? '<span>' . $e(preg_replace('/\s*\R\s*/u', ' · ', $h['full'] ?: $h['see'])) . '</span>' : '') . '</span></div></header>';
         if ($lead !== '') {
             $head .= '<figure class="mnx-lead"><img src="' . $e($lead) . '" alt="' . $e($alt) . '" fetchpriority="high"></figure>';
+        }
+
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'kicker') {
+            return '<div class="mnx mpl mnx-tools">' . self::chip($type, $feast) . '</div>';
+        }
+        if ($part === 'byline') {
+            return '<div class="mnx mpl mnx-tools"><div class="mpl-by mwm-by">' . ($h['img'] !== '' ? '<img src="' . $e($h['img']) . '" alt="" width="56" height="56">' : '')
+                . '<span><b>' . $e($h['name']) . '</b>' . (($h['full'] ?: $h['see']) !== '' ? '<span>' . $e(preg_replace('/\s*\R\s*/u', ' · ', $h['full'] ?: $h['see'])) . '</span>' : '') . '</span></div></div>';
+        }
+        if ($part === 'body') {
+            $head = '';
         }
 
         $share = '<div class="mnx-share">'

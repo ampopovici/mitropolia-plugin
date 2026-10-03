@@ -80,33 +80,51 @@ def layout(*sections):
 
 # ------------------------------------------------------------------ list pages: crumbs, title, intro, search on the right, chips below
 
-def list_head(l, title, intro, tools=None, cls=""):
-    r1 = row(col([crumbs(True)]))
-    left = col([h1(title), para(intro)], "expand", "mx-head-text")
-    r2 = row(left, col([tools], "auto", "mx-head-tools"), cls="mx-head-row") if tools else row(left, cls="mx-head-row")
-    return section("Page header", ("mx-head " + cls).strip(), [r1, r2])
+def list_head(title, intro, tools=None, chips=None, cls=""):
+    """intro: text in the page language, or a Mitropolia element (when it depends on the category)."""
+    rows = [row(col([crumbs(True)]))]
+    text = [h1(title), intro if isinstance(intro, dict) else para(intro)]
+    left = col(text, "expand", "mx-head-text")
+    rows.append(row(left, col([tools], "auto", "mx-head-tools"), cls="mx-head-row") if tools else row(left, cls="mx-head-row"))
+    if chips:
+        rows.append(row(col([chips]), cls="mx-chips-row"))
+    return section("Page header", ("mx-head " + cls).strip(), rows)
+
+
+def body(name, *blocks, cls="mx-body"):
+    return section(name, cls, [row(col(list(blocks)))])
 
 
 def news_list(l):
     t = T[l]
     return layout(
-        list_head(l, t["MIT_NEWS_TITLE"], t["MIT_NEWS_INTRO"], block("mitropolia_news_list", part="search"), "mx-head-chips"),
-        section("Filters", "mx-chips-band", [row(col([block("mitropolia_news_list", part="chips")]))]),
-        section("List", "mx-body", [row(col([block("mitropolia_news_list", part="body")]))]),
+        list_head(t["MIT_NEWS_TITLE"], t["MIT_NEWS_INTRO"], block("mitropolia_news_list", part="search"), block("mitropolia_news_list", part="chips")),
+        body("List", block("mitropolia_news_list", part="body")),
+    )
+
+
+def pastoral_list(l, words=False):
+    t = T[l]
+    return layout(
+        list_head(t["MIT_WM_TITLE" if words else "MIT_PL_TITLE"], block("mitropolia_pastoral_list", part="intro"),
+                  block("mitropolia_pastoral_list", part="search"), block("mitropolia_pastoral_list", part="chips"), "mx-head-760"),
+        body("List", block("mitropolia_pastoral_list", part="body")),
     )
 
 
 # ------------------------------------------------------------------ article pages: crumb band, date and title, lead photo, body
 
-def article_head(meta=True, lead=True, cls=""):
+def article_head(kicker=None, byline=None, meta=True, lead=True, cls=""):
     out = [section("Breadcrumb", "mx-band", [row(col([crumbs(False)]))])]
     items = []
     if meta:
-        items.append(row(col([
-            para(cls="mx-date", src=bind("article", "mitropolia_date")),
-            para(cls="mx-reading", src=bind("article", "mitropolia_reading")),
-        ], cls="mx-meta")))
+        m = [kicker] if kicker else []
+        m += [para(cls="mx-date", src=bind("article", "mitropolia_date")),
+              para(cls="mx-reading", src=bind("article", "mitropolia_reading"))]
+        items.append(row(col(m, cls="mx-meta")))
     items.append(row(col([h1(src=bind("article", "title"), cls="mx-title")])))
+    if byline:
+        items.append(row(col([byline], cls="mx-byline")))
     if lead:
         items.append(row(col([
             el("image", {"image": "", "margin": "remove", "class": "mx-lead", "image_svg_inline": False},
@@ -119,13 +137,27 @@ def article_head(meta=True, lead=True, cls=""):
 
 
 def news_article(l):
-    return layout(*article_head(), section("Article", "mx-body-art", [row(col([block("mitropolia_news_article", part="body")]))]))
+    return layout(*article_head(), body("Article", block("mitropolia_news_article", part="body"), cls="mx-body-art"))
+
+
+def pastoral_letter(l):
+    b = lambda p: block("mitropolia_pastoral_letter", part=p)
+    return layout(*article_head(b("kicker"), b("byline"), lead=False, cls="mx-head-letter"), body("Letter", b("body"), cls="mx-body-art"))
+
+
+def words_article(l):
+    b = lambda p: block("mitropolia_pastoral_letter", part=p)
+    return layout(*article_head(b("kicker"), b("byline"), cls="mx-head-words"), body("Article", b("body"), cls="mx-body-art"))
 
 
 TEMPLATES = {
     # key: (existing template id, name, type, catids, builder)
     "news-list": ("k2yyjw9k", "News list", "com_content.category", ["99", "100", "101"], news_list),
     "news-article": ("u87nnnv4", "News article", "com_content.article", ["99", "100", "101"], news_article),
+    "pastoral-letter": ("8np9hryq", "Pastoral letter", "com_content.article", ["137", "138", "139", "140", "141", "142"], pastoral_letter),
+    "pastoral-list": ("dd6gk1od", "Pastoral letters list", "com_content.category", ["106", "107", "108", "137", "138", "139", "140", "141", "142"], pastoral_list),
+    "words-article": ("qf51qa0e", "Words and Messages article", "com_content.article", ["109", "110", "111", "143", "144", "145", "146", "147", "148"], words_article),
+    "words-list": ("h82m87em", "Words and Messages list", "com_content.category", ["109", "110", "111", "143", "144", "145", "146", "147", "148"], lambda l: pastoral_list(l, True)),
 }
 
 LANG_LABEL = {"ro": "RO", "en": "EN", "es": "ES"}
