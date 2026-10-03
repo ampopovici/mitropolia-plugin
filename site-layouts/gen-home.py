@@ -91,7 +91,7 @@ def layout(l):
             "overlay_container":"default","overlay_position":"center-left","overlay_style":"overlay-primary","overlay_padding":"large","overlay_width":"large","text_color":"light",
             "show_title":True,"show_meta":True,"show_content":True,"show_link":True,"link_text":c["more"],"link_style":"default",
             "title_element":"h1","title_style":"h1","meta_style":"text-meta","meta_align":"above-title","content_style":"text-lead","image_loading":"eager","media_overlay":"rgba(23,46,92,0.15)"},
-            [el("slideshow_item",{},source=src(c["cat"],4,0,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"metaString"},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])
+            [el("slideshow_item",{},source=src(c["cat"],4,0,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"180"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])
     ]))],padding="none",width="expand"))
     # 2 quick links
     S.append(section("Quick links",[row(col([el("subnav",{"subnav_style":"divider","text_align":"center"},[el("subnav_item",{"content":t,"link":u}) for t,u in c["q"]])]))],style="muted",padding="xsmall"))
@@ -103,7 +103,7 @@ def layout(l):
     S.append(section("News",[row(col([kicker(c["kick_news"]),head(c["h_news"],margin="small")])),
         row(col([el("grid",{"grid_default":"1","panel_style":"card-default","panel_card_image":True,"panel_link":True,"show_link":False,"image_align":"top","image_width":"960","image_height":"540",
                 "title_style":"h3","title_element":"h3","meta_style":"text-meta","meta_align":"above-title","content_style":""},
-                [el("grid_item",{},source=src(c["cat"],1,4,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"metaString"},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])],"1-2"),
+                [el("grid_item",{},source=src(c["cat"],1,4,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"180"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])],"1-2"),
             col([el("grid",{"grid_default":"1","grid_row_gap":"small","panel_link":True,"show_link":False,"show_content":False,"image_align":"left","image_grid_width":"1-3","image_width":"240","image_height":"170","image_vertical_align":True,
                 "title_style":"h5","title_element":"h3","meta_style":"text-meta","meta_align":"above-title","divider":True},
                 [el("grid_item",{},source=src(c["cat"],4,5,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))]),
