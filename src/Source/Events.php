@@ -203,6 +203,12 @@ final class Events
         $out = [];
         foreach ($rows as $r) {
             $v = $vals[(int) $r->id] ?? [];
+            // calendar fields are stored in UTC: show them in the site's time zone
+            foreach (['event-start', 'event-end', 'event-deadline'] as $k) {
+                if (preg_match('/^\d{4}-\d{2}-\d{2}( \d{2}:\d{2}(:\d{2})?)?$/', (string) ($v[$k] ?? ''))) {
+                    $v[$k] = self::local((string) $v[$k]);
+                }
+            }
             $s = (string) ($v['event-start'] ?? '');
             if (!preg_match('/^\d{4}-\d{2}-\d{2}/', $s)) {
                 $s = (string) $r->publish_up;
@@ -211,7 +217,8 @@ final class Events
             if (!preg_match('/^\d{4}-\d{2}-\d{2}/', $en) || $en < $s) {
                 $en = '';
             }
-            $p = $par[(int) ($v['event-parish'] ?? 0)] ?? null;
+            // a place typed in the event wins over the parish (the parish list has no empty choice)
+            $p = trim((string) ($v['event-place'] ?? '')) === '' ? ($par[(int) ($v['event-parish'] ?? 0)] ?? null) : null;
             $group = in_array($v['event-group'] ?? '', self::GROUPS, true) ? $v['event-group'] : '';
             $out[] = (object) [
                 'id' => (int) $r->id, 'title' => (string) $r->title, 'a' => $r, 'start' => $s, 'end' => $en,
@@ -224,6 +231,16 @@ final class Events
         }
         usort($out, fn ($a, $b) => strcmp($a->start, $b->start) ?: $a->id <=> $b->id);
         return $out;
+    }
+
+    private static function local(string $utc): string
+    {
+        try {
+            $tz = new \DateTimeZone((string) Factory::getApplication()->get('offset', 'UTC'));
+            return Factory::getDate(strlen($utc) === 10 ? $utc . ' 00:00:00' : $utc, 'UTC')->setTimezone($tz)->format('Y-m-d H:i:s', true);
+        } catch (\Throwable $x) {
+            return $utc;
+        }
     }
 
     private static function regLink(string $urls): string
@@ -431,7 +448,7 @@ final class Events
     {
         $app = Factory::getApplication();
         foreach ($app->getMenu()->getItems(['language'], [$app->getLanguage()->getTag()]) as $item) {
-            if (preg_match('#(mitropolit|metropolitan|metropolitano)/(itinerar|itinerary|itinerario)$#', (string) $item->route)) {
+            if (preg_match('#(mitropolit|metropolitan|metropolitano|metropolita)/(itinerar|pastoral-itinerary|itinerario-pastoral|itinerary|itinerario)$#', (string) $item->route)) {
                 return Route::_('index.php?Itemid=' . (int) $item->id);
             }
         }
