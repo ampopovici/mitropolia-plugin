@@ -89,6 +89,8 @@ final class AdminTools
                 return self::pubCover($p->getInt('id'), (string) $p->getRaw('jpeg'));
             case 'doc_save':
                 return self::docSave(json_decode((string) $p->getRaw('doc'), true) ?: []);
+            case 'page_layout':
+                return self::pageLayout($p->getInt('id'), (string) $p->getRaw('layout'));
         }
         return ['ok' => false, 'error' => 'unknown action'];
     }
@@ -691,5 +693,29 @@ final class AdminTools
             }
         }
         return ['ok' => true, 'id' => $id, 'alias' => $alias];
+    }
+
+    /* ------------------------------------------------------------------ builder pages */
+
+    /**
+     * Writes a YOOtheme builder layout into an article the way YOOtheme stores it
+     * (an HTML comment holding the JSON, after the read-more line). Used for the homepage articles,
+     * whose layouts contain Mitropolia elements the YOOtheme MCP server doesn't know about.
+     */
+    private static function pageLayout(int $id, string $json): array
+    {
+        $l = json_decode($json, true);
+        if (!$id || !is_array($l) || ($l['type'] ?? '') !== 'layout' || empty($l['children'])) {
+            return ['ok' => false, 'error' => 'bad layout'];
+        }
+        $db = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+        $row = $db->setQuery($db->getQuery(true)->select(['id', 'introtext', 'fulltext'])->from('#__content')->where('id = ' . $id))->loadObject();
+        if (!$row) {
+            return ['ok' => false, 'error' => 'no article'];
+        }
+        $comment = '<!-- ' . json_encode($l, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . ' -->';
+        $o = (object) ['id' => $id, 'introtext' => '', 'fulltext' => $comment, 'modified' => Factory::getDate()->toSql()];
+        $db->updateObject('#__content', $o, 'id');
+        return ['ok' => true, 'id' => $id, 'bytes' => strlen($comment), 'before' => substr((string) $row->introtext . '|' . (string) $row->fulltext, 0, 160)];
     }
 }
