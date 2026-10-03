@@ -89,6 +89,8 @@ final class AdminTools
                 return self::pubCover($p->getInt('id'), (string) $p->getRaw('jpeg'));
             case 'doc_save':
                 return self::docSave(json_decode((string) $p->getRaw('doc'), true) ?: []);
+            case 'site_asset':
+                return self::siteAsset((string) $p->getCmd('name'), (string) $p->getRaw('data'));
             case 'page_layout':
                 return self::pageLayout($p->getInt('id'), (string) $p->getRaw('layout'));
         }
@@ -717,5 +719,23 @@ final class AdminTools
         $o = (object) ['id' => $id, 'introtext' => '', 'fulltext' => $comment, 'modified' => Factory::getDate()->toSql()];
         $db->updateObject('#__content', $o, 'id');
         return ['ok' => true, 'id' => $id, 'bytes' => strlen($comment), 'before' => substr((string) $row->introtext . '|' . (string) $row->fulltext, 0, 160)];
+    }
+
+    /** Saves a small site graphic (SVG, PNG or WebP) into images/site/, e.g. the seal watermark. */
+    private static function siteAsset(string $name, string $data): array
+    {
+        if (!preg_match('/^[a-z0-9-]{1,40}\.(svg|png|webp)$/', $name) || $data === '' || strlen($data) > 4000000) {
+            return ['ok' => false, 'error' => 'bad name or data'];
+        }
+        if (str_ends_with($name, '.svg')) {
+            if (stripos($data, '<svg') === false || preg_match('#<script|on[a-z]+\s*=|javascript:#i', $data)) {
+                return ['ok' => false, 'error' => 'svg rejected'];
+            }
+        } elseif (!@getimagesizefromstring($data)) {
+            return ['ok' => false, 'error' => 'not an image'];
+        }
+        $abs = JPATH_ROOT . '/images/site/' . $name;
+        $ok = @file_put_contents($abs, $data);
+        return ['ok' => (bool) $ok, 'path' => 'images/site/' . $name, 'bytes' => (int) $ok];
     }
 }

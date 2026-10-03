@@ -201,7 +201,7 @@ final class Home
             $up = Events::homeRows(false, $n);
             $past = Events::homeRows(true, $n);
             $e = [self::class, 'e'];
-            $first = $up ? 0 : 1;
+            $first = $up || !$past ? 0 : 1;
             $h = '<div class="' . self::cls($props, 'mh-events') . '" data-mh-tabs><div class="mh-ev-head"><div class="mh-head"><span class="mh-kick">' . $e(self::t($props, 'kicker', 'ev_kicker')) . '</span>'
                 . '<h2 class="mh-h2">' . $e(self::t($props, 'title', 'ev_title')) . '</h2></div><div class="mh-ev-ctl"><div class="mh-pills" role="tablist">'
                 . '<button type="button" role="tab" data-mh-tab="0" aria-selected="' . ($first === 0 ? 'true' : 'false') . '">' . $e(self::ui('upcoming')) . '</button>'
