@@ -86,33 +86,33 @@ def layout(l):
     S=[]
     # 1 hero: latest news slideshow
     S.append(section("Hero · latest news",[row(col([
-        el("slideshow",{"slideshow_ratio":"16:7","slideshow_min_height":"440","slideshow_animation":"fade","slideshow_autoplay":True,"slideshow_autoplay_interval":"7",
+        el("slideshow",{"slideshow_ratio":"16:7","slideshow_min_height":"480","slideshow_animation":"fade","slideshow_autoplay":True,"slideshow_autoplay_interval":"7",
             "nav":"dotnav","nav_position":"bottom-left","nav_position_margin":"medium","slidenav":"default","slidenav_hover":True,"slidenav_breakpoint":"m",
-            "overlay_container":"default","overlay_position":"center-left","overlay_style":"overlay-primary","overlay_padding":"large","overlay_width":"large","text_color":"light",
+            "overlay_container":"default","overlay_position":"center-left","overlay_style":"overlay-primary","overlay_padding":"large","overlay_width":"medium","text_color":"light",
             "show_title":True,"show_meta":True,"show_content":True,"show_link":True,"link_text":c["more"],"link_style":"default",
-            "title_element":"h1","title_style":"h1","meta_style":"text-meta","meta_align":"above-title","content_style":"text-lead","image_loading":"eager","media_overlay":"rgba(23,46,92,0.15)"},
-            [el("slideshow_item",{},source=src(c["cat"],4,0,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"180"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])
+            "title_element":"h1","title_style":"h2","meta_style":"text-meta","meta_align":"above-title","content_style":"text-lead","image_loading":"eager","media_overlay":"rgba(23,46,92,0.15)"},
+            [el("slideshow_item",{},source=src(c["cat"],4,0,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"130"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])
     ]))],padding="none",width="expand"))
     # 2 quick links
     S.append(section("Quick links",[row(col([el("subnav",{"subnav_style":"divider","text_align":"center"},[el("subnav_item",{"content":t,"link":u}) for t,u in c["q"]])]))],style="muted",padding="xsmall"))
     # 3 tiles
-    S.append(section("Quick access",[row(col([el("grid",{"grid_default":"1","grid_small":"2","grid_medium":"4","grid_column_gap":"medium","grid_row_gap":"medium",
-        "panel_style":"card-default","panel_padding":"default","panel_link":True,"show_link":False,"title_style":"h4","title_element":"h3","icon_width":"36","icon_color":"primary"},
+    S.append(section("Quick access",[row(col([el("grid",{"grid_default":"1","grid_small":"2","grid_medium":"4","grid_large":"4","grid_xlarge":"4","grid_column_gap":"medium","grid_row_gap":"medium",
+        "panel_style":"card-default","panel_padding":"default","panel_link":True,"show_link":False,"title_style":"h3","title_element":"h3","icon_width":"36","icon_color":"primary"},
         [el("grid_item",{"icon":i,"title":t,"content":"<p>"+x+"</p>","link":u}) for i,t,x,u in c["tiles"]])]))]))
     # 4 news
     S.append(section("News",[row(col([kicker(c["kick_news"]),head(c["h_news"],margin="small")])),
-        row(col([el("grid",{"grid_default":"1","panel_style":"card-default","panel_card_image":True,"panel_link":True,"show_link":False,"image_align":"top","image_width":"960","image_height":"540",
+        row(col([el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"1","grid_large":"1","grid_xlarge":"1","panel_style":"card-default","panel_card_image":True,"panel_link":True,"show_link":False,"image_align":"top","image_width":"960","image_height":"540",
                 "title_style":"h3","title_element":"h3","meta_style":"text-meta","meta_align":"above-title","content_style":""},
                 [el("grid_item",{},source=src(c["cat"],1,4,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"180"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])],"1-2"),
-            col([el("grid",{"grid_default":"1","grid_row_gap":"small","panel_link":True,"show_link":False,"show_content":False,"image_align":"left","image_grid_width":"1-3","image_width":"240","image_height":"170","image_vertical_align":True,
-                "title_style":"h5","title_element":"h3","meta_style":"text-meta","meta_align":"above-title","divider":True},
+            col([el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"1","grid_large":"1","grid_xlarge":"1","grid_row_gap":"small","panel_link":True,"show_link":False,"show_content":False,"image_align":"left","image_grid_width":"1-3","image_width":"240","image_height":"170","image_vertical_align":True,
+                "title_style":"text-large","title_element":"h3","meta_style":"text-meta","meta_align":"above-title","divider":True},
                 [el("grid_item",{},source=src(c["cat"],4,5,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))]),
                 button(c["all_news"]+" →",c["news"],"default")],"1-2")),
         ],padding="large"))
     # 5 hierarchs + itinerary
     S.append(section("Hierarchs and itinerary",[row(
         col([kicker(c["kick_h"]),head(c["h_h"],margin="small"),
-             el("grid",{"grid_default":"1","grid_small":"2","grid_column_gap":"medium","panel_link":False,"show_link":True,"link_style":"text","image_align":"top","image_width":"480","image_height":"560","image_border":"rounded",
+             el("grid",{"grid_default":"1","grid_small":"2","grid_medium":"2","grid_large":"2","grid_xlarge":"2","grid_column_gap":"medium","panel_link":False,"show_link":True,"link_style":"text","image_align":"top","image_width":"480","image_height":"560","image_border":"rounded",
                 "title_style":"h4","title_element":"h3","meta_style":"text-meta","meta_align":"above-title","content_style":"text-small"},
                 [el("grid_item",{"meta":m,"title":t,"content":"<p>"+x+"</p>","image":im,"image_alt":t,"link":u,"link_text":c["bio"]}) for m,t,x,im,u in c["hier"]])],"1-2"),
         col([kicker(c["kick_it"]),head(c["h_it"],margin="small"),el("mitropolia_home_itinerary",{"count":4})],"1-2"))],style="muted",padding="large"))
@@ -120,7 +120,7 @@ def layout(l):
     S.append(section("Events",[row(col([kicker(c["kick_ev"]),head(c["h_ev"],margin="small"),el("mitropolia_home_events",{"count":4,"columns":"4"})]))],padding="large"))
     # 7 structure
     S.append(section("Structure",[row(col([kicker(c["kick_st"]),head(c["h_st"],margin="small"),el("text",{"content":"<p>"+c["st_text"]+"</p>","text_style":"lead","max_width":"xlarge"}),
-        el("grid",{"grid_default":"1","grid_medium":"3","grid_column_gap":"medium","panel_style":"card-default","panel_link":True,"show_link":False,"title_style":"h4","title_element":"h3","meta_style":"text-meta","meta_align":"above-title"},
+        el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"3","grid_large":"3","grid_xlarge":"3","grid_column_gap":"medium","panel_style":"card-default","panel_link":True,"show_link":False,"title_style":"h4","title_element":"h3","meta_style":"text-meta","meta_align":"above-title"},
            [el("grid_item",{"meta":m,"title":t,"content":"<p>"+x+"</p>","link":u}) for m,t,x,u in c["st"]])]))],style="primary",padding="large"))
     # 8 publication + donate
     S.append(section("Publications and support",[row(
