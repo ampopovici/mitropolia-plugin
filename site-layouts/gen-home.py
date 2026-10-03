@@ -88,9 +88,9 @@ def layout(l):
     S.append(section("Hero · latest news",[row(col([
         el("slideshow",{"slideshow_ratio":"16:7","slideshow_min_height":"480","slideshow_animation":"fade","slideshow_autoplay":True,"slideshow_autoplay_interval":"7",
             "nav":"dotnav","nav_position":"bottom-left","nav_position_margin":"medium","slidenav":"default","slidenav_hover":True,"slidenav_breakpoint":"m",
-            "overlay_container":"default","overlay_position":"center-left","overlay_style":"overlay-primary","overlay_padding":"large","overlay_width":"medium","text_color":"light",
-            "show_title":True,"show_meta":True,"show_content":True,"show_link":True,"link_text":c["more"],"link_style":"default",
-            "title_element":"h1","title_style":"h2","meta_style":"text-meta","meta_align":"above-title","content_style":"text-lead","image_loading":"eager","media_overlay":"rgba(23,46,92,0.15)"},
+            "overlay_container":"default","overlay_position":"bottom-left","overlay_style":"overlay-primary","overlay_padding":"","overlay_width":"large","text_color":"light",
+            "show_title":True,"show_meta":True,"show_content":False,"show_link":True,"link_text":c["more"],"link_style":"default",
+            "title_element":"h1","title_style":"h3","meta_style":"text-meta","meta_align":"above-title","content_style":"text-lead","image_loading":"eager","media_overlay":"rgba(23,46,92,0.15)"},
             [el("slideshow_item",{},source=src(c["cat"],4,0,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"130"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])
     ]))],padding="none",width="expand"))
     # 2 quick links
