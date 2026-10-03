@@ -26,7 +26,7 @@ final class Publications
     private const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
     private const UI = [
         'mag'      => ['Revista Credința', 'The Faith Magazine', 'Revista «La Fe»'],
-        'alm'      => ['Almanahul Credința', 'Credința Almanac', 'Almanaque «La Fe»'],
+        'alm'      => ['Almanahul Credința', 'The Faith Almanac', 'Almanaque «La Fe»'],
         'magsub'   => ['The Faith', 'Credința', 'Credința · The Faith'],
         'cur_mag'  => ['Numărul curent', 'Current issue', 'Número actual'],
         'cur_alm'  => ['Ediția curentă', 'Current edition', 'Edición actual'],
