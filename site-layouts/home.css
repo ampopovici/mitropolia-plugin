@@ -40,7 +40,7 @@
 .mh-hero { position: relative; padding: 64px 0; }
 // On computer screens up to 1599px wide, menu + hero fill the screen height (--mh-top is the height above the hero, set by the page)
 @media (min-width: 960px) and (max-width: 1599px) {
-  .mh-s-hero { min-height: calc(100vh - var(--mh-top, 121px)); display: flex; flex-direction: column; justify-content: center; }
+  .mh-s-hero { min-height: ~"calc(100vh - var(--mh-top, 121px))"; display: flex; flex-direction: column; justify-content: center; }
   .mh-s-hero > .uk-container { width: 100%; box-sizing: border-box; }
 }
 .mh-wm { position: absolute; right: -120px; bottom: -160px; width: 760px; height: 760px; opacity: .06; background: var(--h-accent); -webkit-mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; pointer-events: none; }
