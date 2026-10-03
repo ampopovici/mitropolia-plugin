@@ -709,7 +709,7 @@ final class AdminTools
             return ['ok' => false, 'error' => 'bad layout'];
         }
         $db = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
-        $row = $db->setQuery($db->getQuery(true)->select(['id', 'introtext', 'fulltext'])->from('#__content')->where('id = ' . $id))->loadObject();
+        $row = $db->setQuery($db->getQuery(true)->select($db->quoteName(['id', 'introtext', 'fulltext']))->from('#__content')->where('id = ' . $id))->loadObject();
         if (!$row) {
             return ['ok' => false, 'error' => 'no article'];
         }
