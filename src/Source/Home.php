@@ -21,9 +21,6 @@ final class Home
         'prev'        => ['Știrea anterioară', 'Previous story', 'Noticia anterior'],
         'next'        => ['Știrea următoare', 'Next story', 'Noticia siguiente'],
         'show'        => ['Arată știrea %d', 'Show story %d', 'Mostrar la noticia %d'],
-        'it_kicker'   => ['Itinerar pastoral', 'Pastoral itinerary', 'Itinerario pastoral'],
-        'full_itin'   => ['Itinerarul complet', 'Full itinerary', 'Itinerario completo'],
-        'no_visits'   => ['Nu sunt vizite anunțate deocamdată.', 'No visits announced yet.', 'Aún no hay visitas anunciadas.'],
         'ev_kicker'   => ['Evenimente', 'Events', 'Eventos'],
         'ev_title'    => ['Întâlniri în toată Mitropolia', 'Gatherings across the Metropolia', 'Encuentros en toda la Metrópolis'],
         'upcoming'    => ['Viitoare', 'Upcoming', 'Próximos'],
@@ -39,7 +36,6 @@ final class Home
         'read_issue'  => ['Citește online', 'Read online', 'Leer en línea'],
     ];
 
-    private const ORN = '<svg class="mh-orn" width="200" height="18" viewBox="0 0 220 18" fill="none" aria-hidden="true"><path d="M0 9h94M126 9h94" stroke="currentColor" stroke-width="1.2"/><path d="M110 1v16M103 6h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="98" cy="9" r="1.8" fill="currentColor"/><circle cx="122" cy="9" r="1.8" fill="currentColor"/></svg>';
     private const I_PIN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
     private const I_PREV = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
     private const I_NEXT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
@@ -106,12 +102,11 @@ final class Home
             foreach ($items as $i => $it) {
                 $tag = $i === 0 ? 'h1' : 'h2';
                 $h .= '<div class="mh-slide"' . ($i ? ' hidden' : '') . '>'
-                    . '<div class="mh-hero-tx"><div class="mh-hero-kick"><span class="mh-rule"></span><span>' . $e(trim($it->kicker . ($it->kicker !== '' ? ' · ' : '') . $it->date)) . '</span></div>'
-                    . '<' . $tag . ' class="mh-hero-h"><a href="' . $e($it->url) . '">' . $e($it->title) . '</a></' . $tag . '>' . self::ORN
-                    . ($it->text !== '' ? '<p class="mh-hero-dek">' . $e($it->text) . '</p>' : '')
+                    . '<div class="mh-hero-tx"><div class="mh-hero-kick">' . $e(trim($it->kicker . ($it->kicker !== '' ? ' · ' : '') . $it->date)) . '</div>'
+                    . '<' . $tag . ' class="mh-hero-h"><a href="' . $e($it->url) . '">' . $e($it->title) . '</a></' . $tag . '>'
                     . '<div class="mh-hero-btns"><a class="mh-btn mh-btn-gold" href="' . $e($it->url) . '">' . $e($read) . '</a>'
                     . '<a class="mh-btn mh-btn-ghost" href="' . $e($list) . '">' . $e($all) . '</a></div>' . $nav($i) . '</div>'
-                    . '<div class="mh-hero-ph"><span class="mh-frame" aria-hidden="true"></span>'
+                    . '<div class="mh-hero-ph">'
                     . ($it->img !== '' ? '<img src="' . $e($it->img) . '" alt="' . $e($it->alt) . '"' . ($i ? ' loading="lazy"' : ' fetchpriority="high"') . '>' : '<span class="mh-noimg"></span>')
                     . '</div></div>';
             }
@@ -128,7 +123,7 @@ final class Home
     {
         try {
             $offset = isset($props['offset']) && $props['offset'] !== '' ? max(0, (int) $props['offset']) : 4;
-            $items = News::homeItems(1 + self::n($props, 'count', 4, 8), $offset, 240);
+            $items = News::homeItems(1 + self::n($props, 'count', 3, 8), $offset, 240);
             if (!$items) {
                 return '';
             }
@@ -147,47 +142,6 @@ final class Home
             return $h . '<a class="mh-btn mh-btn-line" href="' . $e(News::homeListUrl()) . '">' . $e(self::t($props, 'all_text', 'all_news')) . '</a></div></div>';
         } catch (\Throwable $x) {
             Log::add('Home news: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
-            return '';
-        }
-    }
-
-    /* ------------------------------------------------------------------ hierarchs' visits */
-
-    public static function itinerary(array $props): string
-    {
-        try {
-            $groups = Itinerary::upcoming(self::n($props, 'count', 4, 10));
-            if (!$groups) {
-                return '';
-            }
-            $e = [self::class, 'e'];
-            $h = '<div class="' . self::cls($props, 'mh-itin') . '" data-mh-tabs><span class="mh-kick">' . $e(self::t($props, 'kicker', 'it_kicker')) . '</span>';
-            if (count($groups) > 1) {
-                $h .= '<div class="mh-pills mh-pills-full" role="tablist">';
-                foreach ($groups as $i => $g) {
-                    $h .= '<button type="button" role="tab" data-mh-tab="' . $i . '" aria-selected="' . ($i ? 'false' : 'true') . '">' . $e($g['name']) . '</button>';
-                }
-                $h .= '</div>';
-            }
-            foreach ($groups as $i => $g) {
-                $h .= '<div class="mh-pane" data-mh-pane="' . $i . '"' . ($i ? ' hidden' : '') . '>';
-                if (!$g['rows']) {
-                    $h .= '<p class="mh-it-none">' . $e(self::ui('no_visits')) . '</p>';
-                }
-                foreach ($g['rows'] as $r) {
-                    $sub = trim(strip_tags($r['place']));
-                    $h .= '<div class="mh-stop"><div class="mh-stop-d"><span>' . $e($r['day']) . '</span><small>' . $e(mb_strtoupper($r['mon'], 'UTF-8')) . '</small></div>'
-                        . '<div class="mh-stop-tx"><span class="mh-stop-t">' . $e($r['feast'] !== '' && $r['feast'] !== $r['title'] ? $r['feast'] . ', ' . $r['title'] : $r['title']) . '</span>'
-                        . ($sub !== '' ? '<span class="mh-stop-p">' . $e(html_entity_decode($sub, ENT_QUOTES, 'UTF-8')) . '</span>' : '') . '</div></div>';
-                }
-                if ($g['url'] !== '') {
-                    $h .= '<a class="mh-it-more" href="' . $e($g['url']) . '">' . $e(self::t($props, 'more_text', 'full_itin')) . ' →</a>';
-                }
-                $h .= '</div>';
-            }
-            return $h . '</div>' . self::js();
-        } catch (\Throwable $x) {
-            Log::add('Home itinerary: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
             return '';
         }
     }

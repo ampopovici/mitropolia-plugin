@@ -380,6 +380,41 @@ final class Hierarchs
         $db = self::db();
         $lang = self::lang();
 
+        $cur = self::current($root);
+        $subs = array_map(fn($r) => (int) $r->id, self::below($root));
+        $old = $subs ? $db->setQuery(self::base($subs)->select(['a.id', 'a.title', 'a.introtext'])->order('a.ordering ASC'))->loadObjectList() : [];
+
+        $f = self::fields(array_merge(array_map(fn($r) => (int) $r->id, $cur), array_map(fn($r) => (int) $r->id, $old)),
+            ['hierarch-full-title', 'hierarch-see', 'hierarch-residence', 'hierarch-years', 'hierarch-repose']);
+
+        $cross = Uri::root(true) . '/images/site/cruce.svg';
+
+        $h = '<div class="mnx mhl' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">';
+        $h .= '<section class="mhl-hero"><div class="mhl-head"><h1 class="mhl-title">' . $e(Text::_('MIT_HL_TITLE')) . '</h1></div></section>';
+
+        $h .= self::cardsHtml($cur, $f);
+
+        if ($old) {
+            usort($old, fn($x, $y) => strcmp((string) ($f[(int) $y->id]['hierarch-repose'] ?? ''), (string) ($f[(int) $x->id]['hierarch-repose'] ?? '')));
+            $h .= '<section class="mhl-dep"><h2 class="mhl-dep-h">' . $e(Text::_('MIT_HL_DEPARTED')) . '</h2>'
+                . '<table class="mhl-tbl"><thead><tr><th>' . $e(Text::_('MIT_HL_COL_HIERARCH')) . '</th><th>' . $e(Text::_('MIT_HL_COL_SERVED')) . '</th><th>' . $e(Text::_('MIT_HL_COL_REPOSED')) . '</th></tr></thead><tbody>';
+            foreach ($old as $o) {
+                $v = $f[(int) $o->id] ?? [];
+                $note = trim(strip_tags((string) $o->introtext));
+                $rep = (string) ($v['hierarch-repose'] ?? '');
+                $h .= '<tr><td><span class="mhl-x" aria-hidden="true">†</span><b>' . $e((string) $o->title) . '</b>' . ($note !== '' ? '<span class="mhl-note">' . $e($note) . '</span>' : '') . '</td>'
+                    . '<td data-l="' . $e(Text::_('MIT_HL_COL_SERVED')) . '">' . $e((string) ($v['hierarch-years'] ?? '')) . '</td>'
+                    . '<td data-l="' . $e(Text::_('MIT_HL_COL_REPOSED')) . '">' . $e($rep !== '' ? self::date($rep, Text::_('MIT_NEWS_DATE_FORMAT')) : '') . '</td></tr>';
+            }
+            $h .= '</tbody></table></section>';
+        }
+        return $h . '</div>';
+    }
+
+    /** Current hierarchs of a Hierarchs category, Metropolitan first, then archbishops, then bishops. */
+    private static function current(object $root): array
+    {
+        $db = self::db();
         $cur = $db->setQuery(self::base([(int) $root->id])
             ->select(['a.id', 'a.title', 'a.alias', 'a.catid', 'a.language', 'a.images'])->order('a.ordering ASC, a.id ASC'))->loadObjectList();
         // Metropolitan first, then archbishops, then bishops; same rank keeps the article order
@@ -397,17 +432,16 @@ final class Hierarchs
         };
         $pos = array_flip(array_map(fn($r) => (int) $r->id, $cur));
         usort($cur, fn($x, $y) => [$rank($x), $pos[(int) $x->id]] <=> [$rank($y), $pos[(int) $y->id]]);
-        $subs = array_map(fn($r) => (int) $r->id, self::below($root));
-        $old = $subs ? $db->setQuery(self::base($subs)->select(['a.id', 'a.title', 'a.introtext'])->order('a.ordering ASC'))->loadObjectList() : [];
+        return $cur;
+    }
 
-        $f = self::fields(array_merge(array_map(fn($r) => (int) $r->id, $cur), array_map(fn($r) => (int) $r->id, $old)),
-            ['hierarch-full-title', 'hierarch-see', 'hierarch-residence', 'hierarch-years', 'hierarch-repose']);
-
+    /** The hierarch cards (photo, honorific, name, titles, links), as on the Hierarchs page. */
+    private static function cardsHtml(array $cur, array $f): string
+    {
+        $e = [self::class, 'e'];
+        $lang = self::lang();
         $cross = Uri::root(true) . '/images/site/cruce.svg';
-
-        $h = '<div class="mnx mhl' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">';
-        $h .= '<section class="mhl-hero"><div class="mhl-head"><h1 class="mhl-title">' . $e(Text::_('MIT_HL_TITLE')) . '</h1></div></section>';
-
+        $h = '';
         if ($cur) {
             $h .= '<div class="mhl-cards' . (count($cur) === 1 ? ' one' : '') . '">';
             foreach ($cur as $a) {
@@ -439,21 +473,82 @@ final class Hierarchs
             $h .= '</div>';
         }
 
-        if ($old) {
-            usort($old, fn($x, $y) => strcmp((string) ($f[(int) $y->id]['hierarch-repose'] ?? ''), (string) ($f[(int) $x->id]['hierarch-repose'] ?? '')));
-            $h .= '<section class="mhl-dep"><h2 class="mhl-dep-h">' . $e(Text::_('MIT_HL_DEPARTED')) . '</h2>'
-                . '<table class="mhl-tbl"><thead><tr><th>' . $e(Text::_('MIT_HL_COL_HIERARCH')) . '</th><th>' . $e(Text::_('MIT_HL_COL_SERVED')) . '</th><th>' . $e(Text::_('MIT_HL_COL_REPOSED')) . '</th></tr></thead><tbody>';
-            foreach ($old as $o) {
-                $v = $f[(int) $o->id] ?? [];
-                $note = trim(strip_tags((string) $o->introtext));
-                $rep = (string) ($v['hierarch-repose'] ?? '');
-                $h .= '<tr><td><span class="mhl-x" aria-hidden="true">†</span><b>' . $e((string) $o->title) . '</b>' . ($note !== '' ? '<span class="mhl-note">' . $e($note) . '</span>' : '') . '</td>'
-                    . '<td data-l="' . $e(Text::_('MIT_HL_COL_SERVED')) . '">' . $e((string) ($v['hierarch-years'] ?? '')) . '</td>'
-                    . '<td data-l="' . $e(Text::_('MIT_HL_COL_REPOSED')) . '">' . $e($rep !== '' ? self::date($rep, Text::_('MIT_NEWS_DATE_FORMAT')) : '') . '</td></tr>';
+        return $h;
+    }
+
+    /* ------------------------------------------------------------------ homepage */
+
+    /** Homepage: the hierarch cards of the Hierarchs page. */
+    public static function homeCards(array $props = []): string
+    {
+        try {
+            $root = self::catByAlias('hierarchs-' . self::lang());
+            if (!$root) {
+                return '';
             }
-            $h .= '</tbody></table></section>';
+            $cur = self::current($root);
+            $f = self::fields(array_map(fn($r) => (int) $r->id, $cur), ['hierarch-full-title']);
+            return '<div class="mnx mhl mh-hcards">' . self::cardsHtml($cur, $f) . '</div>' . self::listAssets();
+        } catch (\Throwable $x) {
+            Log::add('Home hierarchs: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            return '';
         }
-        return $h . '</div>';
+    }
+
+    /** Homepage: the pastoral itinerary card of the hierarch page, with a switch between the hierarchs. */
+    public static function homeItinerary(array $props = []): string
+    {
+        try {
+            $root = self::catByAlias('hierarchs-' . self::lang());
+            if (!$root) {
+                return '';
+            }
+            $e = [self::class, 'e'];
+            $sets = [];
+            foreach (self::current($root) as $a) {
+                [, $name] = self::splitName((string) $a->title);
+                $key = (string) (array_slice(explode(' ', $name), -1)[0] ?? '');
+                $st = self::stops($key);
+                if ($st['up'] || $st['past']) {
+                    $sets[] = [$name, $st];
+                }
+            }
+            if (!$sets) {
+                return '';
+            }
+            $title = trim((string) ($props['title'] ?? '')) ?: Text::_('MIT_HP_ITINERARY');
+            $h = '<div class="mhp mh-hitin" data-mh-it><div class="mhp-card"><div class="mhp-card-h"><h2 class="mpx-h2">' . $e($title) . '</h2>'
+                . '<div class="mhp-tabs" role="tablist"><button type="button" class="on" data-mh-m="up">' . $e(Text::_('MIT_HP_UPCOMING')) . '</button>'
+                . '<button type="button" data-mh-m="past">' . $e(Text::_('MIT_HP_RECENT')) . '</button></div></div>';
+            if (count($sets) > 1) {
+                $h .= '<div class="mh-pills mh-pills-full" role="tablist">';
+                foreach ($sets as $i => [$name]) {
+                    $h .= '<button type="button" data-mh-h="' . $i . '" aria-selected="' . ($i ? 'false' : 'true') . '">' . $e($name) . '</button>';
+                }
+                $h .= '</div>';
+            }
+            foreach ($sets as $i => [, $st]) {
+                foreach (['up', 'past'] as $m) {
+                    $h .= '<div data-mh-pane="' . $i . '-' . $m . '"' . ($i === 0 && $m === 'up' ? '' : ' hidden') . '>'
+                        . ($st[$m] ? implode('', $st[$m]) : '<p class="mh-it-none">' . $e(Text::_($m === 'up' ? 'MIT_HP_NO_UPCOMING' : 'MIT_HP_NO_RECENT')) . '</p>')
+                        . ($st['url'] !== '' ? '<a class="mh-it-more" href="' . $e($st['url']) . '">' . $e(Text::_('MIT_HP_FULL_ITIN')) . ' →</a>' : '') . '</div>';
+                }
+            }
+            $h .= '</div></div>' . self::assets() . <<<'HTML'
+<script>
+document.querySelectorAll('[data-mh-it]').forEach(function(box){var h='0',m='up';
+function show(){box.querySelectorAll('[data-mh-pane]').forEach(function(p){p.hidden=p.getAttribute('data-mh-pane')!==h+'-'+m;});
+box.querySelectorAll('[data-mh-m]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-mh-m')===m);});
+box.querySelectorAll('[data-mh-h]').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-mh-h')===h));});}
+box.querySelectorAll('[data-mh-m]').forEach(function(b){b.addEventListener('click',function(){m=b.getAttribute('data-mh-m');show();});});
+box.querySelectorAll('[data-mh-h]').forEach(function(b){b.addEventListener('click',function(){h=b.getAttribute('data-mh-h');show();});});});
+</script>
+HTML;
+            return $h;
+        } catch (\Throwable $x) {
+            Log::add('Home itinerary: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            return '';
+        }
     }
 
     private static function listAssets(): string

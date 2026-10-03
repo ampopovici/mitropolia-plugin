@@ -1,6 +1,6 @@
 {
- "name": "mitropolia_home_itinerary",
- "title": "Homepage: pastoral itinerary",
+ "name": "mitropolia_home_hierarchs",
+ "title": "Homepage: hierarch cards",
  "group": "Mitropolia",
  "icon": "${url:images/icon.svg}",
  "iconSmall": "${url:images/icon-small.svg}",
@@ -12,9 +12,10 @@
   "content": "./templates/content.php"
  },
  "fields": {
-  "title": {
-   "label": "Title",
-   "description": "Leave empty for the standard wording in the page language."
+  "note": {
+   "label": "Note",
+   "type": "textarea",
+   "description": "The cards are the ones on the Hierarchs page; change them in the hierarch articles."
   }
  },
  "fieldset": {
@@ -24,7 +25,7 @@
     {
      "title": "Content",
      "fields": [
-      "title"
+      "note"
      ]
     }
    ]

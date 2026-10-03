@@ -26,7 +26,7 @@ L = {
       ("Canada", "Episcopia", "Păstorită de Episcopul Ioan Casian.", "/ro/structura/eparhii/episcopia"),
       ("America de Sud", "Iglesia Ortodoxa Rumana", "Parohii și misiuni de limbă spaniolă și portugheză.", "/ro/structura/directoare/parohii")],
   don_k="Sprijin", don_h="Susțineți viața Bisericii", don_t="Darul dumneavoastră susține slujirile, publicațiile și misiunile Mitropoliei.", don_b="Donează online", don="/ro/doneaza",
-  part="În comuniune și în presă",
+  part="Parteneri și prieteni ai Mitropoliei",
   stay_h="Rămâneți în legătură", stay_t="Primiți prin e-mail scrisorile pastorale, știrile și fiecare număr nou al revistei Credința.", stay_b="Abonează-te", stay="/ro/contact"),
 'en': dict(
   q=[("History", "/en/about/history"), ("The Orthodox Faith", "/en/about/the-orthodox-faith"), ("Hierarchs", "/en/hierarchs"),
@@ -47,7 +47,7 @@ L = {
       ("Canada", "The Episcopate", "Shepherded by Bishop Ioan Casian.", "/en/structure/church-bodies/canadian-diocese"),
       ("South America", "Iglesia Ortodoxa Rumana", "Parishes and missions in Spanish and Portuguese.", "/en/structure/directories/parish-directory")],
   don_k="Support", don_h="Sustain the life of the Church", don_t="Your offering supports the ministries, publications and missions of the Metropolia.", don_b="Give online", don="/en/donate",
-  part="In communion & in the media",
+  part="Partners and friends of the Metropolia",
   stay_h="Stay connected", stay_t="Receive pastoral letters, news and each new issue of Credința by email.", stay_b="Subscribe", stay="/en/contact"),
 'es': dict(
   q=[("Historia", "/es/sobre-nosotros/historia"), ("La Fe Ortodoxa", "/es/sobre-nosotros/la-fe-ortodoxa"), ("Jerarcas", "/es/jerarcas"),
@@ -68,12 +68,13 @@ L = {
       ("Canadá", "La Diócesis de Canadá", "Bajo el pastoreo del Obispo Ioan Casian.", "/es/estructura/eparquias/diocesis-de-canada"),
       ("América del Sur", "Iglesia Ortodoxa Rumana", "Parroquias y misiones en español y portugués.", "/es/estructura/directorios/directorio-de-parroquias")],
   don_k="Apoyo", don_h="Sostenga la vida de la Iglesia", don_t="Su ofrenda sostiene los ministerios, las publicaciones y las misiones de la Metrópolis.", don_b="Donar en línea", don="/es/donar",
-  part="En comunión y en los medios",
+  part="Socios y amigos de la Metrópolis",
   stay_h="Manténgase en contacto", stay_t="Reciba por correo electrónico las cartas pastorales, las noticias y cada nuevo número de la revista.", stay_b="Suscribirse", stay="/es/contacto"),
 }
-PARTNERS = [("Patriarhia Română", "https://patriarhia.ro"), ("Episcopia Canadei", "https://www.episcopia.ca"), ("Assembly of Bishops", "https://www.assemblyofbishops.org"),
-            ("St Vladimir’s Seminary", "https://www.svots.edu"), ("Trinitas TV", "https://www.trinitastv.ro"), ("Radio Trinitas", "https://www.radiotrinitas.ro"),
-            ("Basilica", "https://www.basilica.ro"), ("Ziarul Lumina", "https://ziarullumina.ro"), ("St. Parascheva Charity", "https://www.spcharity.org")]
+PARTNERS = [("Patriarhia Română", "https://patriarhia.ro", "patriarhia-romana.png"), ("Episcopia Ortodoxă Română a Canadei", "https://www.episcopia.ca", "episcopia.png"),
+            ("Assembly of Canonical Orthodox Bishops", "https://www.assemblyofbishops.org", "assembly.png"), ("Trinitas TV", "https://www.trinitastv.ro", "trinitas-tv.png"),
+            ("Radio Trinitas", "https://www.radiotrinitas.ro", "radio-trinitas.png"), ("Basilica", "https://www.basilica.ro", "basilica-ro.png"),
+            ("Ziarul Lumina", "https://ziarullumina.ro", "ziar-lumina.png"), ("St. Parascheva Charity", "https://www.spcharity.org", "sf-parascheva.png")]
 
 
 def el(t, props=None, children=None, **kw):
@@ -127,15 +128,11 @@ def layout(l):
     S.append(section("Quick access", "mh-s-tiles", [row(col([grid(
         [el("grid_item", {"image": ICON + i + ".svg", "image_alt": "", "title": t, "content": "<p>" + x + "</p>", "link": u}) for i, t, x, u in c["tiles"]],
         ("2", "4"), "mh-tiles", panel_style="card-default", panel_link=True, image_width="28", image_height="28", image_align="top", title_style="")]))]))
-    S.append(section("News", "mh-s-news", [row(col([kick(c["news_k"], "mh-center"), h2(c["news_h"], "mh-center mh-orn"),
-        el("mitropolia_home_news", {"offset": 4, "count": 4})]))]))
-    S.append(section("Hierarchs and visits", "mh-s-hier", [row(
-        col([kick(c["hier_k"]), h2(c["hier_h"]),
-             grid([el("grid_item", {"meta": m, "title": t, "image": im, "image_alt": t,
-                                    "content": "<p>" + x + "</p><p class=\"mh-links\">" + "".join('<a href="%s">%s</a>' % (u, lt) for lt, u in links) + "</p>"})
-                   for m, t, x, im, links in c["hier"]], ("2", "2"), "mh-hier-grid", grid_column_gap="medium", margin="medium",
-                  image_width="600", image_height="750", image_align="top", meta_align="above-title", title_style="", meta_style="", panel_style="")], "3-5"),
-        col([el("mitropolia_home_itinerary", {"count": 4})], "2-5"), gutter="large")]))
+    S.append(section("News", "mh-s-news", [row(col([kick(c["news_k"], "mh-center"), h2(c["news_h"], "mh-center"),
+        el("mitropolia_home_news", {"offset": 4, "count": 3})]))]))
+    S.append(section("Hierarchs and visits", "mh-s-hier", [
+        row(col([h2(c["hier_k"])])),
+        row(col([el("mitropolia_home_hierarchs", {})], "3-5"), col([el("mitropolia_home_itinerary", {})], "2-5"), gutter="large", margin="medium")]))
     S.append(section("Events", "mh-s-events", [row(col([el("mitropolia_home_events", {"count": 4})]))]))
     S.append(section("Structure", "mh-s-struct", [row(col([kick(c["st_k"]), h2(c["st_h"]), lead(c["st_text"]),
         grid([el("grid_item", {"meta": m, "title": t, "content": "<p>" + x + "</p>", "link": u}) for m, t, x, u in c["st"]],
@@ -145,10 +142,11 @@ def layout(l):
         col([el("panel", {"meta": c["don_k"], "title": c["don_h"], "content": "<p>" + c["don_t"] + "</p>", "link": c["don"], "link_text": c["don_b"],
                           "link_style": "default", "panel_style": "card-default", "title_element": "h2", "title_style": "", "meta_style": "", "meta_align": "above-title",
                           "class": "mh-donate"})], "2-5"), gutter="large")]))
-    S.append(section("Partners", "mh-s-partners", [row(
-        col([el("text", {"content": "<p>" + c["part"] + "</p>", "margin": "remove", "class": "mh-plabel"})], "1-5", vertical_align="middle"),
-        col([el("subnav", {"subnav_style": "", "margin": "remove"}, [el("subnav_item", {"content": t, "link": u, "link_target": True}) for t, u in PARTNERS])], "4-5",
-            vertical_align="middle"))]))
+    S.append(section("Partners", "mh-s-partners", [row(col([
+        el("text", {"content": "<p>" + c["part"] + "</p>", "margin": "remove", "class": "mh-plabel mh-center"}),
+        grid([el("grid_item", {"image": "/images/partners/" + f, "image_alt": t, "link": u}) for t, u, f in PARTNERS],
+             ("4", "8"), "mh-logos", panel_link=True, grid_column_gap="medium", grid_row_gap="medium", margin="medium", image_align="top",
+             grid_default="2", text_align="center", panel_style="")]))]))
     S.append(section("Stay connected", "mh-s-stay", [row(
         col([h2(c["stay_h"]), lead(c["stay_t"])], "2-5", vertical_align="middle"),
         col([el("button", {"margin": "remove", "text_align": "right", "text_align_breakpoint": "m"},
