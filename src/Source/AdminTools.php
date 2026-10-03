@@ -19,6 +19,9 @@ use Joomla\CMS\Uri\Uri;
  *   /institutional/ folder to files/institutional/ (only when missing), doc_tags creates the document tags
  *   per language, doc_save creates one document article (documents-ro/en/es) with its file, date, tags and
  *   association.
+ * - pub_*: the publications (Revista Credința, Almanahul Credința). pub_cats creates the two "All languages"
+ *   categories and assigns the publication fields to them; pub_copy copies issue PDFs from the old site's /pdf/
+ *   folder; pub_save creates the issue articles; pub_cover stores a cover (JPEG made from the PDF's first page).
  */
 final class AdminTools
 {
@@ -66,6 +69,16 @@ final class AdminTools
                 return self::docTags(json_decode((string) $p->getRaw('tags'), true) ?: []);
             case 'doc_tag_add':
                 return self::docTagAdd(array_map('intval', json_decode((string) $p->getRaw('ids'), true) ?: []), (string) $p->getString('tag'));
+            case 'pub_diag':
+                return self::pubDiag();
+            case 'pub_cats':
+                return self::pubCats();
+            case 'pub_copy':
+                return self::pubCopy(json_decode((string) $p->getRaw('files'), true) ?: []);
+            case 'pub_save':
+                return self::pubSave(json_decode((string) $p->getRaw('items'), true) ?: []);
+            case 'pub_cover':
+                return self::pubCover($p->getInt('id'), (string) $p->getRaw('jpeg'));
             case 'doc_save':
                 return self::docSave(json_decode((string) $p->getRaw('doc'), true) ?: []);
         }
@@ -420,5 +433,148 @@ final class AdminTools
             $out[] = [$id, $table->store() ? 'tagged' : 'failed'];
         }
         return ['ok' => true, 'items' => $out];
+    }
+
+    /* ------------------------------------------------------------------ publications */
+
+    private static function pubDiag(): array
+    {
+        $im = class_exists('Imagick');
+        $fmts = [];
+        if ($im) {
+            try {
+                $fmts = \Imagick::queryFormats('PDF');
+            } catch (\Throwable $x) {
+            }
+        }
+        $fns = array_map('trim', explode(',', (string) ini_get('disable_functions')));
+        return ['ok' => true, 'imagick' => $im, 'pdf' => $fmts, 'exec' => function_exists('exec') && !in_array('exec', $fns, true), 'gd' => function_exists('imagecreatefromstring')];
+    }
+
+    private static function pubCats(): array
+    {
+        $db = Admin::db();
+        $out = [];
+        foreach (['revista-credinta' => 'Revista Credința', 'almanahul-credinta' => 'Almanahul Credința'] as $alias => $title) {
+            $id = Admin::catByAlias($alias);
+            if (!$id) {
+                $table = Factory::getApplication()->bootComponent('com_categories')->getMVCFactory()->createTable('Category', 'Administrator');
+                $table->setLocation(1, 'last-child');
+                $table->bind(['title' => $title, 'alias' => $alias, 'extension' => 'com_content', 'published' => 1, 'access' => 1, 'language' => '*',
+                    'parent_id' => 1, 'description' => '', 'note' => 'Publicație (ALL)', 'params' => '{}', 'metadata' => '{}']);
+                if (!$table->check() || !$table->store()) {
+                    return ['ok' => false, 'error' => 'category ' . $alias . ': ' . (method_exists($table, 'getError') ? $table->getError() : '')];
+                }
+                $table->rebuildPath($table->id);
+                $id = (int) $table->id;
+            }
+            // the publication fields (issue, year, PDF) also apply here
+            $fields = $db->setQuery($db->getQuery(true)->select('id')->from('#__fields')
+                ->whereIn('name', ['publication-issue', 'publication-year', 'publication-pdf'], \Joomla\Database\ParameterType::STRING))->loadColumn();
+            foreach ($fields as $fid) {
+                $has = (int) $db->setQuery($db->getQuery(true)->select('COUNT(*)')->from('#__fields_categories')
+                    ->where('field_id = ' . (int) $fid)->where('category_id = ' . $id))->loadResult();
+                if (!$has) {
+                    $o = (object) ['field_id' => (int) $fid, 'category_id' => $id];
+                    $db->insertObject('#__fields_categories', $o);
+                }
+            }
+            $out[$alias] = $id;
+        }
+        return ['ok' => true, 'cats' => $out];
+    }
+
+    /** files: [{from: "2026.07.30.pdf", to: "credinta/credinta-2026-2.pdf"}] */
+    private static function pubCopy(array $files): array
+    {
+        $report = [];
+        foreach (array_slice($files, 0, 40) as $f) {
+            $from = (string) ($f['from'] ?? '');
+            $to = (string) ($f['to'] ?? '');
+            if (!preg_match('#^[A-Za-z0-9._-]+\.pdf$#', $from) || !preg_match('#^(credinta|almanah)/[a-z0-9-]+\.pdf$#', $to)) {
+                $report[] = [$to, 'skipped'];
+                continue;
+            }
+            $abs = JPATH_ROOT . '/files/publications/' . $to;
+            if (is_file($abs)) {
+                $report[] = [$to, 'exists', filesize($abs)];
+                continue;
+            }
+            $ctx = stream_context_create(['http' => ['timeout' => 120, 'user_agent' => 'Mitropolia staging']]);
+            $data = @file_get_contents('https://www.mitropolia.us/pdf/' . rawurlencode($from), false, $ctx);
+            if ($data === false || strncmp($data, '%PDF', 4) !== 0) {
+                $report[] = [$to, 'download failed'];
+                continue;
+            }
+            if (!is_dir(dirname($abs)) && !@mkdir(dirname($abs), 0755, true)) {
+                $report[] = [$to, 'mkdir failed'];
+                continue;
+            }
+            $report[] = [$to, @file_put_contents($abs, $data) ? 'copied' : 'write failed', strlen($data)];
+            @chmod($abs, 0644);
+        }
+        return ['ok' => true, 'files' => $report];
+    }
+
+    /** items: [{cat: "revista-credinta", title, issue: "2", year: "2026", file: "files/publications/..."}] */
+    private static function pubSave(array $items): array
+    {
+        $app = Factory::getApplication();
+        $out = [];
+        foreach (array_slice($items, 0, 40) as $d) {
+            $cat = Admin::catByAlias((string) ($d['cat'] ?? ''));
+            $file = (string) ($d['file'] ?? '');
+            $title = trim((string) ($d['title'] ?? ''));
+            if (!$cat || !in_array((string) $d['cat'], ['revista-credinta', 'almanahul-credinta'], true) || $title === ''
+                || !preg_match('#^files/publications/(credinta|almanah)/[a-z0-9-]+\.pdf$#', $file) || !is_file(JPATH_ROOT . '/' . $file)) {
+                $out[] = [$title, 'bad item'];
+                continue;
+            }
+            $now = Factory::getDate()->toSql();
+            $table = Admin::table();
+            $table->bind([
+                'title' => $title, 'alias' => Admin::uniqueAlias($cat, Admin::slug($title, 120) ?: 'numar'),
+                'catid' => $cat, 'state' => 1, 'access' => 1, 'language' => '*', 'introtext' => '', 'fulltext' => '',
+                'created' => $now, 'created_by' => (int) $app->getIdentity()->id, 'publish_up' => $now,
+                'images' => '{}', 'urls' => '{}', 'attribs' => '{}', 'metadata' => '{}', 'metakey' => '', 'metadesc' => '',
+                'note' => 'import publicații (Claude), ' . basename($file),
+            ]);
+            if (!$table->check() || !$table->store()) {
+                $out[] = [$title, 'store failed'];
+                continue;
+            }
+            $id = (int) $table->id;
+            Admin::writeFields($id, [
+                'publication-issue' => (string) ($d['issue'] ?? ''),
+                'publication-year'  => (string) ($d['year'] ?? ''),
+                'publication-pdf'   => json_encode(['file' => $file, 'linktext' => ''], JSON_UNESCAPED_SLASHES),
+            ]);
+            $out[] = [$title, 'created', $id];
+        }
+        Admin::ensureWorkflow([Admin::catByAlias('revista-credinta'), Admin::catByAlias('almanahul-credinta')]);
+        return ['ok' => true, 'items' => $out];
+    }
+
+    /** Stores images/publications/covers/<id>.jpg from a base64 JPEG (the PDF's first page, drawn in the browser). */
+    private static function pubCover(int $id, string $b64): array
+    {
+        $cats = [Admin::catByAlias('revista-credinta'), Admin::catByAlias('almanahul-credinta')];
+        $db = Admin::db();
+        $cat = (int) $db->setQuery($db->getQuery(true)->select('catid')->from('#__content')->where('id = ' . $id))->loadResult();
+        if (!$cat || !in_array($cat, $cats, true)) {
+            return ['ok' => false, 'error' => 'not a publication'];
+        }
+        $data = base64_decode(preg_replace('#^data:image/jpeg;base64,#', '', $b64), true);
+        $info = $data ? @getimagesizefromstring($data) : false;
+        if (!$info || $info[2] !== IMAGETYPE_JPEG || strlen($data) > 3 * 1048576) {
+            return ['ok' => false, 'error' => 'not a jpeg'];
+        }
+        $dir = JPATH_ROOT . '/images/publications/covers';
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true)) {
+            return ['ok' => false, 'error' => 'mkdir'];
+        }
+        $ok = @file_put_contents($dir . '/' . $id . '.jpg', $data);
+        @chmod($dir . '/' . $id . '.jpg', 0644);
+        return ['ok' => (bool) $ok, 'size' => strlen($data), 'w' => $info[0], 'h' => $info[1]];
     }
 }
