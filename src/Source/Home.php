@@ -107,11 +107,10 @@ final class Home
                 if (count($items) < 2) {
                     return '';
                 }
-                $h = '<div class="mh-hero-nav"><button type="button" class="mh-circ" data-mh-prev aria-label="' . $e(self::ui('prev')) . '">' . self::I_PREV . '</button><div class="mh-dots">';
-                foreach ($items as $i => $it) {
-                    $h .= '<button type="button" data-mh-dot="' . $i . '" aria-label="' . $e(sprintf(self::ui('show'), $i + 1)) . '"' . ($i === $cur ? ' aria-current="true"' : '') . '></button>';
-                }
-                return $h . '</div><button type="button" class="mh-circ" data-mh-next aria-label="' . $e(self::ui('next')) . '">' . self::I_NEXT . '</button></div>';
+                $n = count($items);
+                return '<div class="mh-hero-nav"><button type="button" class="mh-circ" data-mh-prev aria-label="' . $e(self::ui('prev')) . '">' . self::I_PREV . '</button>'
+                    . '<span class="mh-count" aria-hidden="true"><b>' . sprintf('%02d', $cur + 1) . '</b><i></i>' . sprintf('%02d', $n) . '</span>'
+                    . '<button type="button" class="mh-circ" data-mh-next aria-label="' . $e(self::ui('next')) . '">' . self::I_NEXT . '</button></div>';
             };
             $season = self::season();
             $h = '<div class="' . self::cls($props, 'mh-hero') . ($season !== '' ? ' mh-season-' . $season : '') . '" data-mh-hero><span class="mh-wm" aria-hidden="true"></span><div class="mh-hero-in">';
