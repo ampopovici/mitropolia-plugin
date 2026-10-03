@@ -1271,7 +1271,11 @@ HTML;
                     'time'  => self::time($v['tm'], $l),
                 ];
             }
-            $out[] = ['name' => $l === 'ro' ? self::who($cat, 0) : self::who($cat, self::li($l)), 'url' => $url, 'rows' => $rows];
+            $short = [
+                'metropolitan-nicolae' => ['Mitropolitul Nicolae', 'Metropolitan Nicolae', 'Metropolitano Nicolae'],
+                'bishop-ioan-casian'   => ['Episcopul Ioan Casian', 'Bishop Ioan Casian', 'Obispo Ioan Casian'],
+            ][(string) $cat->alias][self::li($l)] ?? self::who($cat, self::li($l));
+            $out[] = ['name' => $short, 'url' => $url, 'rows' => $rows];
         }
         return $out;
     }
