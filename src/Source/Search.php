@@ -203,7 +203,7 @@ final class Search
                 $or[] = 'a.title LIKE ' . $like;
                 $or[] = 'a.introtext LIKE ' . $like;
                 $or[] = $db->quoteName('a.fulltext') . ' LIKE ' . $like;
-                $or[] = 'EXISTS (SELECT 1 FROM #__fields_values v WHERE v.item_id = CAST(a.id AS CHAR) AND v.value LIKE ' . $like . ')';
+                $or[] = 'EXISTS (SELECT 1 FROM #__fields_values v WHERE v.item_id = a.id AND v.value LIKE ' . $like . ')';
             }
             $q->where('(' . implode(' OR ', $or) . ')');
         }
@@ -354,7 +354,8 @@ final class Search
             return self::html($props) . News::sharedCss() . self::css();
         } catch (\Throwable $x) {
             Log::add('Search: ' . $x->getMessage() . ' @' . $x->getLine(), Log::WARNING, 'mitropolia');
-            return '';
+            $u = Factory::getApplication()->getIdentity();
+            return $u && $u->authorise('core.admin') ? '<!-- search error: ' . htmlspecialchars($x->getMessage() . ' @' . $x->getLine()) . ' -->' : '';
         }
     }
 
