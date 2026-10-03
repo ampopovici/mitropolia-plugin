@@ -1,0 +1,33 @@
+{
+ "name": "mitropolia_media_item",
+ "title": "Media item",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {},
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
+ },
+ "fields": {
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Media item",
+     "fields": [
+      "class"
+     ]
+    }
+   ]
+  }
+ }
+}

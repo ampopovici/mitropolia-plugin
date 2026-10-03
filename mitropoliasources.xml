@@ -4,7 +4,7 @@
   <author>Romanian Orthodox Metropolia of the Americas</author>
   <creationDate>2026-09</creationDate>
   <license>GPL-2.0-or-later</license>
-  <version>1.20.2</version>
+  <version>1.21.0</version>
   <description>Adds Mitropolia data to YOOtheme Pro dynamic content: the parishes a clergy member serves (with role), the clergy of a parish, the events and pastoral visits at a parish, and the parish of an event or visit. Uses only the documented YOOtheme source API and Joomla's own content model; if either is missing it does nothing.</description>
   <namespace path="src">Mitropolia\Plugin\System\MitropoliaSources</namespace>
   <files>
