@@ -38,7 +38,7 @@
 .mh-s-hero:has(.mh-season-lord) { --h-bg: #F7F3EA; --h-ph: #E6DCC6; --h-accent: #203D78; --h-ink: #1B2A4A; --h-sub: #6B5A34; --h-line: rgba(32,61,120,.3); --h-btn-ink: #FFFFFF; }
 .mh-s-hero { background: radial-gradient(120% 100% at 0% 0%, rgba(255,255,255,.09), rgba(255,255,255,0) 55%), var(--h-bg); position: relative; overflow: hidden; transition: background-color .4s; }
 .mh-s-hero > .uk-container { max-width: 1480px; }
-.mh-hero { position: relative; padding: 56px 0; }
+.mh-hero { position: relative; padding: 44px 0; }
 // On computer screens up to 1599px wide, menu + hero fill the screen height (--mh-top is the height above the hero, set by the page)
 @media (min-width: 960px) and (max-width: 1599px) {
   .mh-s-hero { min-height: ~"calc(100vh - var(--mh-top, 121px))"; display: flex; flex-direction: column; justify-content: center; }
@@ -46,16 +46,17 @@
 }
 .mh-wm { position: absolute; right: -120px; bottom: -160px; width: 760px; height: 760px; opacity: .06; background: var(--h-accent); -webkit-mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; pointer-events: none; }
 .mh-hero-in { position: relative; display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: ~"clamp(40px, 5vw, 80px)"; align-items: center; }
-.mh-hb-main { min-width: 0; }
-.mh-slide { display: flex; flex-direction: column; }
-.mh-slide[hidden] { display: none; }
+// all stories share one spot, so the hero keeps the height of the longest title
+.mh-hb-main { min-width: 0; display: grid; }
+.mh-slide { display: flex; flex-direction: column; grid-area: 1 / 1 / 2 / 2; }
+.mh-slide[hidden] { display: flex; visibility: hidden; }
 .mh-hero-ph { display: block; position: relative; }
 .mh-hero-ph img, .mh-hero-ph .mh-noimg { display: block; width: 100%; aspect-ratio: 600 / 280; object-fit: cover; background: var(--h-ph); border-radius: 18px; box-shadow: 0 40px 80px -40px rgba(0,0,0,.55); }
-.mh-hero-kick { font-size: 13px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--h-sub); margin: 30px 0 14px; }
-.mh-hero-h { margin: 0; font-family: 'Baskervville', Georgia, serif; font-weight: 400; font-size: ~"clamp(30px, 1.2rem + 1.7vw, 48px)"; line-height: 1.1; letter-spacing: -.01em; color: var(--h-accent); text-transform: none; text-wrap: balance; }
+.mh-hero-kick { font-size: 13px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase; color: var(--h-sub); margin: 24px 0 12px; }
+.mh-hero-h { margin: 0; font-family: 'Baskervville', Georgia, serif; font-weight: 400; font-size: ~"clamp(30px, 1.2rem + 1.6vw, 44px)"; line-height: 1.1; letter-spacing: -.01em; color: var(--h-accent); text-transform: none; text-wrap: balance; }
 .mh-hero-h a { color: inherit !important; text-decoration: none !important; }
 .mh-hero-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
-.mh-hero .mh-hero-btns { margin-top: 28px; gap: 14px; }
+.mh-hero .mh-hero-btns { margin-top: 24px; gap: 14px; }
 .mh-hero .mh-btn-gold { background: var(--h-accent); color: var(--h-btn-ink) !important; }
 .mh-hero .mh-btn-gold:hover { filter: brightness(1.08); }
 .mh-hero .mh-btn-ghost { border-color: var(--h-line); color: var(--h-ink) !important; }
