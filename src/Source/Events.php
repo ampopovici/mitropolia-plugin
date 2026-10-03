@@ -542,6 +542,18 @@ final class Events
         $hero = '<div class="mev-hero"><div class="mev-in">' . $crumbs
             . '<h1 class="mev-h1">' . $e($showPast ? self::ui('past') : $title) . '</h1>' . ($showPast ? '' : '<p class="mev-lead">' . $introHtml . '</p>') . $chips . '</div></div>';
 
+        // parts, for pages whose header is built with YOOtheme elements
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'intro') {
+            return '<div class="mev mev-tools"><h1 class="mev-h1">' . $e($showPast ? self::ui('past') : $title) . '</h1>' . ($showPast ? '' : '<p class="mev-lead">' . $introHtml . '</p>') . '</div>';
+        }
+        if ($part === 'chips') {
+            return $chips !== '' && !$showPast ? '<div class="mev mev-tools">' . $chips . '</div>' : '';
+        }
+        if ($part === 'body') {
+            $hero = '';
+        }
+
         if ($showPast) {
             $page = max(1, $in->getInt('p', 1));
             $pages = max(1, (int) ceil(count($past) / self::PER_PAGE));
@@ -696,7 +708,7 @@ final class Events
         }
 
         return '<article class="mev mev-art' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">'
-            . '<div class="mev-band"><div class="mev-in">' . self::crumbs(array_values(array_filter([[self::ui('title'), self::listUrl()], $g !== '' ? [$g, ''] : [$ev->title, '']]))) . '</div></div>'
+            . (($props['part'] ?? '') === 'body' ? '' : '<div class="mev-band"><div class="mev-in">' . self::crumbs(array_values(array_filter([[self::ui('title'), self::listUrl()], $g !== '' ? [$g, ''] : [$ev->title, '']]))) . '</div></div>')
             . ($past ? '<div class="mev-ended"><div class="mev-in"><b>' . $e(self::ui('ended')) . '</b>' . ($photos ? '<a href="#mev-photos">' . $e(self::ui('seephotos')) . ' ↓</a>' : '') . '</div></div>' : '')
             . '<header class="mev-in mev-head"><div class="grid"><div>'
             . ($g !== '' ? '<div class="meta"><span class="kick">' . $e($g) . '</span></div>' : '')
@@ -833,7 +845,7 @@ final class Events
 (function(){
 function init(){
 /* group chips: show only that group's events */
-document.querySelectorAll('.mev .chips').forEach(function(box){var root=box.closest('.mev');box.addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;var g=b.dataset.g;
+document.querySelectorAll('.mev .chips').forEach(function(box){var root=box.closest('.mev-list')||document;box.addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;var g=b.dataset.g;
  box.querySelectorAll('.chip').forEach(function(x){x.classList.toggle('on',x===b);});
  root.querySelectorAll('[data-list]>[data-g]').forEach(function(x){x.hidden=!!g&&x.dataset.g!==g;});
  root.querySelectorAll('[data-list] .month').forEach(function(h){var x=h.nextElementSibling,any=false;while(x&&!x.classList.contains('month')){if(!x.hidden)any=true;x=x.nextElementSibling;}h.hidden=!any;});

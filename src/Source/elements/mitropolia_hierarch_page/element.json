@@ -7,10 +7,47 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "article_id": {"label": "Article ID", "description": "Leave empty: the page shows the hierarch being viewed. Enter an ID only to preview a hierarch in the builder."},
-  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["article_id"]}, {"title": "Advanced", "fields": ["class"]}]}}
+ "fields": {
+  "article_id": {
+   "label": "Article ID",
+   "description": "Leave empty: the page shows the hierarch being viewed. Enter an ID only to preview a hierarch in the builder."
+  },
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Page without the top section": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "part",
+      "article_id"
+     ]
+    },
+    {
+     "title": "Advanced",
+     "fields": [
+      "class"
+     ]
+    }
+   ]
+  }
+ }
 }

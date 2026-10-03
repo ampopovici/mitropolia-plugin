@@ -469,8 +469,15 @@ final class Itinerary
         $whoName = $l === 'ro' ? self::who($cat, 3) : self::who($cat, self::li($l));
         $intro = !empty($props['intro']) ? (string) $props['intro'] : sprintf(self::ui('intro', $l), $whoName);
 
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'intro') {
+            return '<div class="mit mit-tools"><p class="mit-intro">' . self::e($intro) . '</p></div>';
+        }
+        if ($part === 'print') {
+            return '<div class="mit mit-tools"><button type="button" class="mit-btn" onclick="window.print()">' . self::I_PRINT . ' ' . self::e(self::ui('print', $l)) . '</button></div>';
+        }
         $h = '<div class="mit">';
-        $h .= '<div class="mit-hero"><div class="mit-hero-in"><div class="mit-hero-row"><div class="mit-hero-text"><h1 class="mit-h1">' . self::e($title) . '</h1>'
+        if ($part !== 'body') $h .= '<div class="mit-hero"><div class="mit-hero-in"><div class="mit-hero-row"><div class="mit-hero-text"><h1 class="mit-h1">' . self::e($title) . '</h1>'
             . '<p class="mit-intro">' . self::e($intro) . '</p></div>'
             . '<button type="button" class="mit-btn" onclick="window.print()">' . self::I_PRINT . ' ' . self::e(self::ui('print', $l)) . '</button></div></div></div>';
 

@@ -7,11 +7,50 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "category_id": {"label": "Category ID", "description": "Leave empty: the page shows the itinerary category being viewed (one hierarch). Enter an ID only to preview in the builder."},
-  "title": {"label": "Title", "description": "Leave empty for Itinerar pastoral / Pastoral Itinerary / Itinerario pastoral."},
-  "intro": {"label": "Intro", "type": "textarea", "description": "Leave empty for the standard sentence in the page language."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["category_id", "title", "intro"]}]}}
+ "fields": {
+  "category_id": {
+   "label": "Category ID",
+   "description": "Leave empty: the page shows the itinerary category being viewed (one hierarch). Enter an ID only to preview in the builder."
+  },
+  "title": {
+   "label": "Title",
+   "description": "Leave empty for Itinerar pastoral / Pastoral Itinerary / Itinerario pastoral."
+  },
+  "intro": {
+   "label": "Intro",
+   "type": "textarea",
+   "description": "Leave empty for the standard sentence in the page language."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Intro line only": "intro",
+    "Print button only": "print",
+    "Visits only": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "part",
+      "category_id",
+      "title",
+      "intro"
+     ]
+    }
+   ]
+  }
+ }
 }

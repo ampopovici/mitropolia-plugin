@@ -7,10 +7,47 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "category_id": {"label": "Category ID", "description": "Leave empty: the page shows the Hierarchs category being viewed. Current hierarchs are the articles in it; departed hierarchs are the articles in its sub-category."},
-  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["category_id"]}, {"title": "Advanced", "fields": ["class"]}]}}
+ "fields": {
+  "category_id": {
+   "label": "Category ID",
+   "description": "Leave empty: the page shows the Hierarchs category being viewed. Current hierarchs are the articles in it; departed hierarchs are the articles in its sub-category."
+  },
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Cards and list only": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "part",
+      "category_id"
+     ]
+    },
+    {
+     "title": "Advanced",
+     "fields": [
+      "class"
+     ]
+    }
+   ]
+  }
+ }
 }

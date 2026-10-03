@@ -78,6 +78,26 @@ class ArticleExtension
                     'metadata' => ['label' => 'Mitropolia: Page description (text before Read More)', 'group' => 'Mitropolia'],
                     'extensions' => ['call' => __CLASS__ . '::description'],
                 ],
+                'mitropolia_honor' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Hierarch, form of address', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::honor'],
+                ],
+                'mitropolia_name' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Hierarch, name', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::hname'],
+                ],
+                'mitropolia_titles' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Hierarch, titles (list)', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::htitles'],
+                ],
+                'mitropolia_hier_lead' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Hierarch, short text', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::hlead'],
+                ],
                 'mitropolia_clergy' => [
                     'type' => ['listOf' => 'MitropoliaParishClergy'],
                     'metadata' => ['label' => 'Mitropolia: Clergy of this parish', 'group' => 'Mitropolia'],
@@ -141,6 +161,26 @@ class ArticleExtension
     public static function description($article)
     {
         return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\Page::leadText($article));
+    }
+
+    public static function honor($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\Hierarchs::headHonor($article));
+    }
+
+    public static function hname($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\Hierarchs::headName($article));
+    }
+
+    public static function htitles($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\Hierarchs::headTitles($article));
+    }
+
+    public static function hlead($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\Hierarchs::headLead($article));
     }
 
     private static function str(callable $fn): string

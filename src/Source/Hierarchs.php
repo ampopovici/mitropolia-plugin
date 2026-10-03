@@ -175,6 +175,45 @@ final class Hierarchs
         return ['', $title];
     }
 
+    /* ------------------------------------------------------------------ fields for the page header built in YOOtheme */
+
+    private static function headRow(object $a): object
+    {
+        if (!isset($a->introtext) && !empty($a->id)) {
+            $db = self::db();
+            $a = $db->setQuery($db->getQuery(true)->select(['a.id', 'a.title', 'a.introtext'])->from($db->quoteName('#__content', 'a'))->where('a.id = ' . (int) $a->id))->loadObject() ?: $a;
+        }
+        return $a;
+    }
+
+    /** "Înaltpreasfințitul Părinte" */
+    public static function headHonor(object $a): string
+    {
+        return self::splitName((string) ($a->title ?? ''))[0];
+    }
+
+    /** "Mitropolitul Nicolae" */
+    public static function headName(object $a): string
+    {
+        return self::splitName((string) ($a->title ?? ''))[1];
+    }
+
+    /** The full title lines as a list. */
+    public static function headTitles(object $a): string
+    {
+        $f = self::fields([(int) ($a->id ?? 0)], ['hierarch-full-title'])[(int) ($a->id ?? 0)] ?? [];
+        $titles = array_values(array_filter(array_map('trim', preg_split('/\s*(?:\R|·|\|)\s*/u', (string) ($f['hierarch-full-title'] ?? '')))));
+        return $titles ? '<ul class="mhp-titles">' . implode('', array_map(fn($t) => '<li>' . self::e($t) . '</li>', $titles)) . '</ul>' : '';
+    }
+
+    /** The short text under the name (the text before Read More). */
+    public static function headLead(object $a): string
+    {
+        $a = self::headRow($a);
+        $lead = trim(strip_tags((string) ($a->introtext ?? ''), '<a><em><strong><b><i><br>'));
+        return $lead !== '' ? '<p>' . $lead . '</p>' : '';
+    }
+
     /* ------------------------------------------------------------------ element */
 
     public static function article(array $props): string
@@ -244,7 +283,7 @@ final class Hierarchs
         $cross = Uri::root(true) . '/images/site/cruce.svg';
         $h = '<div class="mnx mhp' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">';
         // ---- top section
-        $h .= '<section class="mhp-hero">'
+        if (($props['part'] ?? '') !== 'body') $h .= '<section class="mhp-hero">'
             . '<div class="mhp-hero-in">'
             . ($img !== '' ? '<div class="mhp-ph"><img src="' . $e($img) . '" alt="' . $e($alt) . '"></div>' : '')
             . '<div class="mhp-tx">'
@@ -390,7 +429,9 @@ final class Hierarchs
         $cross = Uri::root(true) . '/images/site/cruce.svg';
 
         $h = '<div class="mnx mhl' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">';
-        $h .= '<section class="mhl-hero"><div class="mhl-head"><h1 class="mhl-title">' . $e(Text::_('MIT_HL_TITLE')) . '</h1></div></section>';
+        if (($props['part'] ?? '') !== 'body') {
+            $h .= '<section class="mhl-hero"><div class="mhl-head"><h1 class="mhl-title">' . $e(Text::_('MIT_HL_TITLE')) . '</h1></div></section>';
+        }
 
         $h .= self::cardsHtml($cur, $f);
 
@@ -837,7 +878,7 @@ a.mhp-stop:hover b{color:var(--mp-red)}
 </style>
 <script>
 (function(){
-function setTop(){var h=document.querySelector('.mhp-hero');if(!h||window.scrollY>2)return;var t=Math.round(h.getBoundingClientRect().top);if(t>20&&t<400)document.documentElement.style.setProperty('--mhp-top',t+'px');}
+function setTop(){var h=document.querySelector('.mhp-hero,.mx-hier-hero');if(!h||window.scrollY>2)return;var t=Math.round(h.getBoundingClientRect().top);if(t>20&&t<400)document.documentElement.style.setProperty('--mhp-top',t+'px');}
 setTop();window.addEventListener('load',setTop);window.addEventListener('resize',setTop);
 document.querySelectorAll('.mhp [data-mhp-t]').forEach(function(b){b.addEventListener('click',function(){var box=b.closest('.mhp-card');box.querySelectorAll('[data-mhp-t]').forEach(function(x){x.classList.toggle('on',x===b);});box.querySelectorAll('[data-mhp-p]').forEach(function(p){p.hidden=p.getAttribute('data-mhp-p')!==b.getAttribute('data-mhp-t');});});});
 document.querySelectorAll('.mhp-morebtn').forEach(function(b){var more=document.getElementById(b.getAttribute('aria-controls'));var t1=b.textContent,t2=b.getAttribute('data-less');b.addEventListener('click',function(){var open=more.hidden;more.hidden=!open;b.setAttribute('aria-expanded',open?'true':'false');b.textContent=open?t2:t1;if(!open)b.closest('.mhp-bio').scrollIntoView({behavior:'smooth'});});});
