@@ -25,9 +25,9 @@ final class Publications
     private const CATS = ['revista-credinta' => 'mag', 'almanahul-credinta' => 'alm'];
     private const PDFJS = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
     private const UI = [
-        'mag'      => ['Revista Credința', 'Credința Magazine', 'Revista «La Fe»'],
+        'mag'      => ['Revista Credința', 'The Faith Magazine', 'Revista «La Fe»'],
         'alm'      => ['Almanahul Credința', 'Credința Almanac', 'Almanaque «La Fe»'],
-        'magsub'   => ['The Faith', 'The Faith', 'Credința · The Faith'],
+        'magsub'   => ['The Faith', 'Credința', 'Credința · The Faith'],
         'cur_mag'  => ['Numărul curent', 'Current issue', 'Número actual'],
         'cur_alm'  => ['Ediția curentă', 'Current edition', 'Edición actual'],
         'earlier'  => ['Numere anterioare', 'Earlier issues', 'Números anteriores'],
