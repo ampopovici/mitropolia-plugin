@@ -308,7 +308,7 @@ final class Parishes
     }
 
     /** Map tiles: CARTO Voyager when a key is set in the plugin options, otherwise OpenStreetMap. */
-    private static function tiles(): array
+    public static function tiles(): array
     {
         $key = trim(Repository::option('carto_key', ''));
         if ($key !== '') {
