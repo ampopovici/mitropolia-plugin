@@ -120,8 +120,8 @@ def layout(l):
     S.append(section("Events",[row(col([kicker(c["kick_ev"]),head(c["h_ev"],margin="small"),el("mitropolia_home_events",{"count":4,"columns":"4"})]))],padding="large"))
     # 7 structure
     S.append(section("Structure",[row(col([kicker(c["kick_st"]),head(c["h_st"],margin="small"),el("text",{"content":"<p>"+c["st_text"]+"</p>","text_style":"lead","max_width":"xlarge"}),
-        el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"3","grid_large":"3","grid_xlarge":"3","grid_column_gap":"medium","panel_style":"tile-muted","panel_padding":"default","panel_link":True,"show_link":False,"title_style":"h4","title_element":"h3","meta_style":"text-meta","meta_align":"above-title"},
-           [el("grid_item",{"meta":m,"title":t,"content":"<p>"+x+"</p>","link":u}) for m,t,x,u in c["st"]])]))],style="primary",padding="large"))
+        el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"3","grid_large":"3","grid_xlarge":"3","grid_column_gap":"medium","panel_style":"card-default","panel_padding":"default","panel_link":True,"show_link":False,"title_style":"h3","title_element":"h3","meta_style":"text-meta","meta_align":"above-title"},
+           [el("grid_item",{"meta":m,"title":t,"content":"<p>"+x+"</p>","link":u}) for m,t,x,u in c["st"]])]))],style="muted",padding="large"))
     # 8 publication + donate
     S.append(section("Publications and support",[row(
         col([kicker(c["kick_pub"]),el("mitropolia_home_publication",{"kind":"mag","intro":c["pub_intro"]})],"2-3"),
