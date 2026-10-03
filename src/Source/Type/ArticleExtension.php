@@ -73,6 +73,11 @@ class ArticleExtension
                     'metadata' => ['label' => 'Mitropolia: Lead image caption', 'group' => 'Mitropolia'],
                     'extensions' => ['call' => __CLASS__ . '::leadCaption'],
                 ],
+                'mitropolia_description' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Page description (text before Read More)', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::description'],
+                ],
                 'mitropolia_clergy' => [
                     'type' => ['listOf' => 'MitropoliaParishClergy'],
                     'metadata' => ['label' => 'Mitropolia: Clergy of this parish', 'group' => 'Mitropolia'],
@@ -131,6 +136,11 @@ class ArticleExtension
     public static function leadCaption($article)
     {
         return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\News::headLead($article)['cap'] ?? '');
+    }
+
+    public static function description($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\Page::leadText($article));
     }
 
     private static function str(callable $fn): string

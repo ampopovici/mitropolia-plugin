@@ -7,10 +7,49 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "tag_id": {"label": "Tag ID", "description": "Leave empty: the page shows the tag being viewed. Enter an ID only to preview a tag in the builder."},
-  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["tag_id"]}, {"title": "Advanced", "fields": ["class"]}]}}
+ "fields": {
+  "tag_id": {
+   "label": "Tag ID",
+   "description": "Leave empty: the page shows the tag being viewed. Enter an ID only to preview a tag in the builder."
+  },
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Intro line only": "intro",
+    "Group buttons only": "chips",
+    "Results only": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "part",
+      "tag_id"
+     ]
+    },
+    {
+     "title": "Advanced",
+     "fields": [
+      "class"
+     ]
+    }
+   ]
+  }
+ }
 }

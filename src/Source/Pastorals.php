@@ -653,7 +653,7 @@ final class Pastorals
 
         $part = (string) ($props['part'] ?? '');
         if ($part === 'kicker') {
-            return '<div class="mnx mpl mnx-tools">' . self::chip($f['pastoral-type'] ?? '', $f['pastoral-feast'] ?? '') . '</div>';
+            return '<div class="mnx mpl mnx-tools"><div class="mnx-meta">' . self::chip($f['pastoral-type'] ?? '', $f['pastoral-feast'] ?? '') . '</div></div>';
         }
         if ($part === 'byline') {
             return '<div class="mnx mpl mnx-tools"><div class="mpl-by">' . ($h['img'] !== '' ? '<img src="' . $e($h['img']) . '" alt="" width="56" height="56">' : '')
@@ -740,7 +740,7 @@ final class Pastorals
 
         $part = (string) ($props['part'] ?? '');
         if ($part === 'kicker') {
-            return '<div class="mnx mpl mnx-tools">' . self::chip($type, $feast) . '</div>';
+            return '<div class="mnx mpl mnx-tools"><div class="mnx-meta">' . self::chip($type, $feast) . '</div></div>';
         }
         if ($part === 'byline') {
             return '<div class="mnx mpl mnx-tools"><div class="mpl-by mwm-by">' . ($h['img'] !== '' ? '<img src="' . $e($h['img']) . '" alt="" width="56" height="56">' : '')

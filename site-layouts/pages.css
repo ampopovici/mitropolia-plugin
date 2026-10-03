@@ -49,6 +49,46 @@
 .mx-head-letter .mx-meta { margin-bottom: 16px; }
 .mx-head-letter .mx-title, .mx-head-letter h1.mx-title { font-size: 48px; margin: 0 0 24px; max-width: 1000px; }
 
+// static pages: ivory band with breadcrumb, title and the description
+.mx-page-head { background: #EFE3CB; border-bottom: 1px solid #E4D8BE; padding: 24px 0 52px; }
+.mx-page-head .mx-page-crumbs { margin-bottom: 40px; }
+.mx-page-head .mx-page-crumbs + .uk-grid { margin-top: 0; }
+.mx-page-lead, .mx-page-lead p { font-family: 'Source Serif 4', Georgia, serif; font-size: 21px; line-height: 1.55; color: #3C4A66; margin: 18px 0 0; max-width: 760px; }
+.mx-page-lead p { margin: 0; }
+
+// tag pages: small red label over the title
+.mx-kick, .mx-kick p { display: block; font-family: 'Source Sans 3', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: #A32D36; margin: 0 0 10px; }
+.mx-kick p { margin: 0; }
+
+// search page: title, intro and the large search box stacked
+.mx-head .mx-search-row { margin-top: 28px; }
+.mx-search-text { max-width: none; }
+.mx-search-text .msr-form { margin-top: 26px; }
+.mx-head-search .mx-chips-row { margin-top: 26px; }
+
+// 404 page (the search box and the four links are Mitropolia elements)
+.mx-404 { background: #F7F3EA; padding: 60px 0; min-height: 100vh; min-height: 100dvh; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; text-align: center; font-family: 'Source Sans 3', sans-serif; color: #1B2A4A; }
+.mx-404 > * { width: 100%; }
+.mx-404 .m404-num, .mx-404 .m404-num p { font-family: 'Baskervville', Georgia, serif; font-size: 150px; line-height: 1; color: #E4D8BE; letter-spacing: .04em; margin: 0; }
+.mx-404 h1.m404-h1, .mx-404 .m404-h1 { font-family: 'Baskervville', Georgia, serif; font-weight: 500; font-size: 44px; line-height: 1.15; color: #172E5C; margin: 4px 0 12px; text-transform: none; letter-spacing: 0; }
+.mx-404 .m404-text { font-family: 'Source Serif 4', Georgia, serif; font-size: 19px; line-height: 1.6; color: #3C4A66; max-width: 560px; margin: 0 auto 6px; }
+.mx-404 .m404-other { font-family: 'Source Serif 4', Georgia, serif; font-size: 16px; line-height: 1.6; color: #6B6F7B; font-style: italic; max-width: 560px; margin: 0 auto 26px; }
+.mx-404 .m404-text p, .mx-404 .m404-other p, .mx-404 .m404-home p, .mx-404 .m404-old p { margin: 0; font: inherit; color: inherit; }
+.mx-404 .m404-home { margin: 0 0 30px; }
+.mx-404 .m404-home a { display: inline-flex; align-items: center; gap: 10px; height: 46px; padding: 0 24px; border-radius: 4px; background: #203D78; color: #fff; font-weight: 600; font-size: 16px; text-decoration: none; }
+.mx-404 .m404-home a:hover { background: #172E5C; color: #fff; text-decoration: none; }
+.mx-404 .m404-old { margin: 40px auto 0; font-size: 14px; color: #6B6F7B; max-width: 640px; }
+.mx-404 .m404-old a { color: #203D78; }
+@media (max-width: 640px) {
+  .mx-404 { padding: 40px 0; }
+  .mx-404 .m404-num, .mx-404 .m404-num p { font-size: 104px; }
+  .mx-404 h1.m404-h1 { font-size: 32px; }
+  .mx-404 .m404-text { font-size: 18px; }
+  .mx-page-head { padding-bottom: 36px; }
+  .mx-page-head .mx-page-crumbs { margin-bottom: 28px; }
+  .mx-page-lead, .mx-page-lead p { font-size: 18px; }
+}
+
 @media (max-width: 1000px) {
   .mx-title, h1.mx-title, .mx-head-letter h1.mx-title { font-size: 40px; }
 }

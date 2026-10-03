@@ -116,6 +116,13 @@ final class NotFound
 
             $mail = '<a href="mailto:' . self::MAIL . '">' . self::MAIL . '</a>';
 
+            $part = (string) ($props['part'] ?? '');
+            if ($part === 'search') {
+                return $search !== '' ? '<div class="m404-part">' . $search . '</div>' . self::assets() : '';
+            }
+            if ($part === 'cards') {
+                return $cards !== '' ? '<nav class="m404-cards" aria-label="' . $e(Text::_('MIT_404_START')) . '">' . $cards . '</nav>' . self::assets() : '';
+            }
             return '<section class="m404' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">'
                 . '<div class="m404-num" aria-hidden="true">404</div>'
                 . '<h1>' . $e(Text::_('MIT_404_TITLE')) . '</h1>'

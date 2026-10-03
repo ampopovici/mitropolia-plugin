@@ -150,6 +150,60 @@ def words_article(l):
     return layout(*article_head(b("kicker"), b("byline"), cls="mx-head-words"), body("Article", b("body"), cls="mx-body-art"))
 
 
+
+# ------------------------------------------------------------------ static page, tag, search, 404
+
+def static_page(l):
+    head = section("Page header", "mx-page-head", [
+        row(col([crumbs(True)]), cls="mx-page-crumbs"),
+        row(col([h1(src=bind("article", "title"), cls="mx-title"),
+                 para(cls="mx-page-lead", src=bind("article", "mitropolia_description"))])),
+    ])
+    return layout(head, body("Page", block("mitropolia_static_page", part="body"), cls="mx-body-art"))
+
+
+def tag_page(l):
+    t = T[l]
+    b = lambda p: block("mitropolia_tag_page", part=p)
+    rows = [row(col([crumbs(True)])),
+            row(col([para(t["MIT_TAG_LABEL"], cls="mx-kick"), h1(src=bind("tagsSingle", "title")), b("intro")], "expand", "mx-head-text"), cls="mx-head-row"),
+            row(col([b("chips")]), cls="mx-chips-row")]
+    return layout(section("Page header", "mx-head", rows), body("Results", b("body")))
+
+
+SEARCH = {"ro": "Căutare", "en": "Search", "es": "Búsqueda"}
+
+
+def search_page(l):
+    b = lambda p: block("mitropolia_search", part=p)
+    rows = [row(col([crumbs(True)])),
+            row(col([h1(SEARCH[l]), b("intro"), b("search")], cls="mx-head-text mx-search-text"), cls="mx-search-row"),
+            row(col([b("chips")]), cls="mx-chips-row")]
+    return layout(section("Page header", "mx-head mx-head-search", rows), body("Results", b("body")))
+
+
+MAIL = "contact@mitropolia.us"
+NF_TITLES = {"ro": "Nu am găsit această pagină.", "en": "We couldn’t find that page.", "es": "No encontramos esta página."}
+HOME_URL = {"ro": "/ro", "en": "/en", "es": "/es"}
+HOME_SVG = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg>'
+
+
+def not_found(l):
+    t = T[l]
+    others = " · ".join('<span lang="%s">%s</span>' % (k, v) for k, v in NF_TITLES.items() if k != l)
+    els = [
+        el("text", {"content": "<p>404</p>", "margin": "remove", "class": "m404-num"}),
+        el("headline", {"content": t["MIT_404_TITLE"], "title_element": "h1", "margin": "remove", "class": "m404-h1"}),
+        el("text", {"content": "<p>" + t["MIT_404_TEXT"] + "</p>", "margin": "remove", "class": "m404-text"}),
+        el("text", {"content": "<p>" + others + "</p>", "margin": "remove", "class": "m404-other"}),
+        el("text", {"content": '<p><a href="' + HOME_URL[l] + '">' + HOME_SVG + t["MIT_404_HOME"] + "</a></p>", "margin": "remove", "class": "m404-home"}),
+        block("mitropolia_not_found", part="search"),
+        block("mitropolia_not_found", part="cards"),
+        el("text", {"content": "<p>" + t["MIT_404_OLDLINK"].replace("%s", '<a href="mailto:' + MAIL + '">' + MAIL + "</a>") + "</p>", "margin": "remove", "class": "m404-old"}),
+    ]
+    return layout(section("Page not found", "m404 mx-404", [row(col(els))]))
+
+
 TEMPLATES = {
     # key: (existing template id, name, type, catids, builder)
     "news-list": ("k2yyjw9k", "News list", "com_content.category", ["99", "100", "101"], news_list),
@@ -157,6 +211,10 @@ TEMPLATES = {
     "pastoral-letter": ("8np9hryq", "Pastoral letter", "com_content.article", ["137", "138", "139", "140", "141", "142"], pastoral_letter),
     "pastoral-list": ("dd6gk1od", "Pastoral letters list", "com_content.category", ["106", "107", "108", "137", "138", "139", "140", "141", "142"], pastoral_list),
     "words-article": ("qf51qa0e", "Words and Messages article", "com_content.article", ["109", "110", "111", "143", "144", "145", "146", "147", "148"], words_article),
+    "static-page": ("rtdxt9xl", "Static page", "com_content.article", ["121", "122", "123"], static_page),
+    "tag-page": ("6g44mvak", "Tag page", "com_tags.tag", None, tag_page),
+    "search": ("if3pvfu9", "Search results", "com_finder.search", None, search_page),
+    "404": (None, "Page not found (404)", "error-404", None, not_found),
     "words-list": ("h82m87em", "Words and Messages list", "com_content.category", ["109", "110", "111", "143", "144", "145", "146", "147", "148"], lambda l: pastoral_list(l, True)),
 }
 
@@ -167,10 +225,17 @@ if __name__ == "__main__":
     for key, (tid, name, typ, cats, fn) in TEMPLATES.items():
         for l, code in LANGS.items():
             CUR["l"] = l
-            tpl = {"type": typ, "query": {"catid": cats, "tag": [], "lang": code.lower()},  # YOOtheme matches lowercase codes
-                   "name": name + " · " + LANG_LABEL[l], "layout": fn(l)}
+            q = {"lang": code.lower()}  # YOOtheme matches lowercase codes
+            if cats is not None:
+                q = {"catid": cats, "tag": [], "lang": code.lower()}
+            elif typ == "com_tags.tag":
+                q = {"lang": code.lower()}
+            elif typ == "com_finder.search":
+                q = {"pages": "", "lang": code.lower()}
+            tpl = {"type": typ, "query": q, "name": name + " · " + LANG_LABEL[l], "layout": fn(l)}
             # RO keeps the id of the old all-language template; EN and ES get a stable id of their own
-            tpl["id"] = tid if l == "ro" else "mx" + hashlib.md5((key + l).encode()).hexdigest()[:6]
+            # (the 404 page keeps its old all-language template as a fallback, so all three get new ids)
+            tpl["id"] = tid if (l == "ro" and tid) else "mx" + hashlib.md5((key + l).encode()).hexdigest()[:6]
             with open(os.path.join(HERE, "templates", key + "-" + l + ".json"), "w", encoding="utf-8") as f:
                 json.dump({"tpl": tpl}, f, ensure_ascii=False)
     print("ok")

@@ -529,6 +529,19 @@ final class Search
         }
 
         $cls = trim((string) ($props['class'] ?? ''));
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'intro') {
+            return $q === '' ? '<div class="mnx msr mnx-tools"><p class="mnx-intro">' . $e(self::ui('intro')) . '</p></div>' : '';
+        }
+        if ($part === 'search') {
+            return '<div class="mnx msr mnx-tools">' . $form . '</div>';
+        }
+        if ($part === 'chips') {
+            return $chips !== '' ? '<div class="mnx msr mnx-tools">' . $chips . '</div>' : '';
+        }
+        if ($part === 'body') {
+            return '<div class="mnx msr' . ($cls !== '' ? ' ' . $e($cls) : '') . '"><div class="msr-body">' . $status . $body . '</div></div>';
+        }
         return '<div class="mnx msr' . ($cls !== '' ? ' ' . $e($cls) : '') . '"><div class="mnx-hero"><div class="mnx-hero-in">' . $crumbs
             . '<h1 class="mpx-h1 msr-h1">' . $e($title) . '</h1>' . ($q === '' ? '<p class="mnx-intro">' . $e(self::ui('intro')) . '</p>' : '')
             . $form . $chips . '</div></div><div class="msr-body">' . $status . $body . '</div></div>';

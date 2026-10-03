@@ -7,9 +7,38 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Advanced", "fields": ["class"]}]}}
+ "fields": {
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Search box only": "search",
+    "Start here links only": "cards"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Advanced",
+     "fields": [
+      "part",
+      "class"
+     ]
+    }
+   ]
+  }
+ }
 }

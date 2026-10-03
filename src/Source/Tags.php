@@ -201,6 +201,19 @@ final class Tags
             }
         }
 
+        $part = (string) ($props['part'] ?? '');
+        $tagCss = '<style>.mtg-k{display:block;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mp-red);margin-bottom:10px}'
+            . '.mtg-body{padding:48px 0 96px}.mtg-sec+.mtg-sec{margin-top:64px}.mtg .mnx-sechead{display:flex;justify-content:space-between;align-items:baseline;gap:20px;margin-bottom:24px}'
+            . '.mtg-n{font-weight:400;opacity:.7;margin-left:4px}</style>';
+        if ($part === 'intro') {
+            return '<div class="mnx mtg mnx-tools"><p class="mnx-intro">' . $e($desc !== '' ? $desc : $count) . '</p></div>' . $tagCss;
+        }
+        if ($part === 'chips') {
+            return $chips !== '' ? '<div class="mnx mtg mnx-tools">' . $chips . '</div>' . $tagCss : '';
+        }
+        if ($part === 'body') {
+            $head = '';
+        }
         return '<div class="mnx mtg' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">' . $head
             . '<div class="mtg-body">' . $body . '</div></div>'
             . '<style>.mtg-k{display:block;font-size:13px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--mp-red);margin-bottom:10px}'

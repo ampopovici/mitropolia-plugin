@@ -150,6 +150,24 @@ final class Page
         );
     }
 
+    /** The page description (text before Read More, as plain text), for headers built in YOOtheme. */
+    public static function leadText(object $a): string
+    {
+        if (!isset($a->fulltext) && !empty($a->id)) {
+            $db = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+            $r = $db->setQuery($db->getQuery(true)->select(['a.introtext', 'a.' . $db->quoteName('fulltext')])->from($db->quoteName('#__content', 'a'))->where('a.id = ' . (int) $a->id))->loadObject();
+            if (!$r) {
+                return '';
+            }
+            $a = $r;
+        }
+        $t = preg_replace('#<!--.*?-->#s', '', (string) ($a->fulltext ?? ''));
+        if (trim($t) === '') {
+            return '';
+        }
+        return trim(preg_replace('/\s+/u', ' ', html_entity_decode(strip_tags((string) $a->introtext), ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+    }
+
     private static function html(object $a, array $props): string
     {
         $e = [self::class, 'e'];
@@ -208,6 +226,10 @@ final class Page
             . implode('<span aria-hidden="true">›</span>', $crumbs) . '</nav>'
             . '<h1 class="mpg-title">' . $e((string) $a->title) . '</h1>'
             . ($lead !== '' ? '<p class="mpg-lead">' . $e($lead) . '</p>' : '') . '</header>';
+
+        if (($props['part'] ?? '') === 'body') {
+            $head = '';
+        }
 
         $nav = '';
         if ($hasNav) {
