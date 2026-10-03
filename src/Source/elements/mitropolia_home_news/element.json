@@ -1,39 +1,33 @@
 {
- "name": "mitropolia_home_publication",
- "title": "Homepage: newest Credința issue",
+ "name": "mitropolia_home_news",
+ "title": "Homepage: news block",
  "group": "Mitropolia",
  "icon": "${url:images/icon.svg}",
  "iconSmall": "${url:images/icon-small.svg}",
  "element": true,
  "width": 500,
  "defaults": {
-  "kind": "mag"
+  "offset": 4,
+  "count": 4
  },
  "templates": {
   "render": "./templates/template.php",
   "content": "./templates/content.php"
  },
  "fields": {
-  "kind": {
-   "label": "Publication",
-   "type": "select",
-   "options": {
-    "Magazine": "mag",
-    "Almanac": "alm"
-   }
+  "offset": {
+   "label": "Skip the first",
+   "type": "number",
+   "description": "How many of the latest stories to skip, because the hero already shows them (default 4)."
   },
-  "kicker": {
-   "label": "Small title",
+  "count": {
+   "label": "Stories in the list",
+   "type": "number",
+   "description": "Stories listed next to the large one (default 4)."
+  },
+  "all_text": {
+   "label": "All news button",
    "description": "Leave empty for the standard wording in the page language."
-  },
-  "title": {
-   "label": "Title",
-   "description": "Leave empty for the standard wording in the page language."
-  },
-  "intro": {
-   "label": "Text",
-   "type": "textarea",
-   "description": "Leave empty for the standard sentence with the issue name."
   },
   "class": {
    "label": "Extra CSS class",
@@ -47,10 +41,9 @@
     {
      "title": "Content",
      "fields": [
-      "kind",
-      "kicker",
-      "title",
-      "intro",
+      "offset",
+      "count",
+      "all_text",
       "class"
      ]
     }

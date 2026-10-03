@@ -7,22 +7,42 @@ use Joomla\CMS\Factory;
 use Joomla\CMS\Log\Log;
 
 /**
- * Small homepage blocks that YOOtheme can't build natively, because they depend on event and visit dates:
- * upcoming events, the hierarchs' upcoming visits, and the newest Credința issue.
- * Everything else on the homepage is native YOOtheme elements that editors change in the builder.
- * The markup uses UIkit classes (cards, buttons, tabs), so the theme's Style settings still apply.
+ * Homepage blocks whose content comes from the database: the news hero, the news block,
+ * the hierarchs' visits, events and the newest Credința issue.
+ * They print the approved homepage markup (class prefix "mh-"). Their styles live with the rest of the
+ * homepage styles in YOOtheme → Settings → CSS ("Homepage" part), so colours and sizes are changed in one place.
+ * Every text has a builder field; an empty field uses the standard wording of the page language.
  */
 final class Home
 {
     private const UI = [
-        'all_events' => ['Toate evenimentele', 'All events', 'Todos los eventos'],
-        'no_events'  => ['Evenimentele viitoare apar aici imediat ce sunt publicate.', 'Upcoming events appear here as soon as they are published.', 'Los próximos eventos aparecen aquí en cuanto se publican.'],
-        'full_itin'  => ['Itinerarul complet', 'Full itinerary', 'Itinerario completo'],
-        'no_visits'  => ['Nu sunt vizite anunțate deocamdată.', 'No visits announced yet.', 'Aún no hay visitas anunciadas.'],
-        'all_issues' => ['Toate numerele', 'All issues', 'Todos los números'],
+        'read'        => ['Citește știrea', 'Read the story', 'Leer la noticia'],
+        'all_news'    => ['Toate știrile', 'All news', 'Todas las noticias'],
+        'prev'        => ['Știrea anterioară', 'Previous story', 'Noticia anterior'],
+        'next'        => ['Știrea următoare', 'Next story', 'Noticia siguiente'],
+        'show'        => ['Arată știrea %d', 'Show story %d', 'Mostrar la noticia %d'],
+        'it_kicker'   => ['Itinerar pastoral', 'Pastoral itinerary', 'Itinerario pastoral'],
+        'full_itin'   => ['Itinerarul complet', 'Full itinerary', 'Itinerario completo'],
+        'no_visits'   => ['Nu sunt vizite anunțate deocamdată.', 'No visits announced yet.', 'Aún no hay visitas anunciadas.'],
+        'ev_kicker'   => ['Evenimente', 'Events', 'Eventos'],
+        'ev_title'    => ['Întâlniri în toată Mitropolia', 'Gatherings across the Metropolia', 'Encuentros en toda la Metrópolis'],
+        'upcoming'    => ['Viitoare', 'Upcoming', 'Próximos'],
+        'recent'      => ['Recente', 'Recent', 'Recientes'],
+        'all_events'  => ['Toate evenimentele', 'All events', 'Todos los eventos'],
+        'no_upcoming' => ['Evenimentele viitoare apar aici imediat ce sunt publicate.', 'Upcoming events appear here as soon as the office publishes them.', 'Los próximos eventos aparecen aquí en cuanto se publican.'],
+        'no_recent'   => ['Nu există evenimente recente.', 'No recent events.', 'No hay eventos recientes.'],
+        'pub_kicker'  => ['Publicații', 'Publications', 'Publicaciones'],
+        'pub_title'   => ['Credința', 'The Faith Magazine', 'Revista «La Fe»'],
+        'pub_text'    => ['Revista Mitropoliei, care apare în fiecare trimestru. Numărul %s se poate descărca.', 'The magazine of the Metropolia, published each quarter. The %s issue is ready to download.', 'La revista de la Metrópolis, publicada cada trimestre. El número de %s ya se puede descargar.'],
+        'download'    => ['Descarcă PDF', 'Download PDF', 'Descargar PDF'],
+        'past'        => ['Numere anterioare', 'Past issues', 'Números anteriores'],
+        'read_issue'  => ['Citește online', 'Read online', 'Leer en línea'],
     ];
 
-    private const I_PIN = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+    private const ORN = '<svg class="mh-orn" width="200" height="18" viewBox="0 0 220 18" fill="none" aria-hidden="true"><path d="M0 9h94M126 9h94" stroke="currentColor" stroke-width="1.2"/><path d="M110 1v16M103 6h14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/><circle cx="98" cy="9" r="1.8" fill="currentColor"/><circle cx="122" cy="9" r="1.8" fill="currentColor"/></svg>';
+    private const I_PIN = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+    private const I_PREV = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>';
+    private const I_NEXT = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>';
 
     private static function li(): int
     {
@@ -33,6 +53,13 @@ final class Home
     private static function ui(string $k): string
     {
         return self::UI[$k][self::li()];
+    }
+
+    /** Builder field if filled, else the standard wording. */
+    private static function t(array $props, string $field, string $key): string
+    {
+        $v = trim((string) ($props[$field] ?? ''));
+        return $v !== '' ? $v : self::ui($key);
     }
 
     private static function e(string $s): string
@@ -46,35 +73,80 @@ final class Home
         return $v > 0 ? min($v, $max) : $def;
     }
 
-    /* ------------------------------------------------------------------ upcoming events */
+    private static function cls(array $props, string $base): string
+    {
+        $c = trim((string) ($props['class'] ?? ''));
+        return $base . ($c !== '' ? ' ' . self::e($c) : '');
+    }
 
-    public static function events(array $props): string
+    /* ------------------------------------------------------------------ hero: latest news */
+
+    public static function hero(array $props): string
     {
         try {
-            [$rows, $list] = Events::upcoming(self::n($props, 'count', 4, 12));
+            $items = News::homeItems(self::n($props, 'count', 4, 8), 0, 200);
+            if (!$items) {
+                return '';
+            }
             $e = [self::class, 'e'];
-            $cols = self::n($props, 'columns', 4, 4);
-            $h = '<div class="mhm mhm-ev">';
-            if (!$rows) {
-                $h .= '<p class="mhm-empty">' . $e(self::ui('no_events')) . '</p>';
-            } else {
-                $h .= '<div class="uk-grid-match uk-child-width-1-2@s uk-child-width-1-' . $cols . '@m" uk-grid>';
-                foreach ($rows as $r) {
-                    $h .= '<div><a class="uk-card uk-card-default uk-card-hover uk-link-toggle mhm-card" href="' . $e($r['url']) . '">'
-                        . '<div class="mhm-top">' . $r['box'] . ($r['group'] !== '' ? '<span class="mhm-kick">' . $e($r['group']) . '</span>' : '') . '</div>'
-                        . '<div class="mhm-body"><h3 class="uk-h4 uk-margin-remove uk-link-heading">' . $e($r['title']) . '</h3>'
-                        . '<div class="uk-text-meta uk-margin-small-top">' . $e($r['span']) . '</div>'
-                        . ($r['place'] !== '' ? '<div class="mhm-where">' . self::I_PIN . '<span>' . $e($r['place']) . '</span></div>' : '')
-                        . '</div></a></div>';
+            $read = self::t($props, 'read_text', 'read');
+            $all = self::t($props, 'all_text', 'all_news');
+            $list = News::homeListUrl();
+            $nav = function (int $cur) use ($items, $e): string {
+                if (count($items) < 2) {
+                    return '';
                 }
-                $h .= '</div>';
+                $h = '<div class="mh-hero-nav"><button type="button" class="mh-circ" data-mh-prev aria-label="' . $e(self::ui('prev')) . '">' . self::I_PREV . '</button><div class="mh-dots">';
+                foreach ($items as $i => $it) {
+                    $h .= '<button type="button" data-mh-dot="' . $i . '" aria-label="' . $e(sprintf(self::ui('show'), $i + 1)) . '"' . ($i === $cur ? ' aria-current="true"' : '') . '></button>';
+                }
+                return $h . '</div><button type="button" class="mh-circ" data-mh-next aria-label="' . $e(self::ui('next')) . '">' . self::I_NEXT . '</button></div>';
+            };
+            $h = '<div class="' . self::cls($props, 'mh-hero') . '" data-mh-hero><span class="mh-wm" aria-hidden="true"></span><div class="mh-hero-in">';
+            foreach ($items as $i => $it) {
+                $tag = $i === 0 ? 'h1' : 'h2';
+                $h .= '<div class="mh-slide"' . ($i ? ' hidden' : '') . '>'
+                    . '<div class="mh-hero-tx"><div class="mh-hero-kick"><span class="mh-rule"></span><span>' . $e(trim($it->kicker . ($it->kicker !== '' ? ' · ' : '') . $it->date)) . '</span></div>'
+                    . '<' . $tag . ' class="mh-hero-h"><a href="' . $e($it->url) . '">' . $e($it->title) . '</a></' . $tag . '>' . self::ORN
+                    . ($it->text !== '' ? '<p class="mh-hero-dek">' . $e($it->text) . '</p>' : '')
+                    . '<div class="mh-hero-btns"><a class="mh-btn mh-btn-gold" href="' . $e($it->url) . '">' . $e($read) . '</a>'
+                    . '<a class="mh-btn mh-btn-ghost" href="' . $e($list) . '">' . $e($all) . '</a></div>' . $nav($i) . '</div>'
+                    . '<div class="mh-hero-ph"><span class="mh-frame" aria-hidden="true"></span>'
+                    . ($it->img !== '' ? '<img src="' . $e($it->img) . '" alt="' . $e($it->alt) . '"' . ($i ? ' loading="lazy"' : ' fetchpriority="high"') . '>' : '<span class="mh-noimg"></span>')
+                    . '</div></div>';
             }
-            if (($props['show_link'] ?? true) !== false && $list !== '') {
-                $h .= '<p class="mhm-more"><a class="uk-button uk-button-text" href="' . $e($list) . '">' . $e(self::ui('all_events')) . ' →</a></p>';
-            }
-            return $h . '</div>' . self::css();
+            return $h . '</div></div>' . self::js();
         } catch (\Throwable $x) {
-            Log::add('Home events: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            Log::add('Home hero: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            return '';
+        }
+    }
+
+    /* ------------------------------------------------------------------ news: one large story and a list */
+
+    public static function news(array $props): string
+    {
+        try {
+            $offset = isset($props['offset']) && $props['offset'] !== '' ? max(0, (int) $props['offset']) : 4;
+            $items = News::homeItems(1 + self::n($props, 'count', 4, 8), $offset, 240);
+            if (!$items) {
+                return '';
+            }
+            $e = [self::class, 'e'];
+            $f = array_shift($items);
+            $kick = fn ($it, $d) => $e(trim($it->kicker . ($it->kicker !== '' ? ' · ' : '') . $d));
+            $h = '<div class="' . self::cls($props, 'mh-news') . '"><a class="mh-feat" href="' . $e($f->url) . '">'
+                . ($f->img !== '' ? '<img src="' . $e($f->img) . '" alt="' . $e($f->alt) . '" loading="lazy">' : '<span class="mh-noimg"></span>')
+                . '<span class="mh-meta">' . $kick($f, $f->date) . '</span><span class="mh-feat-t">' . $e($f->title) . '</span>'
+                . ($f->text !== '' ? '<span class="mh-feat-x">' . $e($f->text) . '</span>' : '') . '</a><div class="mh-nlist">';
+            foreach ($items as $it) {
+                $h .= '<a class="mh-nrow" href="' . $e($it->url) . '">'
+                    . ($it->img !== '' ? '<img src="' . $e($it->img) . '" alt="" loading="lazy">' : '<span class="mh-noimg"></span>')
+                    . '<span class="mh-nrow-tx"><span class="mh-meta">' . $kick($it, $it->short) . '</span><span class="mh-nrow-t">' . $e($it->title) . '</span></span></a>';
+            }
+            return $h . '<a class="mh-btn mh-btn-line" href="' . $e(News::homeListUrl()) . '">' . $e(self::t($props, 'all_text', 'all_news')) . '</a></div></div>';
+        } catch (\Throwable $x) {
+            Log::add('Home news: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
             return '';
         }
     }
@@ -84,41 +156,75 @@ final class Home
     public static function itinerary(array $props): string
     {
         try {
-            $groups = array_values(array_filter(Itinerary::upcoming(self::n($props, 'count', 4, 10))));
+            $groups = Itinerary::upcoming(self::n($props, 'count', 4, 10));
             if (!$groups) {
                 return '';
             }
             $e = [self::class, 'e'];
-            $id = 'mhm-it-' . substr(md5(json_encode($props) . microtime()), 0, 6);
-            $h = '<div class="mhm mhm-it">';
+            $h = '<div class="' . self::cls($props, 'mh-itin') . '" data-mh-tabs><span class="mh-kick">' . $e(self::t($props, 'kicker', 'it_kicker')) . '</span>';
             if (count($groups) > 1) {
-                $h .= '<ul class="uk-subnav uk-subnav-pill mhm-tabs" uk-switcher="connect: #' . $id . '">';
-                foreach ($groups as $g) {
-                    $h .= '<li><a href="#">' . $e($g['name']) . '</a></li>';
-                }
-                $h .= '</ul>';
-            }
-            $h .= '<div id="' . $id . '" class="uk-switcher">';
-            foreach ($groups as $g) {
-                $h .= '<div>';
-                if (!$g['rows']) {
-                    $h .= '<p class="mhm-empty">' . $e(self::ui('no_visits')) . '</p>';
-                }
-                foreach ($g['rows'] as $r) {
-                    $h .= '<div class="mhm-row">' . $r['box'] . '<div class="mhm-rowtx">'
-                        . ($r['feast'] !== '' ? '<div class="mhm-kick">' . $e($r['feast']) . '</div>' : '')
-                        . '<div class="mhm-rt">' . $e($r['title']) . ($r['time'] !== '' ? ' <span class="uk-text-meta">· ' . $e($r['time']) . '</span>' : '') . '</div>'
-                        . ($r['place'] !== '' ? '<div class="mhm-where">' . self::I_PIN . '<span>' . $r['place'] . '</span></div>' : '')
-                        . '</div></div>';
-                }
-                if ($g['url'] !== '') {
-                    $h .= '<p class="mhm-more"><a class="uk-button uk-button-text" href="' . $e($g['url']) . '">' . $e(self::ui('full_itin')) . ' →</a></p>';
+                $h .= '<div class="mh-pills mh-pills-full" role="tablist">';
+                foreach ($groups as $i => $g) {
+                    $h .= '<button type="button" role="tab" data-mh-tab="' . $i . '" aria-selected="' . ($i ? 'false' : 'true') . '">' . $e($g['name']) . '</button>';
                 }
                 $h .= '</div>';
             }
-            return $h . '</div></div>' . self::css();
+            foreach ($groups as $i => $g) {
+                $h .= '<div class="mh-pane" data-mh-pane="' . $i . '"' . ($i ? ' hidden' : '') . '>';
+                if (!$g['rows']) {
+                    $h .= '<p class="mh-it-none">' . $e(self::ui('no_visits')) . '</p>';
+                }
+                foreach ($g['rows'] as $r) {
+                    $sub = trim(strip_tags($r['place']));
+                    $h .= '<div class="mh-stop"><div class="mh-stop-d"><span>' . $e($r['day']) . '</span><small>' . $e(mb_strtoupper($r['mon'], 'UTF-8')) . '</small></div>'
+                        . '<div class="mh-stop-tx"><span class="mh-stop-t">' . $e($r['feast'] !== '' && $r['feast'] !== $r['title'] ? $r['feast'] . ', ' . $r['title'] : $r['title']) . '</span>'
+                        . ($sub !== '' ? '<span class="mh-stop-p">' . $e(html_entity_decode($sub, ENT_QUOTES, 'UTF-8')) . '</span>' : '') . '</div></div>';
+                }
+                if ($g['url'] !== '') {
+                    $h .= '<a class="mh-it-more" href="' . $e($g['url']) . '">' . $e(self::t($props, 'more_text', 'full_itin')) . ' →</a>';
+                }
+                $h .= '</div>';
+            }
+            return $h . '</div>' . self::js();
         } catch (\Throwable $x) {
             Log::add('Home itinerary: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            return '';
+        }
+    }
+
+    /* ------------------------------------------------------------------ events */
+
+    public static function events(array $props): string
+    {
+        try {
+            $n = self::n($props, 'count', 4, 12);
+            $up = Events::homeRows(false, $n);
+            $past = Events::homeRows(true, $n);
+            $e = [self::class, 'e'];
+            $first = $up ? 0 : 1;
+            $h = '<div class="' . self::cls($props, 'mh-events') . '" data-mh-tabs><div class="mh-ev-head"><div class="mh-head"><span class="mh-kick">' . $e(self::t($props, 'kicker', 'ev_kicker')) . '</span>'
+                . '<h2 class="mh-h2">' . $e(self::t($props, 'title', 'ev_title')) . '</h2></div><div class="mh-ev-ctl"><div class="mh-pills" role="tablist">'
+                . '<button type="button" role="tab" data-mh-tab="0" aria-selected="' . ($first === 0 ? 'true' : 'false') . '">' . $e(self::ui('upcoming')) . '</button>'
+                . '<button type="button" role="tab" data-mh-tab="1" aria-selected="' . ($first === 1 ? 'true' : 'false') . '">' . $e(self::ui('recent')) . '</button></div>'
+                . '<a class="mh-link" href="' . $e(Events::homeListUrl()) . '">' . $e(self::ui('all_events')) . ' →</a></div></div>';
+            foreach ([[$up, 'no_upcoming'], [$past, 'no_recent']] as $i => [$rows, $none]) {
+                $h .= '<div class="mh-pane" data-mh-pane="' . $i . '"' . ($i !== $first ? ' hidden' : '') . '>';
+                if (!$rows) {
+                    $h .= '<div class="mh-ev-none">' . $e(self::ui($none)) . '</div>';
+                } else {
+                    $h .= '<div class="mh-ev-grid">';
+                    foreach ($rows as $r) {
+                        $h .= '<a class="mh-ev" href="' . $e($r['url']) . '"><span class="mh-ev-d"><b>' . $e($r['day']) . '</b><span>' . $e($r['when']) . '</span></span>'
+                            . '<span class="mh-ev-t">' . $e($r['title']) . '</span>'
+                            . ($r['place'] !== '' ? '<span class="mh-ev-p">' . self::I_PIN . '<span>' . $e($r['place']) . '</span></span>' : '') . '</a>';
+                    }
+                    $h .= '</div>';
+                }
+                $h .= '</div>';
+            }
+            return $h . '</div>' . self::js();
+        } catch (\Throwable $x) {
+            Log::add('Home events: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
             return '';
         }
     }
@@ -133,20 +239,14 @@ final class Home
                 return '';
             }
             $e = [self::class, 'e'];
-            $intro = trim((string) ($props['intro'] ?? ''));
-            $h = '<div class="mhm mhm-pub"><div class="uk-grid-medium uk-flex-middle" uk-grid>'
-                . '<div class="uk-width-1-3@s"><a class="mhm-cover" href="' . $e($i->url) . '">'
-                . ($i->cover !== '' ? '<img src="' . $e($i->cover) . '" alt="' . $e($i->name . ', ' . $i->label) . '" width="680" height="880" loading="lazy">' : '<span>' . $e($i->name) . '</span>')
-                . '</a></div><div class="uk-width-expand@s">'
-                . '<div class="mhm-kick">' . $e($i->cur) . '</div>'
-                . '<h3 class="uk-h2 uk-margin-small-top uk-margin-remove-bottom">' . $e($i->name) . '</h3>'
-                . '<p class="uk-text-lead uk-margin-small-top">' . $e($i->label) . '</p>'
-                . ($intro !== '' ? '<p>' . $e($intro) . '</p>' : '')
-                . '<div class="mhm-acts"><a class="uk-button uk-button-primary" href="' . $e($i->url) . '">' . $e($i->read) . '</a>'
-                . '<a class="uk-button uk-button-default" href="' . $e($i->pdf) . '" download>' . $e($i->dl) . '</a></div>'
-                . ($i->count > 1 ? '<p class="mhm-more"><a class="uk-button uk-button-text" href="' . $e($i->list) . '">' . $e(self::ui('all_issues')) . ' →</a></p>' : '')
-                . '</div></div></div>';
-            return $h . self::css();
+            $text = trim((string) ($props['intro'] ?? ''));
+            $text = $text !== '' ? $text : sprintf(self::ui('pub_text'), $i->label);
+            return '<div class="' . self::cls($props, 'mh-pub') . '"><a class="mh-cover" href="' . $e($i->url) . '" aria-label="' . $e(self::ui('read_issue') . ': ' . $i->label) . '">'
+                . ($i->cover !== '' ? '<img src="' . $e($i->cover) . '" alt="" loading="lazy">' : '<span>' . $e($i->name) . '</span>') . '</a>'
+                . '<div class="mh-pub-tx"><span class="mh-kick">' . $e(self::t($props, 'kicker', 'pub_kicker')) . '</span>'
+                . '<h2 class="mh-h2">' . $e(self::t($props, 'title', 'pub_title')) . '</h2><p>' . $e($text) . '</p>'
+                . '<div class="mh-hero-btns"><a class="mh-btn mh-btn-navy" href="' . $e($i->pdf) . '" download>' . $e(self::ui('download')) . '</a>'
+                . '<a class="mh-btn mh-btn-line" href="' . $e($i->list) . '">' . $e(self::ui('past')) . '</a></div></div></div>';
         } catch (\Throwable $x) {
             Log::add('Home publication: ' . $x->getMessage(), Log::WARNING, 'mitropolia');
             return '';
@@ -158,7 +258,8 @@ final class Home
         return '';
     }
 
-    private static function css(): string
+    /** Hero slides and tabs (once per page). */
+    private static function js(): string
     {
         static $done = false;
         if ($done) {
@@ -166,34 +267,18 @@ final class Home
         }
         $done = true;
         return <<<'HTML'
-<style>
-/* Homepage blocks (Mitropolia plugin). Colors follow the theme where UIkit classes are used. */
-.mhm{--mh-navy:#172E5C;--mh-red:#A32D36;--mh-gold:#B08D2E;--mh-line:#E4D8BE;--mh-muted:#5A6378}
-.mhm .db{flex:0 0 auto;width:64px;text-align:center;border:1px solid var(--mh-line);border-radius:4px;background:#fff;padding:6px 4px;line-height:1.1;color:var(--mh-navy)}
-.mhm .db .d{font-family:'Baskervville',Georgia,serif;font-size:26px;font-weight:500}
-.mhm .db.rng .d{font-size:19px}
-.mhm .db .w{font-size:12px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mh-red)}
-.mhm .db .y{font-size:11px;color:var(--mh-muted)}
-.mhm-card{display:flex;flex-direction:column;text-decoration:none;color:inherit;height:100%}
-.mhm-card:hover{text-decoration:none}
-.mhm-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 20px 0}
-.mhm-body{padding:14px 20px 20px}
-.mhm-kick{font-size:12px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--mh-red)}
-.mhm-top .mhm-kick{text-align:right;max-width:60%}
-.mhm-where{display:flex;gap:6px;align-items:flex-start;margin-top:8px;font-size:15px;color:var(--mh-muted)}
-.mhm-where svg{flex:0 0 auto;margin-top:3px}
-.mhm-more{margin:20px 0 0}
-.mhm-empty{color:var(--mh-muted);margin:0}
-.mhm-tabs{margin-bottom:18px}
-.mhm-row{display:flex;gap:16px;align-items:flex-start;padding:14px 0;border-bottom:1px solid var(--mh-line)}
-.mhm-row:first-child{padding-top:0}
-.mhm-rowtx{min-width:0}
-.mhm-rt{font-weight:600;font-size:17px;line-height:1.35}
-.mhm-cover{display:block;box-shadow:0 10px 30px rgba(23,46,92,.18);border-radius:3px;overflow:hidden;max-width:300px}
-.mhm-cover img{display:block;width:100%;height:auto}
-.mhm-cover span{display:flex;aspect-ratio:17/22;align-items:center;justify-content:center;background:var(--mh-navy);color:#fff;font-family:'Baskervville',Georgia,serif;font-size:22px;padding:16px;text-align:center}
-.mhm-acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
-</style>
+<script>
+(function(){
+function hero(root){var s=root.querySelectorAll('.mh-slide'),d=root.querySelectorAll('[data-mh-dot]'),k=0;
+function go(n){k=(n+s.length)%s.length;s.forEach(function(x,i){x.hidden=i!==k;});d.forEach(function(b){if(+b.getAttribute('data-mh-dot')===k){b.setAttribute('aria-current','true');}else{b.removeAttribute('aria-current');}});}
+d.forEach(function(b){b.addEventListener('click',function(){go(+b.getAttribute('data-mh-dot'));});});
+root.querySelectorAll('[data-mh-prev]').forEach(function(b){b.addEventListener('click',function(){go(k-1);});});root.querySelectorAll('[data-mh-next]').forEach(function(b){b.addEventListener('click',function(){go(k+1);});});}
+function tabs(root){var t=root.querySelectorAll('[data-mh-tab]'),p=root.querySelectorAll('[data-mh-pane]');
+t.forEach(function(b){b.addEventListener('click',function(){t.forEach(function(x){x.setAttribute('aria-selected',String(x===b));});p.forEach(function(x){x.hidden=x.getAttribute('data-mh-pane')!==b.getAttribute('data-mh-tab');});});});}
+function init(){document.querySelectorAll('[data-mh-hero]').forEach(hero);document.querySelectorAll('[data-mh-tabs]').forEach(tabs);}
+if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',init);}else{init();}
+})();
+</script>
 HTML;
     }
 }

@@ -1263,7 +1263,11 @@ HTML;
             }
             $rows = [];
             foreach ($up as $v) {
+                $da = new \DateTimeImmutable($v['d1']);
+                $db2 = $v['d2'] !== '' ? new \DateTimeImmutable($v['d2']) : null;
                 $rows[] = [
+                    'day'   => $da->format('j') . ($db2 && $db2->format('n') === $da->format('n') ? '–' . $db2->format('j') : ''),
+                    'mon'   => self::MON[$l][(int) $da->format('n') - 1],
                     'box'   => self::dateBox($v, $l),
                     'title' => self::text($v['t'], $l),
                     'feast' => self::text($v['f'], $l),

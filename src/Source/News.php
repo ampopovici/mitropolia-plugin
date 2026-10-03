@@ -931,4 +931,54 @@ var x0=null;L.addEventListener('touchstart',function(ev){x0=ev.touches[0].client
 </script>
 HTML;
     }
+
+    /* ------------------------------------------------------------------ homepage */
+
+    /**
+     * Latest news of the page language for the homepage blocks.
+     * Each row: title, url, date (long), short (day and month), kicker (first tag), text (plain, clipped), img.
+     */
+    public static function homeItems(int $n, int $offset = 0, int $clip = 220): array
+    {
+        $cat = self::categoryId();
+        if (!$cat) {
+            return [];
+        }
+        $db = self::db();
+        $rows = $db->setQuery(self::base($cat)->select(self::cols())->order('a.publish_up DESC, a.id DESC'), max(0, $offset), max(1, $n))->loadObjectList();
+        $tags = self::tagsOf(array_map(fn ($r) => (int) $r->id, $rows));
+        $out = [];
+        foreach ($rows as $a) {
+            $img = self::image($a);
+            $out[] = (object) [
+                'title'  => (string) $a->title,
+                'url'    => self::url($a),
+                'date'   => self::date($a->publish_up),
+                'short'  => self::shortDate($a->publish_up),
+                'kicker' => $tags[(int) $a->id][0][1] ?? '',
+                'text'   => self::clip(self::plain((string) $a->introtext), $clip),
+                'img'    => $img['src'] ?? '',
+                'alt'    => $img['alt'] ?? '',
+            ];
+        }
+        return $out;
+    }
+
+    /** The News list page of the page language. */
+    public static function homeListUrl(): string
+    {
+        return self::listUrl(self::categoryId());
+    }
+
+    /** "September 12" / "12 septembrie" / "12 de septiembre", without the year. */
+    private static function shortDate(?string $sql): string
+    {
+        if (!$sql) {
+            return '';
+        }
+        $l = self::lang();
+        $fmt = $l === 'en' ? 'F j' : ($l === 'es' ? 'j \d\e F' : 'j F');
+        $d = HTMLHelper::_('date', $sql, $fmt);
+        return $l === 'en' ? $d : mb_strtolower($d, 'UTF-8');
+    }
 }

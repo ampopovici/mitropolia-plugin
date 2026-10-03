@@ -14,10 +14,22 @@
   "content": "./templates/content.php"
  },
  "fields": {
+  "kicker": {
+   "label": "Small title",
+   "description": "Leave empty for the standard wording in the page language."
+  },
   "count": {
    "label": "Visits per hierarch",
    "type": "number",
-   "description": "How many upcoming visits to list for each hierarch (default 4)."
+   "description": "Upcoming visits listed for each hierarch (default 4)."
+  },
+  "more_text": {
+   "label": "Link text",
+   "description": "Leave empty for the standard wording in the page language."
+  },
+  "class": {
+   "label": "Extra CSS class",
+   "description": "Optional."
   }
  },
  "fieldset": {
@@ -27,7 +39,10 @@
     {
      "title": "Content",
      "fields": [
-      "count"
+      "kicker",
+      "count",
+      "more_text",
+      "class"
      ]
     }
    ]

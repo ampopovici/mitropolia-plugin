@@ -1,34 +1,35 @@
 {
  "name": "mitropolia_home_events",
- "title": "Homepage: upcoming events",
+ "title": "Homepage: events",
  "group": "Mitropolia",
  "icon": "${url:images/icon.svg}",
  "iconSmall": "${url:images/icon-small.svg}",
  "element": true,
  "width": 500,
  "defaults": {
-  "count": 4,
-  "columns": "4"
+  "count": 4
  },
  "templates": {
   "render": "./templates/template.php",
   "content": "./templates/content.php"
  },
  "fields": {
+  "kicker": {
+   "label": "Small title",
+   "description": "Leave empty for the standard wording in the page language."
+  },
+  "title": {
+   "label": "Title",
+   "description": "Leave empty for the standard wording in the page language."
+  },
   "count": {
    "label": "Number of events",
    "type": "number",
-   "description": "How many upcoming events to show (default 4)."
+   "description": "Cards per tab (default 4)."
   },
-  "columns": {
-   "label": "Columns on desktop",
-   "type": "select",
-   "options": {
-    "2": "2",
-    "3": "3",
-    "4": "4"
-   },
-   "description": "Cards per row on wide screens."
+  "class": {
+   "label": "Extra CSS class",
+   "description": "Optional."
   }
  },
  "fieldset": {
@@ -38,8 +39,10 @@
     {
      "title": "Content",
      "fields": [
+      "kicker",
+      "title",
       "count",
-      "columns"
+      "class"
      ]
     }
    ]

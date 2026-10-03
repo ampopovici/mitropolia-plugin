@@ -874,4 +874,35 @@ HTML;
         }
         return [$rows, self::listUrl()];
     }
+
+    /**
+     * Events for the homepage block: upcoming (soonest first) or recent (latest first).
+     * Each row: title, url, day (first day number), when ("Aug 31 – Sep 3"), place.
+     */
+    public static function homeRows(bool $past, int $n): array
+    {
+        $all = self::all();
+        $list = array_values(array_filter($all, fn ($x) => self::isPast($x) === $past));
+        if ($past) {
+            $list = array_reverse($list);
+        }
+        $M = self::MON[self::lang()];
+        $rows = [];
+        foreach (array_slice($list, 0, max(1, $n)) as $ev) {
+            $a = new \DateTimeImmutable(self::d1($ev));
+            $d2 = self::d2($ev);
+            $when = $M[(int) $a->format('n') - 1] . ' ' . $a->format('j');
+            if ($d2 !== '') {
+                $b = new \DateTimeImmutable($d2);
+                $when .= ' – ' . ($a->format('n') === $b->format('n') ? '' : $M[(int) $b->format('n') - 1] . ' ') . $b->format('j');
+            }
+            $rows[] = ['title' => $ev->title, 'url' => self::url($ev), 'day' => $a->format('j'), 'when' => $when, 'place' => self::placeLine($ev)];
+        }
+        return $rows;
+    }
+
+    public static function homeListUrl(): string
+    {
+        return self::listUrl();
+    }
 }
