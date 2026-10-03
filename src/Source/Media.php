@@ -379,6 +379,16 @@ final class Media
         }
         $title = trim((string) ($props['title'] ?? '')) ?: self::ui('title');
         $intro = trim((string) ($props['intro'] ?? '')) ?: self::ui('intro');
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'search') {
+            return $form !== '' ? '<div class="mnx mmd mnx-tools">' . $form . '</div>' : '';
+        }
+        if ($part === 'chips') {
+            return $chips !== '' ? '<div class="mnx mmd mnx-tools">' . $chips . '</div>' : '';
+        }
+        if ($part === 'body') {
+            return '<div class="mnx mnx-list mmd' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '"><div class="mnx-listbody">' . $body . $pg . '</div></div>';
+        }
         return '<div class="mnx mnx-list mmd' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">'
             . '<div class="mnx-hero"><div class="mnx-hero-in">' . self::crumbs()
             . '<div class="mnx-hero-row"><div class="mnx-hero-text"><h1 class="mpx-h1">' . $e($title) . '</h1><p class="mnx-intro">' . $e($intro) . '</p></div>' . $form . '</div>'
@@ -471,7 +481,7 @@ final class Media
         }
 
         return '<article class="mnx mnx-art mmd' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">'
-            . '<div class="mnx-band">' . self::crumbs($m->title) . '</div>'
+            . (($props['part'] ?? '') === 'body' ? '' : '<div class="mnx-band">' . self::crumbs($m->title) . '</div>')
             . '<header class="mnx-head"><div class="mnx-meta"><span class="mmd-kind">' . $e(self::ui($m->kind)) . '</span><span class="dot" aria-hidden="true"></span><time datetime="' . $e(substr($m->date, 0, 10)) . '">' . $e(self::date($m->date)) . '</time>'
             . ($m->length !== '' ? '<span class="dot" aria-hidden="true"></span><span>' . $e($m->length) . '</span>' : '') . '</div>'
             . '<h1 class="mnx-title">' . $e($m->title) . '</h1>'

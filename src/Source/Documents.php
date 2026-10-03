@@ -432,6 +432,16 @@ final class Documents
 
         $search = $docs ? '<form class="mdx-search-f" role="search" onsubmit="return false"><label class="mdx-search">' . self::I_SEARCH . '<input type="search" data-q placeholder="' . $e(self::ui('search')) . '" aria-label="' . $e(self::ui('search')) . '"></label></form>' : '';
 
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'search') {
+            return $search !== '' ? '<div class="mdx mdx-tools-part" data-mdx-part>' . $search . '</div>' : '';
+        }
+        if ($part === 'chips') {
+            return $chips !== '' ? '<div class="mdx mdx-tools-part" data-mdx-part>' . $chips . '</div>' : '';
+        }
+        if ($part === 'body') {
+            return '<div class="mdx mdx-list' . (($c = trim((string) ($props['class'] ?? ''))) !== '' ? ' ' . $e($c) : '') . '" data-mdx-part><div class="mdx-in mdx-body">' . $body . '</div></div>';
+        }
         return '<div class="mdx mdx-list' . (($c = trim((string) ($props['class'] ?? ''))) !== '' ? ' ' . $e($c) : '') . '" data-mdx>'
             . '<div class="mdx-hero"><div class="mdx-in">' . self::crumbs([[$title, '']])
             . '<div class="mdx-hero-row"><div class="mdx-hero-text"><h1 class="mdx-h1">' . $e($title) . '</h1><p class="mdx-lead">' . $e($intro) . '</p></div>' . $search . '</div>'
@@ -546,7 +556,7 @@ final class Documents
 
         $cls = trim((string) ($props['class'] ?? ''));
         return '<article class="mdx mdx-page' . ($cls !== '' ? ' ' . $e($cls) : '') . '">'
-            . '<div class="mdx-band"><div class="mdx-in">' . self::crumbs([[self::ui('title'), $listUrl], [$d->title, '']]) . '</div></div>'
+            . (($props['part'] ?? '') === 'body' ? '' : '<div class="mdx-band"><div class="mdx-in">' . self::crumbs([[self::ui('title'), $listUrl], [$d->title, '']]) . '</div></div>')
             . '<div class="mdx-in">'
             . '<header class="mdx-head"><div><p class="mdx-kind">' . $e(self::ui('doc') . ' · ' . $d->ext) . '</p><h1 class="mdx-title">' . $e($d->title) . '</h1>'
             . ($tags !== '' ? '<div class="mdx-tags">' . $tags . '</div>' : '')
@@ -661,7 +671,7 @@ final class Documents
 document.addEventListener('DOMContentLoaded',function(){
 /* PDF in the page only on wider screens, so phones don't load it */
 document.querySelectorAll('.mdx [data-pdf]').forEach(function(f){if(window.matchMedia('(min-width:641px)').matches){f.setAttribute('s'+'rc',f.dataset.pdf);}});
-document.querySelectorAll('[data-mdx]').forEach(function(root){
+(function(){var r=[].slice.call(document.querySelectorAll('[data-mdx]'));if(!r.length&&document.querySelector('[data-mdx-part]'))r=[document.body];return r;})().forEach(function(root){
  var list=root.querySelector('[data-rows]');if(!list)return;
  var rows=[].slice.call(list.children),qi=root.querySelector('[data-q]'),sel=root.querySelector('[data-sort]'),st=root.querySelector('[data-status]'),em=root.querySelector('[data-empty]'),tools=root.querySelector('.mdx-tools');
  var norm=function(s){return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().trim();};

@@ -427,6 +427,30 @@ final class Parishes
         $cfg = json_encode(['pts' => $pts, 'tiles' => $tileUrl, 'attr' => $attr, 'page' => Text::_('MIT_PAR_PAGE'),
             'types' => array_combine(array_keys(self::TYPE_ORDER), array_map([self::class, 'typeLabel'], array_keys(self::TYPE_ORDER)))], JSON_UNESCAPED_UNICODE | JSON_HEX_TAG | JSON_HEX_AMP);
 
+        $controls = '<div class="mpd-controls"><label class="mpd-search">' . self::I_SEARCH . '<input type="search" data-f="q" placeholder="' . $e(Text::_('MIT_PAR_SEARCH')) . '" aria-label="' . $e(Text::_('MIT_PAR_SEARCH_LABEL')) . '"></label>'
+            . $dio
+            . '<select class="mpx-sel" data-f="s" aria-label="' . $e(Text::_('MIT_PAR_STATE')) . '"><option value="">' . $e(Text::_('MIT_PAR_STATE')) . '</option>' . $states . '</select>'
+            . '<button type="button" class="mpx-btn mpx-line mpd-near">' . self::I_NAV . ' ' . $e(Text::_('MIT_PAR_NEAR')) . '</button></div>';
+        $chipRow = '<div class="mpd-chiprow"><div class="mpd-chips">' . $chips . '</div>'
+            . '<div class="mpd-legend"><span><i class="mpx-dot-c"></i>' . $e(self::typeLabel('cathedral')) . '</span><span><i class="mpx-dot-m"></i>' . $e(self::typeLabel('monastery')) . '</span><span><i class="mpx-dot-p"></i>' . $e(Text::_('MIT_PAR_LEGEND_OTHER')) . '</span></div></div>';
+        // parts, for pages whose header is built with YOOtheme elements (the script then works on the whole page)
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'search') {
+            return '<div class="mpd mpd-tools" data-mpd-part>' . $controls . '</div>' . self::assets();
+        }
+        if ($part === 'chips') {
+            return '<div class="mpd mpd-tools" data-mpd-part>' . $chipRow . '</div>' . self::assets();
+        }
+        if ($part === 'body') {
+            return '<div class="mpd' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '" data-mpd-part>'
+                . '<div class="mpd-map"><div class="mpd-mapin" role="region" aria-label="' . $e(Text::_('MIT_PAR_MAP')) . '"></div></div>'
+                . '<p class="mpd-count" data-c1="' . $e(Text::_('MIT_PAR_COUNT_ONE')) . '" data-cn="' . $e(Text::_('MIT_PAR_COUNT')) . '" data-cm="' . $e(Text::_('MIT_PAR_COUNT_MANY')) . '"></p>'
+                . '<div class="mpd-grid">' . $body . '</div>'
+                . '<p class="mpd-none" hidden>' . $e(Text::_('MIT_PAR_NONE')) . '</p>'
+                . '<script type="application/json" class="mpd-cfg">' . $cfg . '</script>'
+                . '</div>' . self::assets();
+        }
+
         return '<div class="mpd' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '"' . (!empty($props['id']) ? ' id="' . $e((string) $props['id']) . '"' : '') . ' data-mpd="' . $uid . '">'
             . '<div class="mpd-hero"><div class="mpd-hero-in">' . self::crumbs()
             . '<div class="mpd-hero-row"><div class="mpd-hero-text"><h1 class="mpx-h1">' . $e($title) . '</h1><p class="mpd-intro">' . $e($intro) . '</p></div>'
@@ -935,7 +959,7 @@ function pin(t,big){return L.divIcon({className:'',html:'<div class="mpx-pin '+t
 function guard(m,el){if(!window.matchMedia||!matchMedia('(pointer:coarse)').matches)return;m.dragging.disable();m.options.tap=false;var h=document.createElement('div');h.className='mpx-tf';h.textContent=document.documentElement.dataset.mptf||'';el.appendChild(h);var t;el.addEventListener('touchstart',function(e){if(e.touches.length===1){h.classList.add('on');clearTimeout(t);t=setTimeout(function(){h.classList.remove('on');},1400);}else{h.classList.remove('on');}},{passive:true});el.addEventListener('touchend',function(e){if(!e.touches.length){clearTimeout(t);t=setTimeout(function(){h.classList.remove('on');},700);}},{passive:true});}
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 document.querySelectorAll('[data-m]').forEach(function(a){try{a.href='mailto:'+decodeURIComponent(escape(atob(a.dataset.m)));}catch(x){}});
-document.querySelectorAll('[data-mpd]').forEach(function(root){
+(function(){var r=[].slice.call(document.querySelectorAll('[data-mpd]'));if(!r.length&&document.querySelector('[data-mpd-part]'))r=[document.body];return r;})().forEach(function(root){
  var cfg=JSON.parse(root.querySelector('.mpd-cfg').textContent),q=root.querySelector('[data-f=q]'),d=root.querySelector('[data-f=d]'),s=root.querySelector('[data-f=s]'),cnt=root.querySelector('.mpd-count'),none=root.querySelector('.mpd-none'),T='',map=null,marks=[],box=root.querySelector('.mpd-map');
  ready(function(){map=L.map(root.querySelector('.mpd-mapin'),{scrollWheelZoom:false}).setView([42,-92],4);tiles(map,cfg);guard(map,root.querySelector('.mpd-mapin'));
   cfg.pts.forEach(function(p,i){if(!p){marks.push(null);return;}var m=L.marker([p[0],p[1]],{icon:pin(p[2])}).bindPopup('<span class="mpx-type mpx-'+p[2]+'">'+esc(cfg.types[p[2]]||'')+'</span><b>'+esc(p[3])+'</b>'+esc(p[4])+'<br><a href="'+p[5]+'">'+esc(cfg.page)+' →</a>');marks.push(m);});

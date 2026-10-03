@@ -24,6 +24,17 @@
   "class": {
    "label": "Class",
    "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Search box only": "search",
+    "Type buttons only": "chips",
+    "List only": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
   }
  },
  "fieldset": {
@@ -33,6 +44,7 @@
     {
      "title": "Media list",
      "fields": [
+      "part",
       "title",
       "intro"
      ]

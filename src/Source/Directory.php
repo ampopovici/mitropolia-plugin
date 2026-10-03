@@ -444,6 +444,20 @@ final class Directory
                 . '</div></div>';
         }
 
+        // parts, for pages whose header is built with YOOtheme elements (the script then works on the whole page)
+        $part = (string) ($props['part'] ?? '');
+        if ($part === 'search') {
+            return '<div class="mcd mcd-tools" data-mcd-part>' . $filtersHtml . '</div>' . self::assets();
+        }
+        if ($part === 'chips') {
+            return $chipsHtml !== '' ? '<div class="mcd mcd-tools" data-mcd-part>' . $chipsHtml . '</div>' . self::assets() : '';
+        }
+        if ($part === 'body') {
+            return '<div class="' . $e($cls) . '"' . $idAttr . self::vars($props) . ' data-mcd-part>'
+                . $barHtml . '<div class="mcd-grid">' . $body . '</div>'
+                . '<p class="mcd-none" hidden>' . $e(Text::_('MIT_DIR_NONE')) . '</p></div>' . self::assets();
+        }
+
         return '<div class="' . $e($cls) . ($top !== $filtersHtml . $chipsHtml ? ' mcd-has-hero' : '') . '"' . $idAttr . self::vars($props) . ' data-mcd="' . $uid . '">'
             . $top . $barHtml
             . '<div class="mcd-grid">' . $body . '</div>'
@@ -568,7 +582,7 @@ final class Directory
 <script>
 (function(){
 function fold(s){return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
-document.querySelectorAll('[data-mcd]').forEach(function(root){
+(function(){var r=[].slice.call(document.querySelectorAll('[data-mcd]'));if(!r.length&&document.querySelector('[data-mcd-part]'))r=[document.body];return r;})().forEach(function(root){
  var q=root.querySelector('[data-f=q]'),d=root.querySelector('[data-f=d]'),count=root.querySelector('.mcd-count'),none=root.querySelector('.mcd-none'),mode='name',grp='',lt='',rs=root.querySelector('.mcd-reset');
  function apply(){var t=q?fold(q.value.trim()):'',dv=d?d.value:'',n=0,shown={};
   var av={},cards=root.querySelectorAll('.mcd-card');

@@ -7,12 +7,63 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "title": {"label": "Title", "description": "Leave empty to use the menu item's Page Heading (or \"Find a parish\" in the page language)."},
-  "intro": {"label": "Introduction", "type": "textarea", "attrs": {"rows": 3}, "description": "Leave empty to use the standard sentence in the page language."},
-  "id": {"label": "ID", "description": "Optional HTML id."},
-  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["title", "intro"]}, {"title": "Advanced", "fields": ["id", "class"]}]}}
+ "fields": {
+  "title": {
+   "label": "Title",
+   "description": "Leave empty to use the menu item's Page Heading (or \"Find a parish\" in the page language)."
+  },
+  "intro": {
+   "label": "Introduction",
+   "type": "textarea",
+   "attrs": {
+    "rows": 3
+   },
+   "description": "Leave empty to use the standard sentence in the page language."
+  },
+  "id": {
+   "label": "ID",
+   "description": "Optional HTML id."
+  },
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Search and filters only": "search",
+    "Type buttons only": "chips",
+    "Map and list only": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) is built with YOOtheme elements; this block then shows only the part chosen here."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "part",
+      "title",
+      "intro"
+     ]
+    },
+    {
+     "title": "Advanced",
+     "fields": [
+      "id",
+      "class"
+     ]
+    }
+   ]
+  }
+ }
 }

@@ -8,9 +8,11 @@
 .mx-head { padding: 22px 0 48px; border-bottom: 1px solid #E4D8BE; }
 .mx-head .mx-head-row { margin-top: 34px; align-items: flex-end; }
 .mx-head .mx-chips-row { margin-top: 28px; }
-.mx-head .mx-chips-row:not(:has(.mnx-chips)) { display: none; }
+.mx-head .mx-chips-row:not(:has([class*=chip])) { display: none; }
+.mx-chips-row .mnx-chips, .mx-chips-row .mcd-chips, .mx-chips-row .mdx-chips, .mx-chips-row .mpd-chiprow, .mx-chips-row .chips { margin-top: 0; }
 .mx-head-text > * + * { margin-top: 0; }
-.mx-head-text { max-width: 680px; }
+.mx-head-text > * { max-width: 680px; }
+.mx-head .mx-head-tools { margin-left: auto; }
 .mx-head-tools .mnx { font-family: 'Source Sans 3', sans-serif; }
 .mx-body { padding: 0; }
 
@@ -62,7 +64,7 @@
 
 // search page: title, intro and the large search box stacked
 .mx-head .mx-search-row { margin-top: 28px; }
-.mx-search-text { max-width: none; }
+.mx-search-text > * { max-width: none; }
 .mx-search-text .msr-form { margin-top: 26px; }
 .mx-head-search .mx-chips-row { margin-top: 26px; }
 
@@ -114,15 +116,26 @@ h1.mx-hl-title, .mx-hl-title { font-family: 'Baskervville', Georgia, serif; font
 // pastoral itinerary: no breadcrumb, print button on the right
 .mx-head-it { padding: 34px 0 44px; }
 .mx-head .mx-it-row { margin-top: 0; align-items: flex-end; }
-.mx-it-text { max-width: 700px; }
+.mx-it-text > * { max-width: 700px; }
 
 // events: the title and intro come from the events element
 .mx-head-ev { padding-bottom: 44px; }
 .mx-head .mx-ev-row { margin-top: 0; }
 .mx-head-ev .mev-tools .mev-h1 { margin-top: 30px; }
-.mx-head-ev .mx-chips-row { margin-top: 0; }
+.mx-head-ev .mx-chips-row { margin-top: 28px; }
 .mx-head-ev .mx-chips-row:not(:has(.chips)) { display: none; }
 .mx-band-ev { padding: 18px 0; }
+
+// directories and documents: the same header, a little different spacing each
+.mx-head-dir { padding-bottom: 40px; }
+.mx-head-dir .mx-chips-row { margin-top: 26px; }
+.mx-body .mcd-bar { margin-top: 32px; }
+.mx-head-par { padding-bottom: 36px; }
+.mx-head-par .mx-chips-row { margin-top: 24px; }
+.mx-head-par .mx-head-text > * { max-width: 640px; }
+.mx-head-docs { padding-bottom: 40px; }
+.mx-head-docs .mx-head-row { margin-top: 30px; }
+.mx-head-docs .mx-head-text > * { max-width: 640px; }
 
 @media (max-width: 1000px) {
   .mx-title, h1.mx-title, .mx-head-letter h1.mx-title { font-size: 40px; }

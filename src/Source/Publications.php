@@ -309,7 +309,7 @@ final class Publications
         $name = trim((string) ($props['title'] ?? '')) ?: self::ui($kind);
         $list = self::issues($cat, $kind);
         $cls = trim((string) ($props['class'] ?? ''));
-        $head = '<div class="mnx-band">' . self::crumbs($name) . '</div>';
+        $head = ($props['part'] ?? '') === 'body' ? '' : '<div class="mnx-band">' . self::crumbs($name) . '</div>';
         if (!$list) {
             return '<div class="mnx mpb' . ($cls !== '' ? ' ' . $e($cls) : '') . '">' . $head
                 . '<section class="mpb-hero"><h1 class="mpx-h1">' . $e($name) . '</h1><p class="mnx-empty">' . $e(self::ui('none')) . '</p></section></div>';

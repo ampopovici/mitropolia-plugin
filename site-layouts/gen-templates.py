@@ -127,7 +127,7 @@ def article_head(kicker=None, byline=None, meta=True, lead=True, cls=""):
         items.append(row(col([byline], cls="mx-byline")))
     if lead:
         items.append(row(col([
-            el("image", {"image": "", "margin": "remove", "class": "mx-lead", "image_svg_inline": False},
+            el("image", {"image": "", "margin": "remove", "class": "mx-lead", "image_svg_inline": False, "image_loading": True},
                source={"query": {"name": "article"}, "props": {"image": {"name": "mitropolia_lead", "filters": {}},
                                                                "image_alt": {"name": "mitropolia_lead_alt", "filters": {}}}}),
             para(cls="mx-lead-cap", src=bind("article", "mitropolia_lead_caption")),
@@ -208,7 +208,7 @@ def not_found(l):
 # ------------------------------------------------------------------ hierarchs, itinerary, galleries, events
 
 def hierarch_page(l):
-    photo = col([el("image", {"image": "", "margin": "remove", "class": "mx-hier-ph", "image_svg_inline": False},
+    photo = col([el("image", {"image": "", "margin": "remove", "class": "mx-hier-ph", "image_svg_inline": False, "image_loading": True},
                     source={"query": {"name": "article"}, "props": {"image": {"name": "mitropolia_lead", "filters": {}},
                                                                     "image_alt": {"name": "title", "filters": {}}}})], "1-2", "mx-hier-phcol")
     text = col([
@@ -265,6 +265,46 @@ def event(l):
                   body("Event", block("mitropolia_event", part="body"), cls="mx-body-art"))
 
 
+
+# ------------------------------------------------------------------ directories, documents, media, publications
+
+DIRS = {
+    "clergy": {"ro": ("Directorul clerului", "Ierarhii, preoții și diaconii Mitropoliei: Arhiepiscopia Statelor Unite, Episcopia Canadei și America de Sud."),
+               "en": ("Clergy directory", "Hierarchs, priests and deacons of the Metropolia: the Archdiocese of the United States, the Diocese of Canada and South America."),
+               "es": ("Directorio del clero", "Jerarcas, sacerdotes y diáconos de la Metrópolis: la Arquidiócesis de los Estados Unidos, la Diócesis de Canadá y América del Sur.")},
+    "parish": {"ro": ("Găsește o parohie", "Catedralele, mănăstirile, parohiile și misiunile Mitropoliei din Statele Unite, Canada și America de Sud."),
+               "en": ("Find a parish", "Cathedrals, monasteries, parishes and missions of the Metropolia in the United States, Canada and South America."),
+               "es": ("Encontrar una parroquia", "Catedrales, monasterios, parroquias y misiones de la Metrópolis en los Estados Unidos, Canadá y América del Sur.")},
+    "docs": {"ro": ("Documente", "Statutele, îndrumările administrative și spirituale și formularele pentru Sfintele Taine."),
+             "en": ("Documents", "Statutes, administrative and spiritual guidelines, and forms for the Holy Mysteries."),
+             "es": ("Documentos", "Estatutos, orientaciones administrativas y espirituales, y formularios para los Santos Misterios.")},
+    "media": {"ro": ("Media", "Înregistrări video și audio: slujbe, cuvinte de învățătură, interviuri și evenimente din viața Mitropoliei."),
+              "en": ("Media", "Video and audio recordings: services, homilies, interviews and events in the life of the Metropolia."),
+              "es": ("Multimedia", "Grabaciones de vídeo y audio: oficios, homilías, entrevistas y eventos de la vida de la Metropolía.")},
+}
+
+
+def dir_list(kind, element, cls, default_props=None):
+    def build(l):
+        title, intro = DIRS[kind][l]
+        pp = dict(default_props or {})
+        b = lambda p: block(element, part=p, **pp)
+        return layout(list_head(title, intro, b("search"), b("chips"), cls), body("List", b("body")))
+    return build
+
+
+def band_page(element, cls="mx-band"):
+    def build(l):
+        return layout(section("Breadcrumb", cls, [row(col([crumbs(False)]))]),
+                      body("Page", block(element, part="body"), cls="mx-body-art"))
+    return build
+
+
+CLERGY_PROPS = {"card_align": "", "columns": "4", "columns_l": "3", "columns_m": "2", "columns_s": "1", "diocese": "", "gap": "", "order": "az",
+                "photo_ratio": "", "show_az": True, "show_breadcrumb": True, "show_contact": True, "show_count": True, "show_filters": True,
+                "show_hero": True, "show_parish": True, "show_photo": True}
+
+
 TEMPLATES = {
     # key: (existing template id, name, type, catids, builder)
     "news-list": ("k2yyjw9k", "News list", "com_content.category", ["99", "100", "101"], news_list),
@@ -283,6 +323,14 @@ TEMPLATES = {
     "gallery-page": ("fzvvh9bq", "Gallery page", "com_content.article", ["127"], gallery_page),
     "events-list": ("j90l29sz", "Events list", "com_content.category", ["103", "104", "105"], events_list),
     "event": ("5umq1f54", "Event", "com_content.article", ["103", "104", "105"], event),
+    "clergy-directory": ("bcY7kVzW", "Clergy directory", "com_content.category", ["125"], dir_list("clergy", "mitropolia_clergy_directory", "mx-head-dir", CLERGY_PROPS)),
+    "parish-directory": ("j1vibhr6", "Parish directory", "com_content.category", ["124"], dir_list("parish", "mitropolia_parish_directory", "mx-head-par")),
+    "documents-list": ("w3bdc6vx", "Documents list", "com_content.category", ["118", "119", "120"], dir_list("docs", "mitropolia_documents_list", "mx-head-docs")),
+    "document": ("6hihhjr1", "Document", "com_content.article", ["118", "119", "120"], band_page("mitropolia_document", "mx-band mx-band-ev")),
+    "media-list": ("kq1ndpca", "Media list", "com_content.category", ["128"], dir_list("media", "mitropolia_media_list", "")),
+    "media-item": ("fvngqoeh", "Media item", "com_content.article", ["128"], band_page("mitropolia_media_item")),
+    "publication": ("u95miuom", "Publication", "com_content.category", ["149", "150"], band_page("mitropolia_publication")),
+    "publication-issue": ("1iqa86nl", "Publication issue", "com_content.article", ["149", "150"], band_page("mitropolia_publication")),
     "words-list": ("h82m87em", "Words and Messages list", "com_content.category", ["109", "110", "111", "143", "144", "145", "146", "147", "148"], lambda l: pastoral_list(l, True)),
 }
 
