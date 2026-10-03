@@ -1,0 +1,45 @@
+{
+ "name": "mitropolia_home_publication",
+ "title": "Homepage: newest Credința issue",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {
+  "kind": "mag"
+ },
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
+ },
+ "fields": {
+  "kind": {
+   "label": "Publication",
+   "type": "select",
+   "options": {
+    "Magazine": "mag",
+    "Almanac": "alm"
+   }
+  },
+  "intro": {
+   "label": "Short text",
+   "type": "textarea",
+   "description": "Optional sentence under the issue name."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "kind",
+      "intro"
+     ]
+    }
+   ]
+  }
+ }
+}

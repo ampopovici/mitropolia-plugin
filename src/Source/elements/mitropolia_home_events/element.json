@@ -1,0 +1,48 @@
+{
+ "name": "mitropolia_home_events",
+ "title": "Homepage: upcoming events",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {
+  "count": 4,
+  "columns": "4"
+ },
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
+ },
+ "fields": {
+  "count": {
+   "label": "Number of events",
+   "type": "number",
+   "description": "How many upcoming events to show (default 4)."
+  },
+  "columns": {
+   "label": "Columns on desktop",
+   "type": "select",
+   "options": {
+    "2": "2",
+    "3": "3",
+    "4": "4"
+   },
+   "description": "Cards per row on wide screens."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "count",
+      "columns"
+     ]
+    }
+   ]
+  }
+ }
+}

@@ -1,0 +1,36 @@
+{
+ "name": "mitropolia_home_itinerary",
+ "title": "Homepage: hierarchs' visits",
+ "group": "Mitropolia",
+ "icon": "${url:images/icon.svg}",
+ "iconSmall": "${url:images/icon-small.svg}",
+ "element": true,
+ "width": 500,
+ "defaults": {
+  "count": 4
+ },
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
+ },
+ "fields": {
+  "count": {
+   "label": "Visits per hierarch",
+   "type": "number",
+   "description": "How many upcoming visits to list for each hierarch (default 4)."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "count"
+     ]
+    }
+   ]
+  }
+ }
+}

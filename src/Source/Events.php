@@ -849,4 +849,29 @@ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',
 </script>
 HTML;
     }
+
+    /* ------------------------------------------------------------------ homepage */
+
+    /**
+     * Next upcoming events for the homepage block: title, url, date span, place, day/month box, photo.
+     * Returns [rows, url of the events page].
+     */
+    public static function upcoming(int $n): array
+    {
+        $up = array_values(array_filter(self::all(), fn ($x) => !self::isPast($x)));
+        $rows = [];
+        foreach (array_slice($up, 0, max(1, $n)) as $ev) {
+            $img = self::image($ev);
+            $rows[] = [
+                'title' => $ev->title,
+                'url'   => self::url($ev),
+                'span'  => self::span($ev),
+                'place' => self::placeLine($ev),
+                'group' => self::groupLabel($ev->group),
+                'box'   => self::dateBox($ev),
+                'img'   => $img !== '' ? News::thumbUrl($img) : '',
+            ];
+        }
+        return [$rows, self::listUrl()];
+    }
 }

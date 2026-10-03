@@ -469,4 +469,30 @@ var want=C.open||+(new URL(location.href).searchParams.get('n')||0);if(want&&C.i
 </script>
 HTML;
     }
+
+    /* ------------------------------------------------------------------ homepage */
+
+    /** Newest issue of the magazine ('mag') or almanac ('alm') for the homepage block, or null. */
+    public static function latest(string $kind = 'mag'): ?object
+    {
+        foreach (self::cats() as $cat => $k) {
+            if ($k !== $kind) {
+                continue;
+            }
+            $list = self::issues($cat, $kind);
+            if (!$list) {
+                return null;
+            }
+            $i = $list[0];
+            $i->name = self::ui($kind);
+            $i->url = Route::_(RouteHelper::getArticleRoute($i->id . ':' . $i->alias, $i->catid, Factory::getApplication()->getLanguage()->getTag()));
+            $i->list = self::catUrl($cat);
+            $i->read = self::ui('read');
+            $i->dl = self::ui('dlpdf');
+            $i->cur = self::ui($kind === 'mag' ? 'cur_mag' : 'cur_alm');
+            $i->count = count($list);
+            return $i;
+        }
+        return null;
+    }
 }

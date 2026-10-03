@@ -1234,4 +1234,45 @@ HTML;
             }
         }
     }
+
+    /* ------------------------------------------------------------------ homepage */
+
+    /**
+     * Upcoming visits per hierarch for the homepage block.
+     * Returns a list of ['name' => hierarch, 'url' => itinerary page, 'rows' => [[box, title, feast, place html, time]]].
+     */
+    public static function upcoming(int $n): array
+    {
+        $l = self::lang();
+        $today = Factory::getDate('now', Factory::getApplication()->get('offset', 'UTC'))->format('Y-m-d', true);
+        $app = Factory::getApplication();
+        $tag = $app->getLanguage()->getTag();
+        $out = [];
+        foreach (self::hierarchCats() as $id => $cat) {
+            $up = array_slice(array_values(array_filter(self::visits([$id]), fn ($v) => ($v['d2'] ?: $v['d1']) >= $today)), 0, max(1, $n));
+            $par = self::parishes(array_values(array_unique(array_filter(array_map(fn ($v) => $v['parish'], $up)))));
+            $url = '';
+            foreach ($app->getMenu()->getItems(['component'], ['com_content']) as $item) {
+                $q = $item->query ?? [];
+                if (($q['view'] ?? '') === 'category' && (int) ($q['id'] ?? 0) === $id && in_array($item->language, [$tag, '*'], true)) {
+                    $url = Route::_('index.php?Itemid=' . (int) $item->id);
+                    if ($item->language === $tag) {
+                        break;
+                    }
+                }
+            }
+            $rows = [];
+            foreach ($up as $v) {
+                $rows[] = [
+                    'box'   => self::dateBox($v, $l),
+                    'title' => self::text($v['t'], $l),
+                    'feast' => self::text($v['f'], $l),
+                    'place' => self::placeOf($v, $par, $l)['html'],
+                    'time'  => self::time($v['tm'], $l),
+                ];
+            }
+            $out[] = ['name' => $l === 'ro' ? self::who($cat, 0) : self::who($cat, self::li($l)), 'url' => $url, 'rows' => $rows];
+        }
+        return $out;
+    }
 }
