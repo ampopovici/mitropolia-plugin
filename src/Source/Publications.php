@@ -140,6 +140,7 @@ final class Publications
             $vals[(int) $r->item_id][$r->name] = trim((string) $r->value);
         }
         $out = [];
+        $budget = 2;
         foreach ($rows as $r) {
             $v = $vals[(int) $r->id] ?? [];
             $pdf = self::filePath((string) ($v['publication-pdf'] ?? ''));
@@ -152,7 +153,7 @@ final class Publications
             $cover = trim(explode('#', (string) ($im['image_intro'] ?? ''), 2)[0]);
             if ($cover === '' || !is_file(JPATH_ROOT . '/' . $cover)) {
                 $gen = 'images/publications/covers/' . (int) $r->id . '.jpg';
-                $cover = is_file(JPATH_ROOT . '/' . $gen) ? $gen : '';
+                $cover = is_file(JPATH_ROOT . '/' . $gen) || ($budget-- > 0 && self::makeCover((int) $r->id, $pdf)) ? $gen : '';
             }
             $out[] = (object) [
                 'id'    => (int) $r->id,
@@ -169,6 +170,41 @@ final class Publications
         }
         usort($out, fn ($a, $b) => [$b->sort, $b->pub] <=> [$a->sort, $a->pub]);
         return $out;
+    }
+
+    /**
+     * Cover from the PDF's first page (Imagick), saved as images/publications/covers/<id>.jpg.
+     * Used for new issues the first time the page is shown, at most two per page view.
+     */
+    public static function makeCover(int $id, string $pdf): bool
+    {
+        $abs = realpath(JPATH_ROOT . '/' . ltrim(rawurldecode($pdf), '/'));
+        if (!$abs || !str_starts_with($abs, realpath(JPATH_ROOT)) || !is_file($abs) || !class_exists('Imagick')) {
+            return false;
+        }
+        $dir = JPATH_ROOT . '/images/publications/covers';
+        if (!is_dir($dir) && !@mkdir($dir, 0755, true)) {
+            return false;
+        }
+        try {
+            $im = new \Imagick();
+            $im->setResolution(110, 110);
+            $im->readImage($abs . '[0]');
+            $im->setImageBackgroundColor('white');
+            $im = $im->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
+            $im->setImageColorspace(\Imagick::COLORSPACE_SRGB);
+            $im->thumbnailImage(680, 0);
+            $im->setImageFormat('jpeg');
+            $im->setImageCompressionQuality(82);
+            $im->stripImage();
+            $ok = $im->writeImage($dir . '/' . $id . '.jpg');
+            $im->clear();
+            @chmod($dir . '/' . $id . '.jpg', 0644);
+            return (bool) $ok;
+        } catch (\Throwable $x) {
+            Log::add('Publication cover ' . $id . ': ' . $x->getMessage(), Log::WARNING, 'mitropolia');
+            return false;
+        }
     }
 
     private static function label(string $kind, int $year, int $issue, string $title): string

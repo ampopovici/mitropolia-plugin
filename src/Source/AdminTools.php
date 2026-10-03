@@ -77,6 +77,8 @@ final class AdminTools
                 return self::pubCopy(json_decode((string) $p->getRaw('files'), true) ?: []);
             case 'pub_save':
                 return self::pubSave(json_decode((string) $p->getRaw('items'), true) ?: []);
+            case 'pub_make':
+                return self::pubMake(array_map('intval', json_decode((string) $p->getRaw('ids'), true) ?: []));
             case 'pub_cover':
                 return self::pubCover($p->getInt('id'), (string) $p->getRaw('jpeg'));
             case 'doc_save':
@@ -576,5 +578,22 @@ final class AdminTools
         $ok = @file_put_contents($dir . '/' . $id . '.jpg', $data);
         @chmod($dir . '/' . $id . '.jpg', 0644);
         return ['ok' => (bool) $ok, 'size' => strlen($data), 'w' => $info[0], 'h' => $info[1]];
+    }
+
+    /** Makes covers for issues from their PDFs (server side, Imagick). */
+    private static function pubMake(array $ids): array
+    {
+        $db = Admin::db();
+        $out = [];
+        foreach (array_slice($ids, 0, 10) as $id) {
+            $v = (string) $db->setQuery('SELECT v.value FROM #__fields_values v INNER JOIN #__fields f ON f.id = v.field_id WHERE f.name = ' . $db->quote('publication-pdf')
+                . ' AND v.item_id = ' . $db->quote((string) $id))->loadResult();
+            $j = json_decode($v, true);
+            $file = is_array($j) ? (string) ($j['file'] ?? '') : $v;
+            $t = microtime(true);
+            $ok = $file !== '' && Publications::makeCover($id, $file);
+            $out[] = [$id, $ok ? 'ok' : 'failed', round(microtime(true) - $t, 1)];
+        }
+        return ['ok' => true, 'items' => $out];
     }
 }
