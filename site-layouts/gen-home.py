@@ -92,7 +92,7 @@ def layout(l):
             "show_title":True,"show_meta":True,"show_content":False,"show_link":True,"link_text":c["more"],"link_style":"default",
             "title_element":"h1","title_style":"h3","meta_style":"text-meta","meta_align":"above-title","content_style":"text-lead","image_loading":"eager","media_overlay":"rgba(23,46,92,0.15)"},
             [el("slideshow_item",{},source=src(c["cat"],4,0,{"title":{"name":"title"},"meta":{"name":"publish_up","filters":{"date":"j F Y"}},"content":{"name":"teaser","filters":{"limit":"130"}},"image":{"name":"images.image_intro"},"link":{"name":"link"}}))])
-    ]))],padding="none",width="expand"))
+    ]))],padding="small",padding_remove_bottom=True,width="default"))
     # 2 quick links
     S.append(section("Quick links",[row(col([el("subnav",{"subnav_style":"divider","text_align":"center"},[el("subnav_item",{"content":t,"link":u}) for t,u in c["q"]])]))],style="muted",padding="xsmall"))
     # 3 tiles
@@ -120,7 +120,7 @@ def layout(l):
     S.append(section("Events",[row(col([kicker(c["kick_ev"]),head(c["h_ev"],margin="small"),el("mitropolia_home_events",{"count":4,"columns":"4"})]))],padding="large"))
     # 7 structure
     S.append(section("Structure",[row(col([kicker(c["kick_st"]),head(c["h_st"],margin="small"),el("text",{"content":"<p>"+c["st_text"]+"</p>","text_style":"lead","max_width":"xlarge"}),
-        el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"3","grid_large":"3","grid_xlarge":"3","grid_column_gap":"medium","panel_style":"card-default","panel_link":True,"show_link":False,"title_style":"h4","title_element":"h3","meta_style":"text-meta","meta_align":"above-title"},
+        el("grid",{"grid_default":"1","grid_small":"1","grid_medium":"3","grid_large":"3","grid_xlarge":"3","grid_column_gap":"medium","panel_style":"tile-muted","panel_padding":"default","panel_link":True,"show_link":False,"title_style":"h4","title_element":"h3","meta_style":"text-meta","meta_align":"above-title"},
            [el("grid_item",{"meta":m,"title":t,"content":"<p>"+x+"</p>","link":u}) for m,t,x,u in c["st"]])]))],style="primary",padding="large"))
     # 8 publication + donate
     S.append(section("Publications and support",[row(
