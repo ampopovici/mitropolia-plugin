@@ -848,7 +848,7 @@ HTML;
     private static function formJs(): string
     {
         return <<<'HTML'
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 const D=JSON.parse(document.getElementById('mif-data').textContent);
 const $=id=>document.getElementById(id),esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -952,7 +952,7 @@ $('list').onclick=async e=>{const it=e.target.closest('.it');if(!it)return;const
  else if(e.target.classList.contains('no')){e.target.closest('.confirm').remove();}};
 reset();renderList();
 })();
-</script>
+});</script>
 HTML;
     }
 

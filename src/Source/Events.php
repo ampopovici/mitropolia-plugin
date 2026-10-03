@@ -841,7 +841,7 @@ final class Events
 @media (max-width:640px){.mev-h1{font-size:40px}.mev-h2{font-size:30px}.mev-title{font-size:34px}.mev .evrow{padding:16px;gap:14px;align-items:flex-start}.mev .db{width:70px}.mev .evrow h3{font-size:21px}.mev .evrow .acts{padding-left:0}.mev .evrow .acts .btn{flex:1}.mev .evgrid,.mev .evminis{grid-template-columns:minmax(0,1fr)}.mev-head{padding:32px 0 24px}}
 @media (prefers-reduced-motion:reduce){.mev .evrow,.mev .evcard{transition:none}}
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 function init(){
 /* group chips: show only that group's events */
@@ -858,7 +858,7 @@ if(document.querySelector('.mev [data-map]'))maps();
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
-</script>
+});</script>
 HTML;
     }
 

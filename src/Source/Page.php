@@ -350,14 +350,14 @@ final class Page
  .mpg-doc{padding:14px 16px;gap:14px}.mpg-doc-go{display:none}}
 @media print{.mpg-band .mpx-crumbs,.mpg-nav,.mpg-share{display:none!important}.mpg-grid{display:block;padding-top:24px}.mpg-band{box-shadow:none;background:none;padding-bottom:16px}}
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 if(window.matchMedia&&matchMedia('(max-width:1000px)').matches){document.querySelectorAll('.mpg-nav details').forEach(function(d){d.open=false;});}
 document.querySelectorAll('.mpg .mnx-share [data-copy]').forEach(function(b){b.addEventListener('click',function(){var u=b.getAttribute('data-copy');function ok(){b.classList.add('done');setTimeout(function(){b.classList.remove('done');},1600);}
 if(navigator.clipboard){navigator.clipboard.writeText(u).then(ok,function(){prompt('',u);});}else{prompt('',u);}});});
 document.querySelectorAll('.mpg .mnx-share [data-print]').forEach(function(b){b.addEventListener('click',function(){window.print();});});
 })();
-</script>
+});</script>
 HTML;
     }
 }

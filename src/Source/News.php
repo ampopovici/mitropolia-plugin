@@ -959,7 +959,7 @@ a.mnx-box:hover{border-color:var(--mp-gold)}
 .mnx-pn{grid-template-columns:minmax(0,1fr)}.mnx-search,.mnx-search input{width:100%}.mnx-controls{width:100%}.mnx-controls .mnx-search{flex:1 1 100%}.mnx-rel .mpx-h2{font-size:30px}}
 @media print{.mnx-band,.mnx-side,.mnx-foot,.mnx-pn,.mnx-rel,.mnx-gal-wrap{display:none!important}.mnx-cols{display:block}}
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 document.querySelectorAll('.mnx-share [data-copy]').forEach(function(b){b.addEventListener('click',function(){var u=b.getAttribute('data-copy');function ok(){b.classList.add('done');setTimeout(function(){b.classList.remove('done');},1600);}
 if(navigator.clipboard){navigator.clipboard.writeText(u).then(ok,function(){prompt('',u);});}else{prompt('',u);}});});
@@ -973,7 +973,7 @@ L.addEventListener('click',function(ev){if(ev.target===L)hide();});
 document.addEventListener('keydown',function(ev){if(L.hidden)return;if(ev.key==='Escape')hide();if(ev.key==='ArrowLeft')show(k-1);if(ev.key==='ArrowRight')show(k+1);});
 var x0=null;L.addEventListener('touchstart',function(ev){x0=ev.touches[0].clientX;},{passive:true});L.addEventListener('touchend',function(ev){if(x0===null)return;var d=ev.changedTouches[0].clientX-x0;if(Math.abs(d)>50)show(k+(d<0?1:-1));x0=null;},{passive:true});
 })();
-</script>
+});</script>
 HTML;
     }
 

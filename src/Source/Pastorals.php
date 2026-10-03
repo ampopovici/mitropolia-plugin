@@ -917,14 +917,14 @@ final class Pastorals
  .mpl-letter{padding:36px 22px}.mpl-letter::before{inset:6px}.mpl-lhead .mpl-who{font-size:34px}.mpl-title{font-size:32px}.mpl-prose{font-size:18px}.mpl-filters,.mpl-filters .mpx-sel{width:100%}}
 @media print{.mnx-band,.mpl-side-col,.mpl-by img{display:none!important}.mpl-cols{display:block}.mpl-letter{box-shadow:none;border:0;padding:0}.mpl-letter::before{display:none}}
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 document.querySelectorAll('.mpl .mnx-share [data-copy]').forEach(function(b){b.addEventListener('click',function(){var u=b.getAttribute('data-copy');function ok(){b.classList.add('done');setTimeout(function(){b.classList.remove('done');},1600);}
 if(navigator.clipboard){navigator.clipboard.writeText(u).then(ok,function(){prompt('',u);});}else{prompt('',u);}});});
 document.querySelectorAll('.mpl [data-print]').forEach(function(b){b.addEventListener('click',function(){window.print();});});
 document.querySelectorAll('.mpl-filters select').forEach(function(s){s.addEventListener('change',function(){s.form.submit();});});
 })();
-</script>
+});</script>
 HTML;
     }
 }

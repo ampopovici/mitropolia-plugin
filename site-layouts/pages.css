@@ -13,6 +13,10 @@
 .mx-head-text > * + * { margin-top: 0; }
 .mx-head-text > * { max-width: 680px; }
 .mx-head .mx-head-tools { margin-left: auto; }
+@media (min-width: 960px) {
+  .mx-head .mx-head-text { flex: 1 1 640px; min-width: 0; }
+  .mx-head .mx-head-tools { flex: 0 1 auto; max-width: 100%; }
+}
 .mx-head-tools .mnx { font-family: 'Source Sans 3', sans-serif; }
 .mx-body { padding: 0; }
 

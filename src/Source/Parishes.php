@@ -950,7 +950,7 @@ final class Parishes
 @media (max-width:980px){.mpp-hero .mpx-h1{font-size:42px}.mpp-grid{grid-template-columns:minmax(0,1fr);gap:32px}.mpp-side{position:static}}
 @media (max-width:640px){.mpx-h1{font-size:40px}.mpp-hero .mpx-h1{font-size:32px;line-height:1.1}.mpd-grid,.mpp-neargrid,.mpp-lead,.mpp-clgrid{grid-template-columns:minmax(0,1fr)}.mpd-search,.mpd-search input,.mpd-controls .mpx-sel,.mpd-near{width:100%}.mpp-hero-text{margin-top:32px}.mpp-sched td:first-child{width:auto}}
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 function ready(f){if(window.L)return f();var n=0,t=setInterval(function(){if(window.L||++n>100){clearInterval(t);if(window.L)f();}},50);}
 function fold(s){return (s||'').normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
@@ -980,7 +980,7 @@ document.querySelectorAll('[data-m]').forEach(function(a){try{a.href='mailto:'+d
 });
 document.querySelectorAll('.mpp-map[data-map]').forEach(function(el){var c=JSON.parse(el.dataset.map);ready(function(){var m=L.map(el,{scrollWheelZoom:false,zoomControl:false,attributionControl:true}).setView(c.pt,14);tiles(m,c);guard(m,el);L.marker(c.pt,{icon:pin('',true)}).addTo(m);});});
 })();
-</script>
+});</script>
 HTML;
     }
 }

@@ -572,14 +572,14 @@ final class Hierarchs
                     . ($st['url'] !== '' ? '<a class="mh-it-more" href="' . $e($st['url']) . '">' . $e(Text::_('MIT_HP_FULL_ITIN')) . ' →</a>' : '') . '</div>';
             }
             $h .= '</div></div>' . self::assets() . <<<'HTML'
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 document.querySelectorAll('[data-mh-it]').forEach(function(box){var h='0',m='up';
 function show(){box.querySelectorAll('[data-mh-pane]').forEach(function(p){p.hidden=p.getAttribute('data-mh-pane')!==h+'-'+m;});
 box.querySelectorAll('[data-mh-m]').forEach(function(b){b.classList.toggle('on',b.getAttribute('data-mh-m')===m);});
 box.querySelectorAll('[data-mh-h]').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-mh-h')===h));});}
 box.querySelectorAll('[data-mh-m]').forEach(function(b){b.addEventListener('click',function(){m=b.getAttribute('data-mh-m');show();});});
 box.querySelectorAll('[data-mh-h]').forEach(function(b){b.addEventListener('click',function(){h=b.getAttribute('data-mh-h');show();});});});
-</script>
+});</script>
 HTML;
             return $h;
         } catch (\Throwable $x) {
@@ -876,7 +876,7 @@ a.mhp-stop:hover b{color:var(--mp-red)}
 .mhp-prose{font-size:18px}
 }
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 function setTop(){var h=document.querySelector('.mhp-hero,.mx-hier-hero');if(!h||window.scrollY>2)return;var t=Math.round(h.getBoundingClientRect().top);if(t>20&&t<400)document.documentElement.style.setProperty('--mhp-top',t+'px');}
 setTop();window.addEventListener('load',setTop);window.addEventListener('resize',setTop);
@@ -885,7 +885,7 @@ document.querySelectorAll('.mhp-morebtn').forEach(function(b){var more=document.
 var links=[].slice.call(document.querySelectorAll('.mhp-sub a'));
 if(links.length){window.addEventListener('scroll',function(){var cur=links[0];links.forEach(function(a){var s=document.querySelector(a.getAttribute('href'));if(s&&s.getBoundingClientRect().top<200)cur=a;});links.forEach(function(a){a.classList.toggle('on',a===cur);});},{passive:true});}
 })();
-</script>
+});</script>
 HTML;
     }
 }

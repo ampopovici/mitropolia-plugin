@@ -579,7 +579,7 @@ final class Directory
 @media (max-width:860px){.mcd-grid{grid-template-columns:repeat(var(--mcd-cols-m,2),minmax(0,1fr))}}
 @media (max-width:560px){.mcd-grid{grid-template-columns:repeat(var(--mcd-cols-s,1),minmax(0,1fr))}.mcd-search,.mcd-search input{width:100%}}
 </style>
-<script>
+<script>(function(run){if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();})(function(){
 (function(){
 function fold(s){return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();}
 (function(){var r=[].slice.call(document.querySelectorAll('[data-mcd]'));if(!r.length&&document.querySelector('[data-mcd-part]'))r=[document.body];return r;})().forEach(function(root){
@@ -611,7 +611,7 @@ function fold(s){return s.normalize('NFD').replace(/[̀-ͯ]/g,'').toUpperCase();
  apply();
 });
 })();
-</script>
+});</script>
 HTML;
     }
 }
