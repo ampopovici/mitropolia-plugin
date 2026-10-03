@@ -836,6 +836,7 @@ final class Events
 </style>
 <script>
 (function(){
+function init(){
 /* group chips: show only that group's events */
 document.querySelectorAll('.mev .chips').forEach(function(box){var root=box.closest('.mev');box.addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;var g=b.dataset.g;
  box.querySelectorAll('.chip').forEach(function(x){x.classList.toggle('on',x===b);});
@@ -855,6 +856,8 @@ document.querySelectorAll('.mev [data-copy]').forEach(function(b){b.addEventList
 /* map */
 function maps(){if(!window.L)return setTimeout(maps,200);document.querySelectorAll('.mev [data-map]').forEach(function(el){if(el._m)return;var c=JSON.parse(el.dataset.map);var m=L.map(el,{scrollWheelZoom:false,zoomControl:true}).setView(c.pt,14);el._m=m;L.tileLayer(c.tiles,{attribution:c.attr,maxZoom:18,subdomains:'abcd'}).addTo(m);L.circleMarker(c.pt,{radius:9,color:'#fff',weight:3,fillColor:'#A32D36',fillOpacity:1}).addTo(m);});}
 if(document.querySelector('.mev [data-map]'))maps();
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();
 })();
 </script>
 HTML;
