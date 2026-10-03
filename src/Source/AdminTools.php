@@ -57,6 +57,10 @@ final class AdminTools
                 return self::oldZip(json_decode((string) $p->getRaw('files'), true) ?: [], $p->getCmd('name') ?: 'export');
             case 'old_put':
                 return self::oldPut(json_decode((string) $p->getRaw('files'), true) ?: []);
+            case 'cat_dump':
+                $db = Admin::db();
+                return ['ok' => true, 'items' => $db->setQuery($db->getQuery(true)->select(['c.id', 'c.alias', 'c.parent_id', 'c.language', 'c.title', 'c.published', '(SELECT COUNT(*) FROM #__content a WHERE a.catid = c.id AND a.state IN (0,1)) AS n'])
+                    ->from($db->quoteName('#__categories', 'c'))->where('c.extension = ' . $db->quote('com_content'))->order('c.lft'))->loadObjectList()];
             case 'es_list':
                 return self::esList($p->getInt('year'));
             case 'es_src':
