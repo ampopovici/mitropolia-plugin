@@ -104,6 +104,13 @@ final class Search
         return self::UI[$k][['ro' => 0, 'en' => 1, 'es' => 2][self::lang()]];
     }
 
+    /** The query in the quotation marks of the page language. */
+    private static function quoted(string $q): string
+    {
+        [$a, $b] = ['ro' => ['„', '”'], 'en' => ['“', '”'], 'es' => ['«', '»']][self::lang()];
+        return $a . self::e($q) . $b;
+    }
+
     private static function e(string $s): string
     {
         return htmlspecialchars($s, ENT_QUOTES, 'UTF-8');
@@ -475,7 +482,7 @@ final class Search
                 }
             }
             $status = $total
-                ? '<p class="msr-status"><b>' . $total . '</b> ' . $e($word) . ' ' . $e(self::ui('for')) . ' „' . $e($q) . '”'
+                ? '<p class="msr-status"><b>' . $total . '</b> ' . $e($word) . ' ' . $e(self::ui('for')) . ' ' . self::quoted($q)
                     . ($alts ? '<span class="msr-also">' . $e(self::ui('also')) . ': ' . $e(implode(', ', $alts)) . '</span>' : '') . '</p>'
                 : '';
             if (count($groups) > 1) {
@@ -486,7 +493,7 @@ final class Search
                 $chips .= '</div>';
             }
             if (!$total) {
-                $body = '<div class="msr-none"><p class="msr-none-h">' . $e(self::ui('none')) . ' „' . $e($q) . '”</p><p>' . $e(self::ui('tips')) . '</p>'
+                $body = '<div class="msr-none"><p class="msr-none-h">' . $e(self::ui('none')) . ' ' . self::quoted($q) . '</p><p>' . $e(self::ui('tips')) . '</p>'
                     . (!$allLang ? '<a class="mpx-chip" href="' . $e($link(['al' => 1, 'g' => ''])) . '">' . $e(self::ui('alllang')) . ' →</a>' : '') . '</div>';
             } else {
                 $titles = self::fieldTitles(array_map(fn ($r) => (int) $r->id, $slice));
