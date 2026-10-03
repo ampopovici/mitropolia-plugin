@@ -189,10 +189,16 @@ final class Publications
         try {
             $im = new \Imagick();
             $im->setResolution(110, 110);
+            $im->setColorspace(\Imagick::COLORSPACE_SRGB);
             $im->readImage($abs . '[0]');
+            if ($im->getImageColorspace() === \Imagick::COLORSPACE_CMYK) {
+                $im->transformImageColorspace(\Imagick::COLORSPACE_SRGB);
+            }
             $im->setImageBackgroundColor('white');
+            if (defined('Imagick::ALPHACHANNEL_REMOVE')) {
+                $im->setImageAlphaChannel(\Imagick::ALPHACHANNEL_REMOVE);
+            }
             $im = $im->mergeImageLayers(\Imagick::LAYERMETHOD_FLATTEN);
-            $im->setImageColorspace(\Imagick::COLORSPACE_SRGB);
             $im->thumbnailImage(680, 0);
             $im->setImageFormat('jpeg');
             $im->setImageCompressionQuality(82);

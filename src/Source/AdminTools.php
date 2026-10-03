@@ -591,6 +591,7 @@ final class AdminTools
             $j = json_decode($v, true);
             $file = is_array($j) ? (string) ($j['file'] ?? '') : $v;
             $t = microtime(true);
+            @unlink(JPATH_ROOT . '/images/publications/covers/' . $id . '.jpg');
             $ok = $file !== '' && Publications::makeCover($id, $file);
             $out[] = [$id, $ok ? 'ok' : 'failed', round(microtime(true) - $t, 1)];
         }
