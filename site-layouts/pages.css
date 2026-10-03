@@ -16,8 +16,8 @@
 // breadcrumb
 .mx-crumbs .uk-breadcrumb { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; padding: 0; font-family: 'Source Sans 3', sans-serif; font-size: 14px; color: #6B5A34; }
 .mx-crumbs .uk-breadcrumb > * { flex: none; display: flex; align-items: center; gap: 8px; }
-.mx-crumbs .uk-breadcrumb > * > * { font-size: 14px; color: #6B5A34; }
-.mx-crumbs .uk-breadcrumb > * > a { color: #203D78; }
+.mx-crumbs .uk-breadcrumb > *, .mx-crumbs .uk-breadcrumb > * > *, .mx-crumbs .uk-breadcrumb span { font-family: 'Source Sans 3', sans-serif; font-size: 14px; font-weight: 400; letter-spacing: 0; text-transform: none; color: #6B5A34; line-height: 1.5; }
+.mx-crumbs .uk-breadcrumb > * > a, .mx-crumbs .uk-breadcrumb > * > a span { color: #203D78; }
 .mx-crumbs .uk-breadcrumb > * > a:hover { color: #A32D36; text-decoration: none; }
 .mx-crumbs .uk-breadcrumb > :nth-child(n+2)::before { content: "›"; margin: 0; color: #6B5A34; }
 .mx-crumbs .uk-breadcrumb > :last-child > span { color: #6B5A34; }

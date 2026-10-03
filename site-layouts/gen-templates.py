@@ -54,8 +54,12 @@ def col(children, w="1-1", cls=""):
     return el("column", p, children)
 
 
+HOME = {"ro": "Acasă", "en": "Home", "es": "Inicio"}
+CUR = {"l": "ro"}  # language of the layout being built
+
+
 def crumbs(current=True):
-    return el("breadcrumbs", {"show_home": True, "show_current": current, "margin": "remove", "class": "mx-crumbs"})
+    return el("breadcrumbs", {"show_home": True, "home_text": HOME[CUR["l"]], "show_current": current, "margin": "remove", "class": "mx-crumbs"})
 
 
 def h1(text=None, src=None, cls="mx-h1"):
@@ -130,6 +134,7 @@ if __name__ == "__main__":
     os.makedirs(os.path.join(HERE, "templates"), exist_ok=True)
     for key, (tid, name, typ, cats, fn) in TEMPLATES.items():
         for l, code in LANGS.items():
+            CUR["l"] = l
             tpl = {"type": typ, "query": {"catid": cats, "tag": [], "lang": code.lower()},  # YOOtheme matches lowercase codes
                    "name": name + " · " + LANG_LABEL[l], "layout": fn(l)}
             # RO keeps the id of the old all-language template; EN and ES get a stable id of their own
