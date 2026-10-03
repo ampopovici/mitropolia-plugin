@@ -621,7 +621,7 @@ final class AdminTools
     /** The article part of a page on the old site (www.mitropolia.us only), for importing. */
     private static function oldPage(string $url): array
     {
-        if (!preg_match('#^https://www\.mitropolia\.us/index\.php/(ro|en)/[0-9]+[a-z0-9-]*$#', $url)) {
+        if (!preg_match('#^https://www\.mitropolia\.us/index\.php/(ro|en)/([0-9]+[a-z0-9-]*)?$#', $url)) {
             return ['ok' => false, 'error' => 'bad url'];
         }
         $ctx = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Mitropolia staging']]);
