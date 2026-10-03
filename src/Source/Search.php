@@ -25,7 +25,7 @@ final class Search
     /** Section order; top-category alias without the -ro/-en/-es ending. */
     private const GROUPS = ['news', 'pastoral-letters', 'words-of-wisdom', 'events', 'documents', 'publications', 'media', 'galleries', 'hierarchs', 'parishes', 'pages'];
     private const ALIAS_GROUP = ['revista-credinta' => 'publications', 'almanahul-credinta' => 'publications'];
-    private const SKIP = ['clergy', 'static', 'itinerary'];
+    private const SKIP = ['clergy', 'static', 'itinerary', 'homepage'];
     /** Words searched together (compared without diacritics). */
     private const SYNONYMS = [
         ['paști', 'pascha', 'pascua', 'învierea', 'înviere', 'resurrection', 'resurrección', 'easter'],
