@@ -48,6 +48,8 @@ final class AdminTools
         switch ($p->getCmd('action')) {
             case 'old_zip':
                 return self::oldZip(json_decode((string) $p->getRaw('files'), true) ?: [], $p->getCmd('name') ?: 'export');
+            case 'old_put':
+                return self::oldPut(json_decode((string) $p->getRaw('files'), true) ?: []);
             case 'es_list':
                 return self::esList($p->getInt('year'));
             case 'es_src':
@@ -97,6 +99,41 @@ final class AdminTools
         }
         $zip->close();
         return ['ok' => true, 'url' => rtrim(Uri::root(), '/') . '/images/_export/' . rawurlencode($name) . '.zip', 'size' => @filesize($zipPath), 'files' => $report];
+    }
+
+    /**
+     * files: [{url: "https://www.mitropolia.us/...", to: "images/migrated/..."}]
+     * Copies each image to its place on this site, only when nothing is there yet.
+     */
+    private static function oldPut(array $files): array
+    {
+        $report = [];
+        foreach (array_slice($files, 0, 100) as $f) {
+            $url = (string) ($f['url'] ?? '');
+            $to = Admin::safeRel((string) ($f['to'] ?? ''));
+            if (!preg_match('#^https://(www\.)?mitropolia\.us/#', $url) || $to === '' || !preg_match('#\.(jpe?g|png|webp)$#i', $to)) {
+                $report[] = [$to, 'skipped'];
+                continue;
+            }
+            $abs = JPATH_ROOT . '/' . $to;
+            if (is_file($abs)) {
+                $report[] = [$to, 'exists'];
+                continue;
+            }
+            $ctx = stream_context_create(['http' => ['timeout' => 30, 'user_agent' => 'Mitropolia staging']]);
+            $data = @file_get_contents($url, false, $ctx);
+            if ($data === false || strlen($data) < 500 || !@getimagesizefromstring($data)) {
+                $report[] = [$to, 'download failed'];
+                continue;
+            }
+            if (!is_dir(dirname($abs)) && !@mkdir(dirname($abs), 0755, true)) {
+                $report[] = [$to, 'mkdir failed'];
+                continue;
+            }
+            $report[] = [$to, @file_put_contents($abs, $data) ? strlen($data) : 'write failed'];
+            @chmod($abs, 0644);
+        }
+        return ['ok' => true, 'files' => $report];
     }
 
     /* ------------------------------------------------------------------ Spanish news */
