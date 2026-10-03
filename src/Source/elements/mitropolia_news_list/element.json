@@ -7,11 +7,55 @@
  "element": true,
  "width": 500,
  "defaults": {},
- "templates": {"render": "./templates/template.php", "content": "./templates/content.php"},
- "fields": {
-  "title": {"label": "Title", "description": "Leave empty for News / Știri / Noticias in the page language."},
-  "intro": {"label": "Intro", "type": "textarea", "description": "Leave empty for the standard sentence in the page language."},
-  "class": {"label": "Class", "description": "Optional extra CSS class."}
+ "templates": {
+  "render": "./templates/template.php",
+  "content": "./templates/content.php"
  },
- "fieldset": {"default": {"type": "tabs", "fields": [{"title": "Content", "fields": ["title", "intro"]}, {"title": "Advanced", "fields": ["class"]}]}}
+ "fields": {
+  "title": {
+   "label": "Title",
+   "description": "Leave empty for News / Știri / Noticias in the page language."
+  },
+  "intro": {
+   "label": "Intro",
+   "type": "textarea",
+   "description": "Leave empty for the standard sentence in the page language."
+  },
+  "class": {
+   "label": "Class",
+   "description": "Optional extra CSS class."
+  },
+  "part": {
+   "label": "Show",
+   "type": "select",
+   "options": {
+    "Everything (header included)": "",
+    "Search box only": "search",
+    "Filter buttons only": "chips",
+    "List only": "body"
+   },
+   "description": "The page header (breadcrumb, title, intro) can be built with YOOtheme elements; then place this block three times: search box, filter buttons, list."
+  }
+ },
+ "fieldset": {
+  "default": {
+   "type": "tabs",
+   "fields": [
+    {
+     "title": "Content",
+     "fields": [
+      "part",
+      "title",
+      "intro"
+     ]
+    },
+    {
+     "title": "Advanced",
+     "fields": [
+      "class"
+     ]
+    }
+   ]
+  }
+ }
 }

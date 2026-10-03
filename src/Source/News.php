@@ -469,11 +469,53 @@ final class News
             $pg .= '</nav>';
         }
 
-        return '<div class="mnx mnx-list' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">'
+        $part = (string) ($props['part'] ?? '');
+        $cls = !empty($props['class']) ? ' ' . $e((string) $props['class']) : '';
+        if ($part === 'search') {
+            return '<div class="mnx mnx-tools' . $cls . '">' . $form . '</div>';
+        }
+        if ($part === 'chips') {
+            return $chips !== '' ? '<div class="mnx mnx-tools' . $cls . '">' . $chips . '</div>' : '';
+        }
+        if ($part === 'body') {
+            return '<div class="mnx mnx-list' . $cls . '"><div class="mnx-listbody">' . $status . $body . $pg . '</div></div>';
+        }
+        return '<div class="mnx mnx-list' . $cls . '">'
             . '<div class="mnx-hero"><div class="mnx-hero-in">' . self::crumbs($cat, true)
             . '<div class="mnx-hero-row"><div class="mnx-hero-text"><h1 class="mpx-h1">' . $e($title) . '</h1><p class="mnx-intro">' . $e($intro) . '</p></div>' . $form . '</div>'
             . $chips . '</div></div>'
             . '<div class="mnx-listbody">' . $status . $body . $pg . '</div></div>';
+    }
+
+    /* ------------------------------------------------------------------ fields for page headers built in YOOtheme */
+
+    /** Long date in the page language ("2 octombrie 2026"). */
+    public static function headDate(object $a): string
+    {
+        return self::date($a->publish_up ?? null);
+    }
+
+    /** "5 min de citit" from the article text. */
+    public static function headReading(object $a): string
+    {
+        $t = (string) ($a->introtext ?? '') . (string) ($a->fulltext ?? '');
+        if ($t === '' && !empty($a->id)) {
+            $db = self::db();
+            $r = $db->setQuery($db->getQuery(true)->select(['a.introtext', 'a.' . $db->quoteName('fulltext')])->from($db->quoteName('#__content', 'a'))->where('a.id = ' . (int) $a->id))->loadObject();
+            $t = $r ? (string) $r->introtext . (string) $r->fulltext : '';
+        }
+        $t = preg_replace('#<!--.*?-->#s', '', $t);
+        return Text::sprintf('MIT_NEWS_MIN_READ', self::minutes(self::plain($t)));
+    }
+
+    /** Lead image of an article page (full text image, else the intro image): src, alt, cap. */
+    public static function headLead(object $a): array
+    {
+        if (!isset($a->images) && !empty($a->id)) {
+            $db = self::db();
+            $a = $db->setQuery($db->getQuery(true)->select(['a.id', 'a.images'])->from($db->quoteName('#__content', 'a'))->where('a.id = ' . (int) $a->id))->loadObject() ?: $a;
+        }
+        return self::image($a, true);
     }
 
     /* ------------------------------------------------------------------ article */
@@ -798,6 +840,9 @@ final class News
             . '<button type="button" class="mnx-lb-p" aria-label="' . $e(Text::_('MIT_NEWS_PREVIOUS')) . '">‹</button><img alt="">'
             . '<button type="button" class="mnx-lb-n" aria-label="' . $e(Text::_('MIT_NEWS_NEXT')) . '">›</button><div class="mnx-lb-c"></div></div>' : '';
 
+        if (($props['part'] ?? '') === 'body') {
+            $head = '';
+        }
         return '<article class="mnx mnx-art' . (!empty($props['class']) ? ' ' . $e((string) $props['class']) : '') . '">' . $head
             . '<div class="mnx-cols"><div class="mnx-main">' . $main . '</div><aside class="mnx-side">' . $side . '</aside></div>'
             . $rel . $lb . '</article>';

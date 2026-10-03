@@ -48,6 +48,31 @@ class ArticleExtension
                     ],
                     'extensions' => ['call' => __CLASS__ . '::visits'],
                 ],
+                'mitropolia_date' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Date (page language)', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::date'],
+                ],
+                'mitropolia_reading' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Reading time', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::reading'],
+                ],
+                'mitropolia_lead' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Lead image', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::lead'],
+                ],
+                'mitropolia_lead_alt' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Lead image alt', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::leadAlt'],
+                ],
+                'mitropolia_lead_caption' => [
+                    'type' => 'String',
+                    'metadata' => ['label' => 'Mitropolia: Lead image caption', 'group' => 'Mitropolia'],
+                    'extensions' => ['call' => __CLASS__ . '::leadCaption'],
+                ],
                 'mitropolia_clergy' => [
                     'type' => ['listOf' => 'MitropoliaParishClergy'],
                     'metadata' => ['label' => 'Mitropolia: Clergy of this parish', 'group' => 'Mitropolia'],
@@ -81,5 +106,39 @@ class ArticleExtension
     public static function clergy($article)
     {
         return Repository::safe(fn () => Repository::clergyOf((int) ($article->id ?? 0)));
+    }
+
+    public static function date($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\News::headDate($article));
+    }
+
+    public static function reading($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\News::headReading($article));
+    }
+
+    public static function lead($article)
+    {
+        return ltrim(self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\News::headLead($article)['src'] ?? ''), '/');
+    }
+
+    public static function leadAlt($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\News::headLead($article)['alt'] ?? '');
+    }
+
+    public static function leadCaption($article)
+    {
+        return self::str(fn () => \Mitropolia\Plugin\System\MitropoliaSources\Source\News::headLead($article)['cap'] ?? '');
+    }
+
+    private static function str(callable $fn): string
+    {
+        try {
+            return (string) $fn();
+        } catch (\Throwable $e) {
+            return '';
+        }
     }
 }
