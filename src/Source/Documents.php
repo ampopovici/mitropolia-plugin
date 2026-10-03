@@ -41,7 +41,7 @@ final class Documents
         'lang'    => ['Limba', 'Language', 'Idioma'],
         'pages'   => ['Pagini', 'Pages', 'Páginas'],
         'size'    => ['Mărime', 'Size', 'Tamaño'],
-        'updated' => ['Actualizat', 'Updated', 'Actualizado'],
+        'updated' => ['Data', 'Date', 'Fecha'],
         'same'    => ['Cu aceleași etichete', 'With the same tags', 'Con las mismas etiquetas'],
         'more'    => ['Alte documente', 'More documents', 'Más documentos'],
         'alldocs' => ['Toate documentele', 'All documents', 'Todos los documentos'],
@@ -165,6 +165,7 @@ final class Documents
                 'lang'  => (string) $r->language,
                 'intro' => (string) $r->introtext,
                 'date'  => $dates[$id] ?? (string) ($r->publish_up ?: $r->modified),
+                'docdate' => $dates[$id] ?? '',
                 'mod'   => (string) $r->modified,
                 'file'  => $file,
                 'ext'   => strtoupper(pathinfo(parse_url($file, PHP_URL_PATH) ?: '', PATHINFO_EXTENSION)) ?: 'PDF',
@@ -401,7 +402,7 @@ final class Documents
 
         $rows = '';
         foreach ($docs as $i => $d) {
-            $meta = '<span>' . $e($d->ext) . '</span>';
+            $meta = '<span>' . $e($d->ext) . '</span>' . ($d->docdate !== '' ? '<span>' . $e(substr(self::longDate($d->docdate), -4)) . '</span>' : '');
             foreach (self::langCodes($d) as $c) {
                 $meta .= '<span class="mdx-lang">' . strtoupper($c) . '</span>';
             }
@@ -527,7 +528,7 @@ final class Documents
             }
             $facts .= '<dt>' . $e(self::ui('size')) . '</dt><dd>' . $e(self::size((int) filesize($disk))) . '</dd>';
         }
-        $upd = self::longDate($d->date);
+        $upd = self::longDate($d->docdate);
         if ($upd !== '') {
             $facts .= '<dt>' . $e(self::ui('updated')) . '</dt><dd>' . $e($upd) . '</dd>';
         }

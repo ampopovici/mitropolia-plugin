@@ -15,6 +15,10 @@ use Joomla\CMS\Uri\Uri;
  * - es_list / es_src / es_save: Spanish translations of Romanian news. es_save creates or updates the
  *   Spanish article in news-es with the Romanian article's date, author, images and custom fields, and
  *   links it with the Romanian and English versions (associations).
+ * - doc_copy / doc_tags / doc_save: the Documents import. doc_copy copies PDFs from the old site's
+ *   /institutional/ folder to files/institutional/ (only when missing), doc_tags creates the document tags
+ *   per language, doc_save creates one document article (documents-ro/en/es) with its file, date, tags and
+ *   association.
  */
 final class AdminTools
 {
@@ -56,6 +60,12 @@ final class AdminTools
                 return self::esSrc($p->getInt('id'));
             case 'es_save':
                 return self::esSave();
+            case 'doc_copy':
+                return self::docCopy(json_decode((string) $p->getRaw('files'), true) ?: []);
+            case 'doc_tags':
+                return self::docTags(json_decode((string) $p->getRaw('tags'), true) ?: []);
+            case 'doc_save':
+                return self::docSave(json_decode((string) $p->getRaw('doc'), true) ?: []);
         }
         return ['ok' => false, 'error' => 'unknown action'];
     }
@@ -256,5 +266,128 @@ final class AdminTools
         }
         Admin::ensureWorkflow([$c['es']]);
         return ['ok' => true, 'es' => $esId, 'assoc' => $ids];
+    }
+
+    /* ------------------------------------------------------------------ documents import */
+
+    /** files: ["docs/statut-mi-ro.pdf", ...] relative to /institutional/ */
+    private static function docCopy(array $files): array
+    {
+        $report = [];
+        foreach (array_slice($files, 0, 60) as $rel) {
+            $rel = (string) $rel;
+            if (!preg_match('#^(docs|sacraments|resumes|policies)/[a-z0-9][a-z0-9-]*\.pdf$#', $rel)) {
+                $report[] = [$rel, 'skipped'];
+                continue;
+            }
+            $abs = JPATH_ROOT . '/files/institutional/' . $rel;
+            if (is_file($abs)) {
+                $report[] = [$rel, 'exists', filesize($abs), md5_file($abs)];
+                continue;
+            }
+            $ctx = stream_context_create(['http' => ['timeout' => 60, 'user_agent' => 'Mitropolia staging']]);
+            $data = @file_get_contents('https://www.mitropolia.us/institutional/' . $rel, false, $ctx);
+            if ($data === false || strncmp($data, '%PDF', 4) !== 0) {
+                $report[] = [$rel, 'download failed'];
+                continue;
+            }
+            if (!is_dir(dirname($abs)) && !@mkdir(dirname($abs), 0755, true)) {
+                $report[] = [$rel, 'mkdir failed'];
+                continue;
+            }
+            $report[] = [$rel, @file_put_contents($abs, $data) ? 'copied' : 'write failed', strlen($data), md5($data)];
+            @chmod($abs, 0644);
+        }
+        return ['ok' => true, 'files' => $report];
+    }
+
+    /** tags: [{title, alias, lang: "ro-RO"}]; creates the missing ones at the top level. */
+    private static function docTags(array $tags): array
+    {
+        $db = Admin::db();
+        $out = [];
+        foreach (array_slice($tags, 0, 40) as $t) {
+            $title = trim((string) ($t['title'] ?? ''));
+            $alias = trim((string) ($t['alias'] ?? ''));
+            $lang = (string) ($t['lang'] ?? '');
+            if ($title === '' || !preg_match('#^[a-z0-9-]+$#', $alias) || !in_array($lang, ['ro-RO', 'en-US', 'es-ES'], true)) {
+                $out[] = [$alias, 'skipped'];
+                continue;
+            }
+            $id = (int) $db->setQuery($db->getQuery(true)->select('id')->from('#__tags')->where('alias = ' . $db->quote($alias))->where('published >= 0'), 0, 1)->loadResult();
+            if ($id) {
+                $out[] = [$alias, 'exists', $id];
+                continue;
+            }
+            $table = Factory::getApplication()->bootComponent('com_tags')->getMVCFactory()->createTable('Tag', 'Administrator');
+            $table->setLocation(1, 'last-child');
+            $table->bind(['title' => $title, 'alias' => $alias, 'language' => $lang, 'published' => 1, 'access' => 1, 'parent_id' => 1,
+                'description' => '', 'note' => 'Documente', 'params' => '{}', 'metadata' => '{}', 'images' => '{}', 'urls' => '{}']);
+            if (!$table->check() || !$table->store()) {
+                $out[] = [$alias, 'failed: ' . (method_exists($table, 'getError') ? $table->getError() : '')];
+                continue;
+            }
+            $table->rebuildPath($table->id);
+            $out[] = [$alias, 'created', (int) $table->id];
+        }
+        return ['ok' => true, 'tags' => $out];
+    }
+
+    /** doc: {lang: ro|en|es, title, file: "files/institutional/..", date: "Y-m-d"|'' , tags: [alias], assoc: id} */
+    private static function docSave(array $d): array
+    {
+        $app = Factory::getApplication();
+        $db = Admin::db();
+        $l = (string) ($d['lang'] ?? '');
+        $tag = ['ro' => 'ro-RO', 'en' => 'en-US', 'es' => 'es-ES'][$l] ?? '';
+        $cat = $tag ? Admin::catByAlias('documents-' . $l) : 0;
+        $title = trim((string) ($d['title'] ?? ''));
+        $file = (string) ($d['file'] ?? '');
+        if (!$cat || $title === '' || !preg_match('#^files/institutional/[a-z]+/[a-z0-9-]+\.pdf$#', $file) || !is_file(JPATH_ROOT . '/' . $file)) {
+            return ['ok' => false, 'error' => 'bad document: ' . $title . ' ' . $file];
+        }
+        $tagIds = [];
+        foreach ((array) ($d['tags'] ?? []) as $a) {
+            $tid = (int) $db->setQuery($db->getQuery(true)->select('id')->from('#__tags')->where('alias = ' . $db->quote((string) $a))
+                ->where('language = ' . $db->quote($tag))->where('published = 1'), 0, 1)->loadResult();
+            if (!$tid) {
+                return ['ok' => false, 'error' => 'missing tag ' . $a];
+            }
+            $tagIds[] = $tid;
+        }
+        $now = Factory::getDate()->toSql();
+        $table = Admin::table();
+        $table->bind([
+            'title' => $title, 'alias' => Admin::uniqueAlias($cat, Admin::slug($title, 120) ?: 'document'),
+            'catid' => $cat, 'state' => 1, 'access' => 1, 'language' => $tag, 'introtext' => '', 'fulltext' => '',
+            'created' => $now, 'created_by' => (int) $app->getIdentity()->id, 'publish_up' => $now,
+            'images' => '{}', 'urls' => '{}', 'attribs' => '{}', 'metadata' => '{}', 'metakey' => '', 'metadesc' => '',
+            'note' => 'import documente (Claude), ' . basename($file),
+        ]);
+        $table->newTags = $tagIds;
+        if (!$table->check() || !$table->store()) {
+            return ['ok' => false, 'error' => 'store failed' . (method_exists($table, 'getError') ? ': ' . $table->getError() : '')];
+        }
+        $id = (int) $table->id;
+        $vals = ['document-pdf' => json_encode(['file' => $file, 'linktext' => ''], JSON_UNESCAPED_SLASHES)];
+        $date = (string) ($d['date'] ?? '');
+        if (preg_match('#^\d{4}-\d{2}-\d{2}$#', $date)) {
+            $vals['document-date'] = $date . ' 12:00:00';
+        }
+        Admin::writeFields($id, $vals);
+        $other = (int) ($d['assoc'] ?? 0);
+        if ($other) {
+            $ids = self::assoc($other);
+            $ids = array_filter(array_merge($ids, [$tag => $id]));
+            $db->setQuery($db->getQuery(true)->delete('#__associations')->where('context = ' . $db->quote('com_content.item'))
+                ->where('id IN (' . implode(',', array_map('intval', $ids)) . ')'))->execute();
+            $key = md5(json_encode($ids));
+            foreach ($ids as $aid) {
+                $o = (object) ['id' => (int) $aid, 'context' => 'com_content.item', 'key' => $key, 'parent_id' => 0];
+                $db->insertObject('#__associations', $o);
+            }
+        }
+        Admin::ensureWorkflow([$cat]);
+        return ['ok' => true, 'id' => $id];
     }
 }
