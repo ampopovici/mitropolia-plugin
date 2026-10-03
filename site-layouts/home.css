@@ -27,25 +27,24 @@
 .mh-btn-line:hover { background: #203D78; color: #FFFFFF !important; }
 
 // hero
-// Season colours: add one of these classes to the hero section (Section → Advanced → Class), next to mh-s-hero:
-// mh-season-theotokos, mh-season-pascha, mh-season-pentecost, mh-season-lent, mh-season-holyweek, mh-season-lord.
-// Without one, the hero uses ordinary time (navy and gold). To change a palette, edit its line below.
+// Season colours: chosen in the homepage article, tab "Pagina principală" (the hero adds mh-season-… to its box).
+// Ordinary time is navy and gold. To change a palette, edit its line below.
 .mh-s-hero { --h-bg: #203D78; --h-ph: #2C4B8A; --h-accent: #D4AF37; --h-ink: #FFFFFF; --h-sub: #EFE3CB; --h-line: rgba(255,255,255,.35); --h-btn-ink: #172E5C; }
-.mh-s-hero.mh-season-theotokos { --h-bg: #2A5A9E; --h-ph: #3667AC; }
-.mh-s-hero.mh-season-pascha { --h-bg: #7A1F29; --h-ph: #8C2B35; }
-.mh-s-hero.mh-season-pentecost { --h-bg: #2E5A3C; --h-ph: #3A6848; }
-.mh-s-hero.mh-season-lent { --h-bg: #4A2D5C; --h-ph: #573869; }
-.mh-s-hero.mh-season-holyweek { --h-bg: #1E1B24; --h-ph: #2B2733; --h-accent: #B99755; }
-.mh-s-hero.mh-season-lord { --h-bg: #F7F3EA; --h-ph: #E6DCC6; --h-accent: #203D78; --h-ink: #1B2A4A; --h-sub: #6B5A34; --h-line: rgba(32,61,120,.3); --h-btn-ink: #FFFFFF; }
+.mh-s-hero:has(.mh-season-theotokos) { --h-bg: #2A5A9E; --h-ph: #3667AC; }
+.mh-s-hero:has(.mh-season-pascha) { --h-bg: #7A1F29; --h-ph: #8C2B35; }
+.mh-s-hero:has(.mh-season-pentecost) { --h-bg: #2E5A3C; --h-ph: #3A6848; }
+.mh-s-hero:has(.mh-season-lent) { --h-bg: #4A2D5C; --h-ph: #573869; }
+.mh-s-hero:has(.mh-season-holyweek) { --h-bg: #1E1B24; --h-ph: #2B2733; --h-accent: #B99755; }
+.mh-s-hero:has(.mh-season-lord) { --h-bg: #F7F3EA; --h-ph: #E6DCC6; --h-accent: #203D78; --h-ink: #1B2A4A; --h-sub: #6B5A34; --h-line: rgba(32,61,120,.3); --h-btn-ink: #FFFFFF; }
 .mh-s-hero { background: var(--h-bg); position: relative; overflow: hidden; transition: background .4s; }
-.mh-hero { position: relative; padding: 72px 0 64px; }
+.mh-hero { position: relative; padding: 64px 0; }
 .mh-wm { position: absolute; right: -120px; bottom: -160px; width: 760px; height: 760px; opacity: .06; background: var(--h-accent); -webkit-mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; mask: url(/images/site/seal-watermark.svg) center / contain no-repeat; pointer-events: none; }
 .mh-hero-in { position: relative; }
-.mh-slide { display: grid; grid-template-columns: 5fr 6fr; gap: 64px; align-items: center; }
+.mh-slide { display: grid; grid-template-columns: minmax(0, 1fr) 480px; gap: 64px; align-items: center; min-height: 420px; }
 .mh-slide[hidden] { display: none; }
 .mh-hero-tx { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
 .mh-hero-kick { font-size: 13px; font-weight: 600; letter-spacing: .16em; text-transform: uppercase; color: var(--h-sub); }
-.mh-hero-h { margin: 0; font-family: 'Baskervville', Georgia, serif; font-weight: 400; font-size: ~"clamp(34px, 2.2rem + 2vw, 60px)"; line-height: 1.08; color: var(--h-accent); text-transform: none; letter-spacing: 0; text-wrap: balance; }
+.mh-hero-h { margin: 0; font-family: 'Baskervville', Georgia, serif; font-weight: 400; font-size: ~"clamp(28px, 1.3rem + 1.5vw, 44px)"; line-height: 1.15; display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 4; overflow: hidden; color: var(--h-accent); text-transform: none; letter-spacing: 0; text-wrap: balance; }
 .mh-hero-h a { color: inherit !important; text-decoration: none !important; }
 .mh-hero-btns { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; }
 .mh-hero .mh-btn-gold { background: var(--h-accent); color: var(--h-btn-ink) !important; }
@@ -58,7 +57,7 @@
 .mh-dots button { width: 12px; height: 12px; border-radius: 50%; padding: 0; cursor: pointer; border: 2px solid var(--h-ink); background: transparent; opacity: .7; }
 .mh-dots button[aria-current] { border-color: var(--h-accent); background: var(--h-accent); opacity: 1; }
 .mh-hero-ph { position: relative; }
-.mh-hero-ph img, .mh-hero-ph .mh-noimg { position: relative; display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; background: var(--h-ph); border-radius: 14px; }
+.mh-hero-ph img, .mh-hero-ph .mh-noimg { position: relative; display: block; width: 480px; max-width: 100%; height: 360px; aspect-ratio: auto; object-fit: cover; background: var(--h-ph); border-radius: 14px; }
 
 // quick links
 .mh-s-ql { background: #FFFFFF; border-bottom: 1px solid #E4D8BE; }
@@ -164,12 +163,16 @@
 .mh-s-stay .uk-button { border-radius: 999px; background: #203D78; color: #FFFFFF; padding: 0 34px; line-height: 54px; font-size: 14px; font-weight: 600; letter-spacing: .1em; }
 
 @media (max-width: 1180px) {
+  .mh-slide { grid-template-columns: minmax(0, 1fr) 400px; gap: 48px; min-height: 360px; }
+  .mh-hero-ph img, .mh-hero-ph .mh-noimg { width: 400px; height: 300px; }
   .mh-ev-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .mh-s-ql .uk-subnav { justify-content: flex-start; flex-wrap: nowrap; overflow-x: auto; white-space: nowrap; }
 }
 @media (max-width: 900px) {
   .mh-slide, .mh-news { grid-template-columns: minmax(0, 1fr); gap: 40px; }
   .mh-hero-ph { order: -1; }
+  .mh-slide { min-height: 0; }
+  .mh-hero-ph img, .mh-hero-ph .mh-noimg { width: 100%; height: auto; aspect-ratio: 16 / 10; }
   .mh-h2 { font-size: 38px; }
   .mh-s-struct .mh-h2 { font-size: 38px; }
   .mh-ev-head { flex-direction: column; align-items: flex-start; }

@@ -75,6 +75,21 @@ final class Home
         return $base . ($c !== '' ? ' ' . self::e($c) : '');
     }
 
+    /** Season colours chosen in the homepage article's "Pagina principală" tab (field home-season). */
+    private static function season(): string
+    {
+        $in = Factory::getApplication()->getInput();
+        if ($in->get('option') !== 'com_content' || $in->get('view') !== 'article' || !$in->getInt('id')) {
+            return '';
+        }
+        $db = Factory::getContainer()->get(\Joomla\Database\DatabaseInterface::class);
+        $v = (string) $db->setQuery($db->getQuery(true)->select('v.value')->from($db->quoteName('#__fields_values', 'v'))
+            ->join('INNER', $db->quoteName('#__fields', 'f') . ' ON f.id = v.field_id')
+            ->where('f.name = ' . $db->quote('home-season'))->where('f.state = 1')
+            ->where('v.item_id = ' . $db->quote((string) $in->getInt('id'))), 0, 1)->loadResult();
+        return in_array($v, ['theotokos', 'lord', 'lent', 'holyweek', 'pascha', 'pentecost'], true) ? $v : '';
+    }
+
     /* ------------------------------------------------------------------ hero: latest news */
 
     public static function hero(array $props): string
@@ -98,7 +113,8 @@ final class Home
                 }
                 return $h . '</div><button type="button" class="mh-circ" data-mh-next aria-label="' . $e(self::ui('next')) . '">' . self::I_NEXT . '</button></div>';
             };
-            $h = '<div class="' . self::cls($props, 'mh-hero') . '" data-mh-hero><span class="mh-wm" aria-hidden="true"></span><div class="mh-hero-in">';
+            $season = self::season();
+            $h = '<div class="' . self::cls($props, 'mh-hero') . ($season !== '' ? ' mh-season-' . $season : '') . '" data-mh-hero><span class="mh-wm" aria-hidden="true"></span><div class="mh-hero-in">';
             foreach ($items as $i => $it) {
                 $tag = $i === 0 ? 'h1' : 'h2';
                 $h .= '<div class="mh-slide"' . ($i ? ' hidden' : '') . '>'
